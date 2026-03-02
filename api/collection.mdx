@@ -1,0 +1,505 @@
+---
+title: Collection
+description: Organize and manage collections to structure your Metabase content
+---
+
+The Collection API manages collections in Metabase. Collections are folders that organize dashboards, questions, and other content. This API includes 12 endpoints.
+
+## List collections
+
+Get all collections you have access to.
+
+```bash
+GET /api/collection
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/collection \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+
+```javascript JavaScript
+const collections = await fetch('https://your-metabase.com/api/collection', {
+  headers: { 'X-Metabase-Session': sessionToken }
+}).then(r => r.json());
+```
+
+```python Python
+response = requests.get(
+    'https://your-metabase.com/api/collection',
+    headers={'X-Metabase-Session': session_token}
+)
+collections = response.json()
+```
+</CodeGroup>
+
+### Query parameters
+
+<ParamField query="archived" type="boolean">
+  Show archived collections instead of active ones (default: false)
+</ParamField>
+
+<ParamField query="exclude-other-user-collections" type="boolean">
+  Hide other users' personal collections (default: false)
+</ParamField>
+
+<ParamField query="personal-only" type="boolean">
+  Show only personal collections (default: false)
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  Filter by namespace (e.g., "snippets")
+</ParamField>
+
+### Response
+
+```json
+[
+  {
+    "id": 5,
+    "name": "Marketing",
+    "description": "Marketing analytics",
+    "color": "#509EE3",
+    "can_write": true,
+    "parent_id": null,
+    "personal_owner_id": null
+  }
+]
+```
+
+<ResponseField name="can_write" type="boolean">
+  Whether you have write permissions for this collection
+</ResponseField>
+
+## Get collection
+
+Get details about a specific collection.
+
+```bash
+GET /api/collection/{id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/collection/5 \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="id" type="integer" required>
+  Collection ID
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="integer">
+  Collection ID
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Collection name
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Collection description
+</ResponseField>
+
+<ResponseField name="color" type="string">
+  Color hex code for the collection icon
+</ResponseField>
+
+<ResponseField name="archived" type="boolean">
+  Whether the collection is archived
+</ResponseField>
+
+<ResponseField name="parent_id" type="integer">
+  Parent collection ID (null for top-level collections)
+</ResponseField>
+
+<ResponseField name="personal_owner_id" type="integer">
+  User ID if this is a personal collection
+</ResponseField>
+
+<ResponseField name="authority_level" type="string">
+  Authority level ("official" or null)
+</ResponseField>
+
+## Create collection
+
+Create a new collection.
+
+```bash
+POST /api/collection
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/collection \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "name": "New Collection",
+    "description": "Collection description",
+    "color": "#509EE3"
+  }'
+```
+
+```javascript JavaScript
+const collection = await fetch('https://your-metabase.com/api/collection', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Metabase-Session': sessionToken
+  },
+  body: JSON.stringify({
+    name: 'New Collection',
+    description: 'Collection description',
+    color: '#509EE3'
+  })
+}).then(r => r.json());
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="name" type="string" required>
+  Collection name (minimum 1 character)
+</ParamField>
+
+<ParamField body="description" type="string">
+  Collection description
+</ParamField>
+
+<ParamField body="color" type="string">
+  Color hex code (e.g., "#509EE3")
+</ParamField>
+
+<ParamField body="parent_id" type="integer">
+  Parent collection ID to create a nested collection
+</ParamField>
+
+<ParamField body="namespace" type="string">
+  Namespace for special collection types
+</ParamField>
+
+<ParamField body="authority_level" type="string">
+  Set to "official" to mark as an official collection (requires admin)
+</ParamField>
+
+## Update collection
+
+Update an existing collection.
+
+```bash
+PUT /api/collection/{id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X PUT \
+  https://your-metabase.com/api/collection/5 \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "name": "Updated Collection Name",
+    "description": "Updated description"
+  }'
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="id" type="integer" required>
+  Collection ID
+</ParamField>
+
+### Request body
+
+All fields are optional.
+
+<ParamField body="name" type="string">
+  Updated collection name
+</ParamField>
+
+<ParamField body="description" type="string">
+  Updated description
+</ParamField>
+
+<ParamField body="color" type="string">
+  Updated color
+</ParamField>
+
+<ParamField body="archived" type="boolean">
+  Archive or unarchive the collection
+</ParamField>
+
+<ParamField body="parent_id" type="integer">
+  Move to a different parent collection
+</ParamField>
+
+## Delete collection
+
+Permanently delete a collection.
+
+```bash
+DELETE /api/collection/{id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X DELETE \
+  https://your-metabase.com/api/collection/5 \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+<Warning>
+This permanently deletes the collection and all its contents. Items in the collection cannot be recovered.
+</Warning>
+
+## Get collection items
+
+Get all items (dashboards, questions, etc.) in a collection.
+
+```bash
+GET /api/collection/{id}/items
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/collection/5/items \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Query parameters
+
+<ParamField query="models" type="array">
+  Filter by model types: card, dashboard, dataset, collection, etc.
+</ParamField>
+
+<ParamField query="archived" type="boolean">
+  Include archived items (default: false)
+</ParamField>
+
+<ParamField query="pinned_state" type="string">
+  Filter by pin state: is_pinned, is_not_pinned, or all
+</ParamField>
+
+<ParamField query="sort_column" type="string">
+  Sort by: name, last_edited_at, last_edited_by, model, or description
+</ParamField>
+
+<ParamField query="sort_direction" type="string">
+  Sort direction: asc or desc
+</ParamField>
+
+### Response
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "Sales Dashboard",
+      "model": "dashboard",
+      "description": "Overview of sales metrics",
+      "collection_position": null,
+      "display": "dashboard",
+      "last_edited_at": "2024-03-01T10:00:00Z",
+      "last_edited_by": {
+        "id": 1,
+        "common_name": "John Doe"
+      }
+    }
+  ],
+  "total": 1
+}
+```
+
+## Root collection
+
+### Get root collection
+
+Get the root collection (top-level).
+
+```bash
+GET /api/collection/root
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/collection/root \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+<Note>
+The root collection is a virtual collection that contains all items not in any other collection.
+</Note>
+
+### Get root collection items
+
+Get items in the root collection.
+
+```bash
+GET /api/collection/root/items
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/collection/root/items \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+Supports the same query parameters as `/api/collection/{id}/items`.
+
+## Collection tree
+
+Get the full collection hierarchy tree.
+
+```bash
+GET /api/collection/tree
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/collection/tree \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Response
+
+Returns a nested tree structure of all collections:
+
+```json
+[
+  {
+    "id": "root",
+    "name": "Our analytics",
+    "children": [
+      {
+        "id": 5,
+        "name": "Marketing",
+        "children": [
+          {
+            "id": 12,
+            "name": "Campaigns",
+            "children": []
+          }
+        ]
+      }
+    ]
+  }
+]
+```
+
+## Collection permissions
+
+### Get permissions graph
+
+Get the full collection permissions graph.
+
+```bash
+GET /api/collection/graph
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/collection/graph \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+<Note>
+Requires admin permissions.
+</Note>
+
+### Update permissions graph
+
+Update collection permissions for groups.
+
+```bash
+PUT /api/collection/graph
+```
+
+<CodeGroup>
+```bash curl
+curl -X PUT \
+  https://your-metabase.com/api/collection/graph \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "groups": {
+      "1": {
+        "5": "write",
+        "root": "read"
+      }
+    }
+  }'
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="groups" type="object" required>
+  Map of group IDs to their collection permissions
+  
+  Permission values:
+  - `"none"` - No access
+  - `"read"` - Read-only access
+  - `"write"` - Full access
+</ParamField>
+
+<ParamField body="revision" type="integer">
+  Current revision number (for optimistic locking)
+</ParamField>
+
+### Query parameters
+
+<ParamField query="force" type="boolean">
+  Skip revision check and force update (default: false)
+</ParamField>
+
+<ParamField query="skip-graph" type="boolean">
+  Only return revision, not full graph (default: false)
+</ParamField>
+
+## Move items
+
+Move multiple cards to a collection.
+
+```bash
+POST /api/cards/move
+```
+
+See [Card API](/api/card) for details.
+
+## Trash
+
+Get items in trash (archived collections).
+
+```bash
+GET /api/collection/trash
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/collection/trash \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>

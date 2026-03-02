@@ -1,0 +1,560 @@
+---
+title: Event handlers
+description: Handle events and user interactions in embedded Metabase components
+---
+
+The Metabase Embedding SDK provides event handlers to respond to user interactions and component lifecycle events.
+
+## Global event handlers
+
+Set up global event handlers in the `MetabaseProvider`:
+
+```tsx
+import { MetabaseProvider } from '@metabase/embedding-sdk-react';
+
+const eventHandlers = {
+  onDashboardLoad: (dashboard) => {
+    console.log('Dashboard loaded:', dashboard);
+  },
+  onDashboardLoadWithoutCards: (dashboard) => {
+    console.log('Dashboard structure loaded:', dashboard);
+  },
+};
+
+function App() {
+  return (
+    <MetabaseProvider
+      authConfig={authConfig}
+      eventHandlers={eventHandlers}
+    >
+      {/* Your app */}
+    </MetabaseProvider>
+  );
+}
+```
+
+## Dashboard events
+
+### onLoad
+
+Triggered when a dashboard loads with all visible cards and their content:
+
+```tsx
+<InteractiveDashboard
+  dashboardId={1}
+  onLoad={(dashboard) => {
+    console.log('Dashboard name:', dashboard?.name);
+    console.log('Number of cards:', dashboard?.dashcards?.length);
+    
+    // Track analytics
+    analytics.track('Dashboard Viewed', {
+      dashboardId: dashboard?.id,
+      name: dashboard?.name,
+    });
+  }}
+/>
+```
+
+### onLoadWithoutCards
+
+Triggered after a dashboard loads, but without its cards (only the dashboard title, tabs, and cards grid are rendered):
+
+```tsx
+<InteractiveDashboard
+  dashboardId={1}
+  onLoadWithoutCards={(dashboard) => {
+    console.log('Dashboard structure loaded');
+    console.log('Dashboard has', dashboard?.tabs?.length || 0, 'tabs');
+    
+    // Show loading indicator
+    setIsLoadingCards(false);
+  }}
+/>
+```
+
+### Complete dashboard example
+
+```tsx
+import { InteractiveDashboard, MetabaseDashboard } from '@metabase/embedding-sdk-react';
+import { useState } from 'react';
+
+function Analytics() {
+  const [loadTime, setLoadTime] = useState<number | null>(null);
+  const [dashboard, setDashboard] = useState<MetabaseDashboard | null>(null);
+
+  const handleLoad = (loadedDashboard: MetabaseDashboard | null) => {
+    setDashboard(loadedDashboard);
+    const endTime = performance.now();
+    setLoadTime(endTime - startTime);
+    
+    // Track performance
+    analytics.track('Dashboard Load Time', {
+      dashboardId: loadedDashboard?.id,
+      loadTime: endTime - startTime,
+    });
+  };
+
+  const startTime = performance.now();
+
+  return (
+    <div>
+      {loadTime && (
+        <div className="stats">
+          Loaded in {loadTime.toFixed(0)}ms
+        </div>
+      )}
+      
+      <InteractiveDashboard
+        dashboardId={1}
+        onLoad={handleLoad}
+        onLoadWithoutCards={(dashboard) => {
+          console.log('Structure loaded for:', dashboard?.name);
+        }}
+      />
+    </div>
+  );
+}
+```
+
+## Question events
+
+### onRun
+
+Triggered when a question is executed:
+
+```tsx
+<InteractiveQuestion
+  questionId={1}
+  onRun={(question) => {
+    console.log('Question executed:', question);
+    console.log('Query:', question.query());
+    
+    // Track query execution
+    analytics.track('Question Run', {
+      questionId: question.id(),
+    });
+  }}
+/>
+```
+
+### onSave
+
+Triggered when a question is saved:
+
+```tsx
+<InteractiveQuestion
+  questionId={1}
+  isSaveEnabled={true}
+  onSave={(question) => {
+    console.log('Question saved:', question);
+    console.log('New question ID:', question.id());
+    
+    // Show success message
+    toast.success('Question saved successfully!');
+    
+    // Navigate to the saved question
+    navigate(`/question/${question.id()}`);
+  }}
+/>
+```
+
+### onBeforeSave
+
+Triggered before a question is saved, allowing you to validate or modify the question:
+
+```tsx
+<InteractiveQuestion
+  questionId={1}
+  isSaveEnabled={true}
+  onBeforeSave={(question) => {
+    console.log('About to save:', question);
+    
+    // Validate question name
+    const name = question.displayName();
+    if (!name || name.trim() === '') {
+      alert('Please provide a name for this question');
+      // Note: This won't prevent the save, just logs a warning
+    }
+  }}
+/>
+```
+
+### onNavigateBack
+
+Triggered when the back button is clicked:
+
+```tsx
+import { useNavigate } from 'react-router-dom';
+
+function QuestionView() {
+  const navigate = useNavigate();
+
+  return (
+    <InteractiveQuestion
+      questionId={1}
+      onNavigateBack={() => {
+        console.log('Back button clicked');
+        navigate('/dashboards');
+      }}
+    />
+  );
+}
+```
+
+## Visualization events
+
+### onVisualizationChange
+
+Triggered when the visualization type changes:
+
+```tsx
+<InteractiveQuestion
+  questionId={1}
+  onVisualizationChange={(question) => {
+    console.log('Visualization changed to:', question.display());
+    
+    // Track visualization changes
+    analytics.track('Visualization Changed', {
+      questionId: question.id(),
+      newType: question.display(),
+    });
+  }}
+/>
+```
+
+Also works with dashboards:
+
+```tsx
+<InteractiveDashboard
+  dashboardId={1}
+  onVisualizationChange={(question) => {
+    console.log('Card visualization changed:', question.display());
+  }}
+/>
+```
+
+## Collection browser events
+
+### onClick
+
+Triggered when an item is clicked:
+
+```tsx
+import { CollectionBrowser, MetabaseCollectionItem } from '@metabase/embedding-sdk-react';
+import { useNavigate } from 'react-router-dom';
+
+function Collections() {
+  const navigate = useNavigate();
+
+  const handleItemClick = (item: MetabaseCollectionItem) => {
+    console.log('Clicked:', item);
+    
+    // Track clicks
+    analytics.track('Collection Item Clicked', {
+      itemId: item.id,
+      itemType: item.model,
+      itemName: item.name,
+    });
+
+    // Navigate based on type
+    switch (item.model) {
+      case 'dashboard':
+        navigate(`/dashboard/${item.id}`);
+        break;
+      case 'card':
+      case 'dataset':
+        navigate(`/question/${item.id}`);
+        break;
+      case 'collection':
+        // Navigation handled automatically
+        console.log('Navigating to collection:', item.name);
+        break;
+    }
+  };
+
+  return (
+    <CollectionBrowser
+      collectionId="root"
+      onClick={handleItemClick}
+    />
+  );
+}
+```
+
+## Analytics integration
+
+### Google Analytics
+
+```tsx
+import { InteractiveDashboard } from '@metabase/embedding-sdk-react';
+import ReactGA from 'react-ga4';
+
+function AnalyticsDashboard() {
+  return (
+    <InteractiveDashboard
+      dashboardId={1}
+      onLoad={(dashboard) => {
+        ReactGA.event({
+          category: 'Dashboard',
+          action: 'View',
+          label: dashboard?.name,
+        });
+      }}
+    />
+  );
+}
+```
+
+### Segment
+
+```tsx
+import { InteractiveQuestion } from '@metabase/embedding-sdk-react';
+import { useAnalytics } from '@segment/analytics-react';
+
+function QuestionView() {
+  const analytics = useAnalytics();
+
+  return (
+    <InteractiveQuestion
+      questionId={1}
+      onRun={(question) => {
+        analytics.track('Question Executed', {
+          questionId: question.id(),
+          questionName: question.displayName(),
+        });
+      }}
+      onSave={(question) => {
+        analytics.track('Question Saved', {
+          questionId: question.id(),
+          questionName: question.displayName(),
+        });
+      }}
+    />
+  );
+}
+```
+
+### Mixpanel
+
+```tsx
+import { InteractiveDashboard } from '@metabase/embedding-sdk-react';
+import mixpanel from 'mixpanel-browser';
+
+function Dashboard() {
+  return (
+    <InteractiveDashboard
+      dashboardId={1}
+      onLoad={(dashboard) => {
+        mixpanel.track('Dashboard Viewed', {
+          dashboard_id: dashboard?.id,
+          dashboard_name: dashboard?.name,
+          card_count: dashboard?.dashcards?.length,
+        });
+      }}
+    />
+  );
+}
+```
+
+## Error handling
+
+Handle errors using a custom error component:
+
+```tsx
+import { MetabaseProvider } from '@metabase/embedding-sdk-react';
+
+const CustomError = ({ message }) => {
+  // Log error to monitoring service
+  console.error('SDK Error:', message);
+  
+  // Track error
+  analytics.track('SDK Error', { message });
+
+  return (
+    <div className="error-container">
+      <h2>Something went wrong</h2>
+      <p>{message}</p>
+      <button onClick={() => window.location.reload()}>
+        Reload
+      </button>
+    </div>
+  );
+};
+
+function App() {
+  return (
+    <MetabaseProvider
+      authConfig={authConfig}
+      errorComponent={CustomError}
+    >
+      {/* Your app */}
+    </MetabaseProvider>
+  );
+}
+```
+
+## Performance monitoring
+
+```tsx
+import { InteractiveDashboard, MetabaseDashboard } from '@metabase/embedding-sdk-react';
+import { useEffect, useState } from 'react';
+
+function PerformanceMonitoring() {
+  const [startTime] = useState(performance.now());
+  const [metrics, setMetrics] = useState<{
+    structureLoadTime?: number;
+    fullLoadTime?: number;
+  }>({});
+
+  return (
+    <>
+      {metrics.fullLoadTime && (
+        <div className="performance-metrics">
+          <p>Structure load: {metrics.structureLoadTime?.toFixed(0)}ms</p>
+          <p>Full load: {metrics.fullLoadTime?.toFixed(0)}ms</p>
+        </div>
+      )}
+      
+      <InteractiveDashboard
+        dashboardId={1}
+        onLoadWithoutCards={(dashboard) => {
+          const loadTime = performance.now() - startTime;
+          setMetrics(prev => ({ ...prev, structureLoadTime: loadTime }));
+          
+          // Send to monitoring service
+          monitoring.recordMetric('dashboard.structure.load', loadTime);
+        }}
+        onLoad={(dashboard) => {
+          const loadTime = performance.now() - startTime;
+          setMetrics(prev => ({ ...prev, fullLoadTime: loadTime }));
+          
+          // Send to monitoring service
+          monitoring.recordMetric('dashboard.full.load', loadTime);
+        }}
+      />
+    </>
+  );
+}
+```
+
+## Event handler types
+
+```typescript
+import type {
+  MetabaseDashboard,
+  MetabaseQuestion,
+  MetabaseCollectionItem,
+  SdkEventHandlersConfig,
+} from '@metabase/embedding-sdk-react';
+
+// Global event handlers
+const eventHandlers: SdkEventHandlersConfig = {
+  onDashboardLoad: (dashboard: MetabaseDashboard | null) => {
+    // Handle dashboard load
+  },
+  onDashboardLoadWithoutCards: (dashboard: MetabaseDashboard | null) => {
+    // Handle dashboard structure load
+  },
+};
+
+// Component-specific handlers
+type OnLoad = (dashboard: MetabaseDashboard | null) => void;
+type OnRun = (question: MetabaseQuestion) => void;
+type OnSave = (question: MetabaseQuestion) => void;
+type OnClick = (item: MetabaseCollectionItem) => void;
+```
+
+## Best practices
+
+### Debounce frequent events
+
+For events that fire frequently, consider debouncing:
+
+```tsx
+import { useCallback } from 'react';
+import { debounce } from 'lodash';
+
+function QuestionView() {
+  const debouncedRun = useCallback(
+    debounce((question) => {
+      console.log('Question run:', question);
+      analytics.track('Question Run', { questionId: question.id() });
+    }, 1000),
+    []
+  );
+
+  return (
+    <InteractiveQuestion
+      questionId={1}
+      onRun={debouncedRun}
+    />
+  );
+}
+```
+
+### Use error boundaries
+
+```tsx
+import { Component, ReactNode } from 'react';
+
+class ErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Error caught:', error, errorInfo);
+    analytics.track('Component Error', { error: error.message });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <h1>Something went wrong.</h1>;
+    }
+    return this.props.children;
+  }
+}
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <MetabaseProvider authConfig={authConfig}>
+        <InteractiveDashboard dashboardId={1} />
+      </MetabaseProvider>
+    </ErrorBoundary>
+  );
+}
+```
+
+### Track user journeys
+
+```tsx
+import { useState } from 'react';
+
+function Analytics() {
+  const [journey, setJourney] = useState<string[]>([]);
+
+  const addToJourney = (event: string) => {
+    setJourney(prev => [...prev, event]);
+    console.log('User journey:', [...journey, event]);
+  };
+
+  return (
+    <CollectionBrowser
+      onClick={(item) => {
+        addToJourney(`clicked_${item.model}_${item.id}`);
+      }}
+    />
+  );
+}
+```
+
+## Related
+
+- [Configuration](/sdk/configuration) - SDK configuration
+- [TypeScript types](/sdk/typescript-types) - Type definitions

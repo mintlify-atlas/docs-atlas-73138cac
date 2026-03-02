@@ -1,0 +1,561 @@
+---
+title: 'Dashboard filters'
+description: 'Add interactive filters to dashboards to let users explore data across multiple questions without creating duplicate dashboards.'
+---
+
+Dashboard filters allow people to change what data is displayed or how it's displayed across multiple questions at once. Instead of creating separate dashboards for different time periods or categories, you can create one flexible dashboard with filters.
+
+## Filters vs parameters
+
+There are two types of widgets you can add to dashboards:
+
+<Tabs>
+  <Tab title="Filters">
+    **Filters determine WHAT data to show**
+    
+    Examples:
+    - Show only orders from the last 30 days
+    - Display data for a specific region or category
+    - Filter to customers with high lifetime value
+    
+    Filter types:
+    - Date picker
+    - Location
+    - Text or category
+    - Number
+    - ID
+    - Boolean
+  </Tab>
+  
+  <Tab title="Parameters">
+    **Parameters determine HOW to show data**
+    
+    Examples:
+    - Change time grouping from daily to monthly
+    - Switch aggregation method
+    - Adjust visualization granularity
+    
+    Parameter types:
+    - Time grouping
+  </Tab>
+</Tabs>
+
+## Adding a filter to your dashboard
+
+<Steps>
+  <Step title="Enter edit mode">
+    Click the **pencil** icon to start editing your dashboard.
+  </Step>
+  
+  <Step title="Choose filter location">
+    You can add filters to:
+    - **The dashboard itself** (top bar): Visible across all tabs
+    - **Heading cards**: Scoped to cards below the heading on current tab
+    - **Question cards**: Only affects that specific card
+    
+    Click the **filter** icon where you want to add the filter.
+  </Step>
+  
+  <Step title="Select filter type">
+    Choose the type that matches your data:
+    - Date picker (for dates)
+    - Text or category (for labels and categories)
+    - Number (for numeric values)
+    - Location (for geographic data)
+    - ID (for IDs and codes)
+    - Boolean (for true/false values)
+  </Step>
+  
+  <Step title="Configure and connect">
+    Set up the filter options and connect it to the cards you want it to affect.
+  </Step>
+  
+  <Step title="Save your dashboard">
+    Click **Save** to apply your changes.
+  </Step>
+</Steps>
+
+<Info>
+Filters only appear on tabs where they're connected to at least one card. If a filter isn't connected to any cards on the current tab, it won't be visible.
+</Info>
+
+## Date picker filters
+
+Date filters let users filter time-based data:
+
+<Tabs>
+  <Tab title="Single date">
+    Pick one specific date using a calendar widget.
+    
+    Best for:
+    - Viewing data for a specific day
+    - Selecting an exact date point
+  </Tab>
+  
+  <Tab title="Date range">
+    Select start and end dates to define a period.
+    
+    Best for:
+    - Custom time periods
+    - Comparing specific date ranges
+  </Tab>
+  
+  <Tab title="Relative date">
+    Dynamic date ranges that update automatically.
+    
+    Examples:
+    - Previous 7 days
+    - Current month
+    - Last quarter
+    - Next 30 days
+    
+    Best for:
+    - Always-current dashboards
+    - Rolling time windows
+  </Tab>
+  
+  <Tab title="Month and year">
+    Select a specific month and year from dropdowns.
+    
+    Best for:
+    - Monthly reports
+    - Year-over-year comparisons
+  </Tab>
+  
+  <Tab title="Quarter and year">
+    Pick a quarter (Q1, Q2, Q3, Q4) and year.
+    
+    Best for:
+    - Quarterly business reviews
+    - Seasonal analysis
+  </Tab>
+  
+  <Tab title="All options">
+    Provides all date filtering options in one widget - just like the query builder's date filter.
+  </Tab>
+</Tabs>
+
+<Tip>
+Use relative dates for dashboards that should stay current. "Previous 30 days" automatically adjusts to always show the last 30 days, no matter when you view the dashboard.
+</Tip>
+
+## Text or category filters
+
+Filter based on text values, labels, or categories:
+
+### Filter operators
+
+- **Is**: Matches specific values (dropdown or search)
+- **Is not**: Excludes specific values
+- **Contains**: Matches values containing the text
+- **Does not contain**: Excludes values with the text
+- **Starts with**: Matches values beginning with the text
+- **Ends with**: Matches values ending with the text
+
+### Widget types
+
+<Tabs>
+  <Tab title="Dropdown list">
+    Shows all possible values in a selectable list with checkboxes.
+    
+    **Pros:**
+    - Loads instantly from cache
+    - See all options at once
+    - Easy to select multiple values
+    
+    **Best for:**
+    - Columns with fewer than 100 unique values
+    - When users need to see all options
+    - Frequently filtered fields
+  </Tab>
+  
+  <Tab title="Search box">
+    Type to search for values with auto-suggest.
+    
+    **Pros:**
+    - Works well with many values
+    - Fast for users who know what they want
+    - Supports multiple selections
+    
+    **Best for:**
+    - Columns with 100-1000 values
+    - When users know what they're looking for
+    - Lists of names, products, or IDs
+  </Tab>
+  
+  <Tab title="Input box">
+    Plain text input without suggestions.
+    
+    **Pros:**
+    - Simple and fast
+    - Works with any number of values
+    - Good for partial matching
+    
+    **Best for:**
+    - Columns with many unique values
+    - Free text fields (comments, descriptions)
+    - Using "contains" or "starts with" operators
+  </Tab>
+</Tabs>
+
+<Note>
+If you don't see the dropdown list option, an admin needs to enable it in the metadata settings for that column, or you need to map the model column to a database field.
+</Note>
+
+## Number filters
+
+Filter based on numeric values:
+
+- **Equal to**: Exact match
+- **Not equal to**: Exclude specific value
+- **Between**: Range of values
+- **Greater than or equal to**: Minimum threshold
+- **Less than or equal to**: Maximum threshold
+
+Example uses:
+- Orders over $1,000
+- Products with inventory between 10 and 50
+- Accounts with exactly 5 users
+
+## Location filters
+
+Filter geographic data:
+
+<Tabs>
+  <Tab title="Country">
+    Select one or more countries from a searchable list.
+  </Tab>
+  
+  <Tab title="State">
+    Filter by state or province.
+  </Tab>
+  
+  <Tab title="City">
+    Select specific cities.
+  </Tab>
+  
+  <Tab title="ZIP / postal code">
+    Filter by ZIP or postal codes.
+  </Tab>
+</Tabs>
+
+All location filters support the same operators as text filters (is, is not, contains, etc.).
+
+## ID filters
+
+Simple input for IDs, order numbers, or unique identifiers:
+
+- Can accept single or multiple values
+- Plain text input box
+- Useful for looking up specific records
+
+Example: Filter dashboard to show data for customer IDs 1001, 1002, and 1003.
+
+## Boolean filters
+
+Filter true/false or yes/no values:
+
+- Simple toggle or dropdown
+- Good for status flags (active/inactive, paid/unpaid, etc.)
+- Can also handle null values (empty/not empty)
+
+## Time grouping parameters
+
+Change how time-based data is grouped across the dashboard:
+
+<Steps>
+  <Step title="Add time grouping parameter">
+    Select **Time grouping** when adding a new filter.
+  </Step>
+  
+  <Step title="Connect to date fields">
+    Map the parameter to datetime columns in your questions.
+  </Step>
+  
+  <Step title="Users can change grouping">
+    Choose to view data by:
+    - Minute / hour
+    - Day / week / month
+    - Quarter / year
+    - Day of week, month of year, etc.
+  </Step>
+</Steps>
+
+<Info>
+Time grouping parameters don't filter data - they change the aggregation level. All data points remain; they're just grouped differently.
+</Info>
+
+<Warning>
+For query builder questions, time grouping parameters can only connect to date fields in the final stage of the query. If your last stage is a filter or sort, time grouping won't work on earlier date fields.
+</Warning>
+
+## Connecting filters to cards
+
+After adding a filter, connect it to the questions you want it to affect:
+
+<Steps>
+  <Step title="Click on a card's dropdown">
+    While editing the filter, each card shows a dropdown to connect it to the filter.
+  </Step>
+  
+  <Step title="Select the field to filter">
+    Choose which column in that question the filter should affect.
+  </Step>
+  
+  <Step title="Repeat for other cards">
+    Connect the filter to all relevant cards on the dashboard.
+  </Step>
+</Steps>
+
+### Auto-connecting
+
+When you connect a filter to a card by selecting a field, Metabase offers to automatically connect the filter to other cards that have the same field. This saves time when you have many cards with the same column.
+
+Metabase will also try to auto-connect new cards you add later if they contain the field.
+
+<Tip>
+To undo auto-connecting, click the notification that appears or manually disconnect cards by clicking the X next to the connected field.
+</Tip>
+
+## Connecting filters to SQL questions
+
+For SQL questions to work with dashboard filters, the question must include variables:
+
+```sql
+SELECT *
+FROM orders
+WHERE {{status}} AND {{order_date}}
+```
+
+Then:
+1. Add the SQL question to your dashboard
+2. Create a dashboard filter matching the variable type
+3. Connect the dashboard filter to the SQL variable
+
+<Info>
+Use field filters in SQL questions (not basic variables) for better compatibility with dashboard filters and more flexible filter options.
+</Info>
+
+## Connecting filters to text cards
+
+Text cards can use filter values to create dynamic content:
+
+```markdown
+# Performance report [[for {{region}}]]
+
+Showing data [[from {{start_date}} to {{end_date}}]]
+```
+
+Variables:
+- Use `{{variable}}` to insert the filter value
+- Wrap text in `[[ ]]` to show it only when the filter has a value
+
+## Filter configuration options
+
+### Setting a default value
+
+Provide a starting value when the dashboard loads:
+
+1. Click the filter while editing
+2. Set the **Default value** in the sidebar
+3. Users can change it, but it starts with your default
+
+<Tip>
+Default values help users understand what the filter does and provide a good starting point for exploration.
+</Tip>
+
+### Requiring a filter
+
+Force users to select a filter value:
+
+1. Click the filter while editing  
+2. Toggle **Required** in the sidebar
+3. Set a default value (required when filter is required)
+
+Use required filters when:
+- Unfiltered queries would return too much data
+- The dashboard only makes sense with a filter applied
+- You want to reduce database load by preventing broad queries
+
+### Multi-select filters
+
+Allow selecting multiple values:
+
+1. Click the filter while editing
+2. Under **People can pick**, select "Multiple values"
+3. Save the dashboard
+
+Dropdown and search box widgets show checkboxes for multi-select.
+
+### Custom selectable values
+
+Control what values appear in dropdowns:
+
+<Tabs>
+  <Tab title="From connected fields">
+    Default behavior - shows all values from the connected columns.
+  </Tab>
+  
+  <Tab title="From another model or question">
+    Pull filter values from a different data source:
+    
+    1. Select this option
+    2. Choose a model or saved question
+    3. Pick which column contains the filter values
+    
+    Useful for:
+    - Curated lists of values
+    - Active/current records only
+    - Custom sort orders
+  </Tab>
+  
+  <Tab title="Custom list">
+    Manually enter specific values:
+    
+    1. Select this option
+    2. Type each value (press Enter after each)
+    3. Reorder by dragging
+    
+    Best for:
+    - Small, fixed lists
+    - Custom groupings
+    - Specific value sets
+  </Tab>
+</Tabs>
+
+## Filter organization
+
+### Reordering filters
+
+1. Enter dashboard edit mode
+2. Click the grabber handle (six dots) on the left of a filter
+3. Drag to reposition
+
+### Renaming filters
+
+1. Enter dashboard edit mode
+2. Click the filter
+3. Change the label text in the sidebar
+
+<Note>
+Renaming a filter only changes the display label. It doesn't affect which fields the filter is connected to.
+</Note>
+
+### Removing filters
+
+1. Enter dashboard edit mode
+2. Click the filter
+3. Click **Remove** in the sidebar
+4. Save the dashboard (or click Cancel to undo)
+
+## Linked filters
+
+Create filter dependencies where one filter's options depend on another filter's value.
+
+For example:
+- Select a country first, then state filter only shows states in that country
+- Choose a category, then product filter shows only products in that category
+
+This creates intuitive, cascading filter experiences.
+
+<Info>
+See the Linked filters documentation for detailed setup instructions.
+</Info>
+
+## Auto-apply filters
+
+Control when filters refresh the dashboard:
+
+<Tabs>
+  <Tab title="Auto-apply ON (default)">
+    Dashboard refreshes immediately when you change any filter value.
+    
+    **Best for:**
+    - Fast-loading dashboards
+    - Single-filter interactions
+    - Immediate feedback preference
+  </Tab>
+  
+  <Tab title="Auto-apply OFF">
+    Dashboard refreshes only when you click the **Apply** button.
+    
+    **Best for:**
+    - Slow or complex dashboards
+    - Adjusting multiple filters before refreshing
+    - Reducing database load
+    - Controlling when queries run
+  </Tab>
+</Tabs>
+
+To toggle auto-apply:
+1. View the dashboard (not in edit mode)
+2. Click the three-dot menu (**...**)
+3. Select **Edit settings**
+4. Toggle **Auto-apply filters**
+
+## Using dashboard filters
+
+Once filters are set up, users can:
+
+1. **Click the filter widget** to open the selection interface
+2. **Choose value(s)** from dropdown, search box, or calendar
+3. **View updated results** (or click Apply if auto-apply is off)
+4. **Clear the filter** by clicking the blue X
+
+<Info>
+Filter selections are personal to each user's view. If someone else views the same dashboard at the same time, they won't see your filter selections.
+</Info>
+
+## Best practices
+
+<CardGroup cols={2}>
+  <Card title="Start with key filters" icon="filter">
+    Place the most commonly used filters first. Users scan left-to-right.
+  </Card>
+  
+  <Card title="Use clear labels" icon="tag">
+    Name filters descriptively: "Order Status" not just "Status", "Customer Region" not "Region".
+  </Card>
+  
+  <Card title="Set helpful defaults" icon="star">
+    Provide default values that show meaningful data immediately.
+  </Card>
+  
+  <Card title="Choose the right widget" icon="gear">
+    Use dropdowns for short lists, search boxes for longer lists, input boxes for free text.
+  </Card>
+  
+  <Card title="Group related filters" icon="object-group">
+    Keep filters for similar concepts together (all location filters, all time filters).
+  </Card>
+  
+  <Card title="Don't over-filter" icon="triangle-exclamation">
+    Too many filters overwhelm users. Aim for 3-5 filters; use tabs for different views instead.
+  </Card>
+</CardGroup>
+
+## Dashboard filter permissions
+
+<Info>
+Users can interact with dashboard filters based on their permissions:
+- **View access**: Can use filters and see filtered results
+- **Curate access**: Can add, edit, and remove filters
+
+Data access permissions still apply - filters can't show data users don't have permission to see.
+</Info>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Creating dashboards" icon="table-columns" href="/dashboards/creating-dashboards">
+    Learn more about building effective dashboards
+  </Card>
+  
+  <Card title="Subscriptions" icon="paper-plane" href="/dashboards/subscriptions">
+    Send filtered dashboard results via email or Slack
+  </Card>
+  
+  <Card title="SQL editor" icon="code" href="/questions/sql-editor">
+    Add variables to SQL questions for dashboard compatibility
+  </Card>
+</CardGroup>

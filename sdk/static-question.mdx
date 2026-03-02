@@ -1,0 +1,378 @@
+---
+title: StaticQuestion
+description: Embed read-only questions with optional filtering capabilities
+---
+
+The `StaticQuestion` component renders a lightweight, read-only question visualization. It's ideal for displaying data without allowing users to edit the underlying query.
+
+## Basic usage
+
+```tsx
+import { StaticQuestion } from '@metabase/embedding-sdk-react';
+
+function Dashboard() {
+  return <StaticQuestion questionId={1} />;
+}
+```
+
+## With custom dimensions
+
+```tsx
+<StaticQuestion 
+  questionId={1} 
+  height={400}
+  width="100%"
+/>
+```
+
+## Using entity ID
+
+You can reference questions by their entity ID:
+
+```tsx
+<StaticQuestion questionId="abc123-entity-id" />
+```
+
+## Using signed embed token
+
+For guest embed scenarios, use a signed token:
+
+```tsx
+<StaticQuestion token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." />
+```
+
+<Note>
+When using a `token`, the `questionId` prop becomes optional.
+</Note>
+
+## Composing with sub-components
+
+Build custom layouts using sub-components:
+
+```tsx
+import { StaticQuestion } from '@metabase/embedding-sdk-react';
+
+function CustomStaticView() {
+  return (
+    <StaticQuestion questionId={1}>
+      <div className="header">
+        <StaticQuestion.Title />
+        <div className="actions">
+          <StaticQuestion.ChartTypeSelector />
+          <StaticQuestion.DownloadWidget />
+        </div>
+      </div>
+      
+      <div className="filters">
+        <StaticQuestion.Filter />
+        <StaticQuestion.ResetButton />
+      </div>
+      
+      <StaticQuestion.QuestionVisualization />
+    </StaticQuestion>
+  );
+}
+```
+
+## With filters
+
+Allow users to filter the data without editing the query:
+
+```tsx
+<StaticQuestion questionId={1}>
+  <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+    <StaticQuestion.Filter />
+    <StaticQuestion.ResetButton />
+  </div>
+  <StaticQuestion.QuestionVisualization />
+</StaticQuestion>
+```
+
+## With SQL parameters
+
+Provide initial values for SQL template tags:
+
+```tsx
+<StaticQuestion
+  questionId={5}
+  initialSqlParameters={{
+    user_id: '123',
+    start_date: '2024-01-01',
+    end_date: '2024-12-31',
+  }}
+/>
+```
+
+## Hiding parameters
+
+Hide specific parameters from the UI:
+
+```tsx
+<StaticQuestion
+  questionId={1}
+  hiddenParameters={['internal_param', 'debug_mode']}
+/>
+```
+
+## With custom title
+
+```tsx
+<StaticQuestion
+  questionId={1}
+  title="Q4 Sales Performance"
+/>
+```
+
+## With chart type selector
+
+Allow users to switch between visualization types:
+
+```tsx
+<StaticQuestion
+  questionId={1}
+  withChartTypeSelector={true}
+/>
+```
+
+## Disable downloads
+
+```tsx
+<StaticQuestion
+  questionId={1}
+  withDownloads={false}
+/>
+```
+
+## Available sub-components
+
+<CodeGroup>
+
+```tsx Filters
+<StaticQuestion questionId={1}>
+  <StaticQuestion.Filter />
+  <StaticQuestion.FilterDropdown />
+  <StaticQuestion.ResetButton />
+</StaticQuestion>
+```
+
+```tsx Visualization
+<StaticQuestion questionId={1}>
+  <StaticQuestion.Title />
+  <StaticQuestion.QuestionVisualization />
+  <StaticQuestion.ChartTypeSelector />
+  <StaticQuestion.ChartTypeDropdown />
+</StaticQuestion>
+```
+
+```tsx Settings and Actions
+<StaticQuestion questionId={1}>
+  <StaticQuestion.QuestionSettings />
+  <StaticQuestion.QuestionSettingsDropdown />
+  <StaticQuestion.DownloadWidget />
+  <StaticQuestion.AlertsButton />
+</StaticQuestion>
+```
+
+```tsx Data Exploration
+<StaticQuestion questionId={1}>
+  <StaticQuestion.Summarize />
+  <StaticQuestion.SummarizeDropdown />
+  <StaticQuestion.Breakout />
+  <StaticQuestion.BreakoutDropdown />
+</StaticQuestion>
+```
+
+```tsx SQL Parameters
+<StaticQuestion questionId={1}>
+  <StaticQuestion.SqlParametersList />
+</StaticQuestion>
+```
+
+</CodeGroup>
+
+## Complete example
+
+```tsx
+import { StaticQuestion } from '@metabase/embedding-sdk-react';
+
+function SalesReport() {
+  return (
+    <div className="report-container">
+      <StaticQuestion 
+        questionId={1}
+        height={500}
+        withChartTypeSelector={true}
+        withDownloads={true}
+        initialSqlParameters={{
+          region: 'North America',
+          year: '2024',
+        }}
+        style={{
+          border: '1px solid #e5e7eb',
+          borderRadius: '8px',
+          padding: '16px',
+        }}
+      >
+        <div className="question-header">
+          <StaticQuestion.Title />
+          <div className="question-actions">
+            <StaticQuestion.ChartTypeSelector />
+            <StaticQuestion.DownloadWidget />
+          </div>
+        </div>
+        
+        <div className="question-filters">
+          <StaticQuestion.Filter />
+          <StaticQuestion.ResetButton />
+        </div>
+        
+        <div className="question-content">
+          <StaticQuestion.QuestionVisualization />
+        </div>
+      </StaticQuestion>
+    </div>
+  );
+}
+```
+
+## Props
+
+<ParamField path="questionId" type="SdkQuestionId">
+  The ID of the question. Can be:
+  - Numerical ID (e.g., `1`)
+  - Entity ID string (e.g., `"abc123"`)
+  
+  Optional when using `token`.
+</ParamField>
+
+<ParamField path="token" type="string">
+  Signed token for guest embed. When provided, `questionId` becomes optional.
+</ParamField>
+
+<ParamField path="height" type="number | string">
+  Height of the component (e.g., `400` or `"100%"`).
+</ParamField>
+
+<ParamField path="width" type="number | string">
+  Width of the component.
+</ParamField>
+
+<ParamField path="style" type="React.CSSProperties">
+  Custom CSS styles.
+</ParamField>
+
+<ParamField path="className" type="string">
+  Custom CSS class name.
+</ParamField>
+
+<ParamField path="withChartTypeSelector" type="boolean" default="false">
+  Whether to show the chart type selector.
+</ParamField>
+
+<ParamField path="withDownloads" type="boolean" default="true">
+  Whether to enable download functionality.
+</ParamField>
+
+<ParamField path="withAlerts" type="boolean" default="false">
+  Whether to enable alerts functionality.
+</ParamField>
+
+<ParamField path="initialSqlParameters" type="SqlParameterValues">
+  Initial values for SQL template tags.
+</ParamField>
+
+<ParamField path="hiddenParameters" type="string[]">
+  List of parameter names to hide from the UI.
+</ParamField>
+
+<ParamField path="title" type="string">
+  Custom title to display instead of the question's title.
+</ParamField>
+
+<ParamField path="children" type="ReactNode">
+  Custom layout using sub-components.
+</ParamField>
+
+## Sub-components reference
+
+### StaticQuestion.Filter
+Filter controls for the question.
+
+### StaticQuestion.FilterDropdown
+Dropdown menu for filter controls.
+
+### StaticQuestion.ResetButton
+Button to reset filters.
+
+### StaticQuestion.Title
+Question title display.
+
+### StaticQuestion.Summarize
+Summarization controls.
+
+### StaticQuestion.SummarizeDropdown
+Dropdown menu for summarization.
+
+### StaticQuestion.QuestionVisualization
+The main visualization display.
+
+### StaticQuestion.ChartTypeSelector
+Selector for changing the chart type.
+
+### StaticQuestion.ChartTypeDropdown
+Dropdown menu for chart types.
+
+### StaticQuestion.QuestionSettings
+Question settings controls.
+
+### StaticQuestion.QuestionSettingsDropdown
+Dropdown menu for question settings.
+
+### StaticQuestion.Breakout
+Breakout/group by controls.
+
+### StaticQuestion.BreakoutDropdown
+Dropdown menu for breakout options.
+
+### StaticQuestion.DownloadWidget
+Download controls.
+
+### StaticQuestion.DownloadWidgetDropdown
+Dropdown menu for download options.
+
+### StaticQuestion.AlertsButton
+Button to manage question alerts.
+
+### StaticQuestion.SqlParametersList
+List of SQL template tag parameters.
+
+## TypeScript types
+
+```typescript
+import type {
+  StaticQuestionProps,
+  StaticQuestionComponents,
+  SdkQuestionId,
+  SqlParameterValues,
+} from '@metabase/embedding-sdk-react';
+```
+
+## When to use StaticQuestion vs InteractiveQuestion
+
+Use `StaticQuestion` when:
+- You want to display data without allowing query editing
+- You need a lightweight, read-only visualization
+- Users should only be able to filter pre-defined parameters
+- You're embedding in a dashboard-like layout
+
+Use `InteractiveQuestion` when:
+- Users need to explore and modify queries
+- You want to enable drill-through actions
+- Users should be able to save modified questions
+- You need full query builder functionality
+
+## Related
+
+- [InteractiveQuestion](/sdk/interactive-question) - Interactive question component
+- [Custom styling](/sdk/custom-styling) - Styling questions
+- [Event handlers](/sdk/event-handlers) - Working with events

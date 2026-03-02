@@ -1,0 +1,421 @@
+---
+title: Embedding
+description: Embed Metabase dashboards and questions in your applications
+---
+
+The Embedding API allows you to embed Metabase content (dashboards and questions) into external applications with secure, signed URLs.
+
+## Embedding overview
+
+Metabase supports two types of embedding:
+
+- **Public embedding** - No authentication required, uses UUID-based URLs
+- **Signed embedding** - Secure, token-based embedding with parameter locking
+
+<Note>
+This page covers programmatic embedding. Public embedding is covered in the [Public API](/api/public) documentation.
+</Note>
+
+## Enable embedding
+
+Before you can embed content, enable embedding in your Metabase settings:
+
+1. Go to Admin > Settings > Embedding
+2. Enable "Embedded analytics"
+3. Generate or set your embedding secret key
+
+<Warning>
+Keep your embedding secret key secure. It's used to sign embedding tokens and should never be exposed in client-side code.
+</Warning>
+
+## Enable embedding on content
+
+To make a dashboard or question embeddable, update its `enable_embedding` property.
+
+### Enable embedding on a card
+
+```bash
+PUT /api/card/{id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X PUT \
+  https://your-metabase.com/api/card/1 \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "enable_embedding": true,
+    "embedding_params": {
+      "category": "enabled",
+      "date_range": "locked"
+    }
+  }'
+```
+</CodeGroup>
+
+### Enable embedding on a dashboard
+
+```bash
+PUT /api/dashboard/{id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X PUT \
+  https://your-metabase.com/api/dashboard/1 \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "enable_embedding": true,
+    "embedding_params": {
+      "user_id": "locked",
+      "date_range": "enabled"
+    }
+  }'
+```
+</CodeGroup>
+
+## Embedding parameters
+
+<ParamField body="enable_embedding" type="boolean" required>
+  Enable or disable embedding for this content
+</ParamField>
+
+<ParamField body="embedding_params" type="object">
+  Map of parameter names to their embedding status:
+  
+  - `"disabled"` - Parameter cannot be set
+  - `"enabled"` - Parameter can be passed in the embedding URL
+  - `"locked"` - Parameter must be set server-side and cannot be changed
+</ParamField>
+
+## Generate embedding token
+
+To embed content securely, you need to generate a signed JWT token on your server.
+
+### Token payload
+
+```javascript
+const payload = {
+  resource: { dashboard: 1 },  // or { question: 1 }
+  params: {
+    user_id: 123,              // locked parameter values
+    date_range: "last-30-days"
+  },
+  exp: Math.round(Date.now() / 1000) + (10 * 60) // 10 minute expiration
+};
+```
+
+### Sign the token
+
+<CodeGroup>
+```javascript Node.js
+const jwt = require('jsonwebtoken');
+
+const METABASE_SECRET_KEY = process.env.METABASE_SECRET_KEY;
+
+const payload = {
+  resource: { dashboard: 1 },
+  params: {
+    user_id: 123
+  },
+  exp: Math.round(Date.now() / 1000) + (10 * 60)
+};
+
+const token = jwt.sign(payload, METABASE_SECRET_KEY);
+```
+
+```python Python
+import jwt
+import time
+import os
+
+METABASE_SECRET_KEY = os.getenv('METABASE_SECRET_KEY')
+
+payload = {
+    'resource': {'dashboard': 1},
+    'params': {
+        'user_id': 123
+    },
+    'exp': round(time.time()) + (10 * 60)
+}
+
+token = jwt.encode(payload, METABASE_SECRET_KEY, algorithm='HS256')
+```
+
+```ruby Ruby
+require 'jwt'
+
+METABASE_SECRET_KEY = ENV['METABASE_SECRET_KEY']
+
+payload = {
+  resource: { dashboard: 1 },
+  params: {
+    user_id: 123
+  },
+  exp: Time.now.to_i + (10 * 60)
+}
+
+token = JWT.encode(payload, METABASE_SECRET_KEY, 'HS256')
+```
+</CodeGroup>
+
+## Embed URL structure
+
+### Dashboard embedding
+
+```
+https://your-metabase.com/embed/dashboard/TOKEN#bordered=true&titled=true
+```
+
+### Question embedding
+
+```
+https://your-metabase.com/embed/question/TOKEN#bordered=true&titled=true
+```
+
+## URL parameters
+
+Customize the embedded appearance with URL hash parameters:
+
+<ParamField query="bordered" type="boolean">
+  Show border around the embed (default: true)
+</ParamField>
+
+<ParamField query="titled" type="boolean">
+  Show title (default: true)
+</ParamField>
+
+<ParamField query="theme" type="string">
+  Color theme: null (default), "night", or "transparent"
+</ParamField>
+
+<ParamField query="hide_parameters" type="string">
+  Comma-separated list of parameters to hide
+</ParamField>
+
+<ParamField query="hide_download_button" type="boolean">
+  Hide download button (default: false)
+</ParamField>
+
+## Example implementation
+
+### Server-side token generation
+
+<CodeGroup>
+```javascript Express.js
+const express = require('express');
+const jwt = require('jsonwebtoken');
+
+const app = express();
+const METABASE_SECRET_KEY = process.env.METABASE_SECRET_KEY;
+
+app.get('/embed/dashboard/:dashboardId', (req, res) => {
+  const userId = req.user.id; // from your auth system
+  
+  const payload = {
+    resource: { dashboard: parseInt(req.params.dashboardId) },
+    params: {
+      user_id: userId  // locked parameter
+    },
+    exp: Math.round(Date.now() / 1000) + (10 * 60)
+  };
+  
+  const token = jwt.sign(payload, METABASE_SECRET_KEY);
+  
+  res.json({
+    url: `https://metabase.example.com/embed/dashboard/${token}#bordered=true&titled=true`
+  });
+});
+```
+
+```python Flask
+from flask import Flask, jsonify, request
+import jwt
+import time
+import os
+
+app = Flask(__name__)
+METABASE_SECRET_KEY = os.getenv('METABASE_SECRET_KEY')
+
+@app.route('/embed/dashboard/<int:dashboard_id>')
+def embed_dashboard(dashboard_id):
+    user_id = request.user.id  # from your auth system
+    
+    payload = {
+        'resource': {'dashboard': dashboard_id},
+        'params': {
+            'user_id': user_id  # locked parameter
+        },
+        'exp': round(time.time()) + (10 * 60)
+    }
+    
+    token = jwt.encode(payload, METABASE_SECRET_KEY, algorithm='HS256')
+    
+    return jsonify({
+        'url': f'https://metabase.example.com/embed/dashboard/{token}#bordered=true&titled=true'
+    })
+```
+</CodeGroup>
+
+### Client-side iframe
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Embedded Dashboard</title>
+    <style>
+        #embed-container {
+            width: 100%;
+            height: 800px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <iframe
+        id="embed-container"
+        src=""
+        frameborder="0"
+        allowtransparency
+    ></iframe>
+
+    <script>
+        // Fetch the signed embedding URL from your server
+        fetch('/embed/dashboard/1')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('embed-container').src = data.url;
+            });
+    </script>
+</body>
+</html>
+```
+
+## List embeddable content
+
+### Get embeddable cards
+
+```bash
+GET /api/card/embeddable
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/card/embeddable \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+Returns all cards where `enable_embedding` is true.
+
+### Get embeddable dashboards
+
+```bash
+GET /api/dashboard/embeddable
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/dashboard/embeddable \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+## Embedding types
+
+### Static embedding
+
+Embed with fixed parameters that cannot be changed:
+
+```javascript
+const payload = {
+  resource: { dashboard: 1 },
+  params: {
+    user_id: 123  // locked - cannot be changed by end user
+  }
+};
+```
+
+### Dynamic filtering
+
+Allow users to change certain parameters:
+
+```javascript
+const payload = {
+  resource: { dashboard: 1 },
+  params: {
+    user_id: 123,           // locked
+    date_range: "last-30-days"  // enabled - can be changed via URL
+  }
+};
+```
+
+URL: `https://metabase.com/embed/dashboard/TOKEN#bordered=true&date_range=last-7-days`
+
+## Best practices
+
+<Tip>
+**Embedding security tips:**
+- Always generate tokens server-side
+- Never expose your embedding secret key
+- Use short token expiration times (5-10 minutes)
+- Implement proper user authentication before generating tokens
+- Use locked parameters for user-specific data filtering
+- Regularly rotate your embedding secret key
+</Tip>
+
+## Token expiration
+
+Tokens include an `exp` (expiration) claim:
+
+```javascript
+const exp = Math.round(Date.now() / 1000) + (10 * 60); // 10 minutes
+```
+
+<Note>
+When a token expires, the embed will stop working. Implement token refresh logic in your application.
+</Note>
+
+## Responsive embedding
+
+Make embeds responsive with CSS:
+
+```css
+.embed-container {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    height: 0;
+    overflow: hidden;
+}
+
+.embed-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+```
+
+## Error handling
+
+<ResponseField name="400 Bad Request" type="error">
+  Invalid token or malformed request
+</ResponseField>
+
+<ResponseField name="401 Unauthorized" type="error">
+  Invalid or expired token
+</ResponseField>
+
+<ResponseField name="403 Forbidden" type="error">
+  Embedding not enabled for this resource
+</ResponseField>
+
+<ResponseField name="404 Not Found" type="error">
+  Dashboard or question not found
+</ResponseField>

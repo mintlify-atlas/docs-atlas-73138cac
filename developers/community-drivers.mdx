@@ -1,0 +1,156 @@
+---
+title: Community drivers
+description: Database drivers built and maintained by the Metabase community
+---
+
+In addition to [officially supported databases](https://www.metabase.com/docs/latest/databases/connecting), community members build and maintain drivers for additional databases. These drivers extend Metabase's capabilities to work with a wide variety of data sources.
+
+<Warning>
+Community drivers are not supported on [Metabase Cloud](https://www.metabase.com/cloud/). They are only available for self-hosted installations.
+</Warning>
+
+## How to use a community driver
+
+To use a community driver with your self-hosted Metabase:
+
+<Steps>
+  <Step title="Download the driver JAR">
+    Visit the driver's GitHub repository and download the latest JAR file from the Releases section.
+  </Step>
+  
+  <Step title="Copy to plugins directory">
+    Copy the JAR file to your Metabase's `plugins` directory (in the same location as your `metabase.jar`):
+    
+    ```bash
+    # Example directory structure
+    /path/to/metabase/
+    ├── metabase.jar
+    └── plugins/
+        └── my-driver.jar
+    ```
+  </Step>
+  
+  <Step title="Restart Metabase">
+    Restart your Metabase instance to load the new driver.
+  </Step>
+  
+  <Step title="Connect to your database">
+    The new database type should now appear in the database connection options.
+  </Step>
+</Steps>
+
+<Note>
+You can change the plugins directory location by setting the `MB_PLUGINS_DIR` environment variable.
+</Note>
+
+## Security and trust
+
+<Warning>
+**Install drivers at your own risk.** Community drivers run as part of your Metabase instance and have access to anything your Metabase has access to. We cannot vet or guarantee the security of third-party drivers.
+</Warning>
+
+Before installing a community driver:
+
+- Review the source code on GitHub
+- Check the driver's maintenance status and activity
+- Verify it's from a trusted source
+- Test in a non-production environment first
+
+## Available community drivers
+
+These are currently known third-party database drivers for Metabase:
+
+| Database | Repository | GitHub Stars | Latest Release |
+|----------|-----------|--------------|----------------|
+| [CSV](https://github.com/Markenson/csv-metabase-driver) | Markenson/csv-metabase-driver | ![GitHub stars](https://img.shields.io/github/stars/Markenson/csv-metabase-driver) | ![Release](https://img.shields.io/github/release-date-pre/Markenson/csv-metabase-driver) |
+| [Databend](https://github.com/databendcloud/metabase-databend-driver) | databendcloud/metabase-databend-driver | ![GitHub stars](https://img.shields.io/github/stars/databendcloud/metabase-databend-driver) | ![Release](https://img.shields.io/github/release-date-pre/databendcloud/metabase-databend-driver) |
+| [DB2 for LUW](https://github.com/alisonrafael/metabase-db2-driver) | alisonrafael/metabase-db2-driver | ![GitHub stars](https://img.shields.io/github/stars/alisonrafael/metabase-db2-driver) | ![Release](https://img.shields.io/github/release-date-pre/alisonrafael/metabase-db2-driver) |
+| [IBM i](https://github.com/damienchambe/metabase-ibmi-driver) | damienchambe/metabase-ibmi-driver | ![GitHub stars](https://img.shields.io/github/stars/damienchambe/metabase-ibmi-driver) | ![Release](https://img.shields.io/github/release-date-pre/damienchambe/metabase-ibmi-driver) |
+| [Dremio](https://github.com/Baoqi/metabase-dremio-driver) | Baoqi/metabase-dremio-driver | ![GitHub stars](https://img.shields.io/github/stars/Baoqi/metabase-dremio-driver) | ![Release](https://img.shields.io/github/release-date-pre/Baoqi/metabase-dremio-driver) |
+| [DuckDB](https://github.com/MotherDuck-Open-Source/metabase_duckdb_driver) | MotherDuck-Open-Source/metabase_duckdb_driver | ![GitHub stars](https://img.shields.io/github/stars/MotherDuck-Open-Source/metabase_duckdb_driver) | ![Release](https://img.shields.io/github/release-date-pre/MotherDuck-Open-Source/metabase_duckdb_driver) |
+| [Firebolt](https://github.com/firebolt-db/metabase-firebolt-driver) | firebolt-db/metabase-firebolt-driver | ![GitHub stars](https://img.shields.io/github/stars/firebolt-db/metabase-firebolt-driver) | ![Release](https://img.shields.io/github/release-date-pre/firebolt-db/metabase-firebolt-driver) |
+| [Firebird](https://github.com/evosec/metabase-firebird-driver) | evosec/metabase-firebird-driver | ![GitHub stars](https://img.shields.io/github/stars/evosec/metabase-firebird-driver) | ![Release](https://img.shields.io/github/release-date-pre/evosec/metabase-firebird-driver) |
+| [GreptimeDB](https://github.com/greptimeteam/greptimedb-metabase-driver) | greptimeteam/greptimedb-metabase-driver | ![GitHub stars](https://img.shields.io/github/stars/greptimeteam/greptimedb-metabase-driver) | ![Release](https://img.shields.io/github/release-date-pre/greptimeteam/greptimedb-metabase-driver) |
+| [Hydra](https://www.hydra.so/blog-posts/2022-09-28-metabase-and-hydra) | Uses official Postgres driver | N/A | N/A |
+| [Impala](https://github.com/brenoae/metabase-impala-driver) | brenoae/metabase-impala-driver | ![GitHub stars](https://img.shields.io/github/stars/brenoae/metabase-impala-driver) | ![Release](https://img.shields.io/github/release-date-pre/brenoae/metabase-impala-driver) |
+| [InterSystems IRIS](https://github.com/Siddardar/metabase-iris-driver) | Siddardar/metabase-iris-driver | ![GitHub stars](https://img.shields.io/github/stars/Siddardar/metabase-iris-driver) | ![Release](https://img.shields.io/github/release-date-pre/Siddardar/metabase-iris-driver) |
+| [Materialize](https://github.com/MaterializeInc/metabase-materialize-driver) | MaterializeInc/metabase-materialize-driver | ![GitHub stars](https://img.shields.io/github/stars/MaterializeInc/metabase-materialize-driver) | ![Release](https://img.shields.io/github/release-date-pre/MaterializeInc/metabase-materialize-driver) |
+| [Neo4j](https://github.com/StronkMan/metabase-neo4j-driver) | StronkMan/metabase-neo4j-driver | ![GitHub stars](https://img.shields.io/github/stars/StronkMan/metabase-neo4j-driver) | ![Release](https://img.shields.io/github/release-date-pre/StronkMan/metabase-neo4j-driver) |
+| [NetSuite](https://github.com/ericcj/metabase-netsuite-driver) | ericcj/metabase-netsuite-driver | ![GitHub stars](https://img.shields.io/github/stars/ericcj/metabase-netsuite-driver) | ![Release](https://img.shields.io/github/release-date-pre/ericcj/metabase-netsuite-driver) |
+| [Peaka](https://github.com/peakacom/metabase-driver) | peakacom/metabase-driver | ![GitHub stars](https://img.shields.io/github/stars/peakacom/metabase-driver) | ![Release](https://img.shields.io/github/release-date-pre/peakacom/metabase-driver) |
+| [SPARQL](https://github.com/jhisse/metabase-sparql-driver) | jhisse/metabase-sparql-driver | ![GitHub stars](https://img.shields.io/github/stars/jhisse/metabase-sparql-driver) | ![Release](https://img.shields.io/github/release-date-pre/jhisse/metabase-sparql-driver) |
+| [StarRocks](https://github.com/Carbon-Arc/metabase-starrocks-driver) | Carbon-Arc/metabase-starrocks-driver | ![GitHub stars](https://img.shields.io/github/stars/Carbon-Arc/metabase-starrocks-driver) | ![Release](https://img.shields.io/github/release-date-pre/Carbon-Arc/metabase-starrocks-driver) |
+| [Teradata](https://github.com/swisscom-bigdata/metabase-teradata-driver) | swisscom-bigdata/metabase-teradata-driver | ![GitHub stars](https://img.shields.io/github/stars/swisscom-bigdata/metabase-teradata-driver) | ![Release](https://img.shields.io/github/release-date-pre/swisscom-bigdata/metabase-teradata-driver) |
+
+## Finding more drivers
+
+If you don't see a driver for your database:
+
+1. **Search GitHub** for "Metabase driver" + your database name
+2. **Check GitHub issues** in the [Metabase repository](https://github.com/metabase/metabase/labels/Database%2F) for discussions
+3. **Ask in the community** on [Discourse](https://discourse.metabase.com/)
+
+## Getting support
+
+For issues with community drivers:
+
+- **Contact the driver author** - Check the driver's GitHub repository for issues and discussions
+- **Review the documentation** - Most drivers have installation and usage instructions in their README
+- **Ask in the community** - Other users may have encountered similar issues
+
+<Note>
+The Metabase team cannot provide support for community drivers. Please contact the driver maintainer for help.
+</Note>
+
+## Building your own driver
+
+Interested in creating a driver for a database that isn't supported yet?
+
+<Steps>
+  <Step title="Read the driver guide">
+    Check out our comprehensive [guide to building drivers](/developers/building-drivers).
+  </Step>
+  
+  <Step title="Study the driver interface">
+    Learn about the [driver interface](/developers/driver-interface) and what methods you need to implement.
+  </Step>
+  
+  <Step title="Review example drivers">
+    Look at existing [community drivers](#available-community-drivers) for inspiration and patterns.
+  </Step>
+  
+  <Step title="Share your driver">
+    Once built, share your driver with the community by:
+    - Publishing it on GitHub
+    - Creating releases with JAR files
+    - Submitting a PR to add it to this list
+  </Step>
+</Steps>
+
+## Driver compatibility
+
+<Warning>
+Community drivers may not be compatible with all Metabase versions. Check the driver's documentation for compatibility information.
+</Warning>
+
+When choosing a driver:
+
+- Check the last update date
+- Review compatibility notes in the README
+- Look for version tags matching your Metabase version
+- Test thoroughly before production use
+
+## Contributing to community drivers
+
+You can help improve existing community drivers by:
+
+- **Reporting bugs** - Open issues on the driver's GitHub repository
+- **Submitting fixes** - Contribute pull requests for bugs or features
+- **Improving documentation** - Help make installation and usage clearer
+- **Testing** - Verify the driver works with different Metabase versions
+
+## Next steps
+
+- Learn how to [build your own driver](/developers/building-drivers)
+- Understand the [driver interface](/developers/driver-interface)
+- Join the [Metabase community](https://discourse.metabase.com/) to discuss drivers

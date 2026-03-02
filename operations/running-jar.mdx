@@ -1,0 +1,603 @@
+---
+title: Running the Metabase JAR file
+description: Install and run Metabase as a standalone Java application using the JAR file for maximum control and flexibility.
+---
+
+The Metabase JAR file allows you to run Metabase directly on any system with Java installed. While Docker is recommended for production, the JAR provides more control and is useful for specific deployment scenarios.
+
+<Note>
+For easier deployment and management, we recommend [Docker](/operations/running-docker) for production. For the easiest option, use [Metabase Cloud](https://www.metabase.com/cloud/).
+</Note>
+
+## When to use the JAR
+
+The JAR file is ideal for:
+
+- Testing and local development
+- Environments where Docker isn't available
+- Custom deployment scenarios requiring direct Java control
+- Integration with existing Java application servers
+- Running on systems with restricted container support
+
+## Prerequisites
+
+### Java requirements
+
+<Warning>
+**Java 21 is required.** Earlier versions are not supported.
+</Warning>
+
+We recommend:
+- **Java 21 JRE** from [Eclipse Temurin](https://adoptium.net/) with HotSpot JVM
+- Works on x86 and ARM architectures
+- Linux, macOS, and Windows are supported
+
+### Check your Java version
+
+```bash
+java -version
+```
+
+Expected output:
+```
+openjdk version "21.0.1" 2023-10-17
+OpenJDK Runtime Environment Temurin-21.0.1+12 (build 21.0.1+12)
+OpenJDK 64-Bit Server VM Temurin-21.0.1+12 (build 21.0.1+12, mixed mode, sharing)
+```
+
+## Quick start (local testing)
+
+Get Metabase running quickly for testing and demos:
+
+<Steps>
+  <Step title="Download Metabase">
+    <Tabs>
+      <Tab title="Open Source">
+        Download the [Metabase OSS JAR](https://www.metabase.com/start/oss/jar)
+        
+        Or via command line:
+        ```bash
+        wget https://downloads.metabase.com/v0.54.1/metabase.jar
+        ```
+      </Tab>
+      
+      <Tab title="Pro/Enterprise">
+        Download the [Metabase Enterprise JAR](https://downloads.metabase.com/enterprise/latest/metabase.jar)
+        
+        Or via command line:
+        ```bash
+        wget https://downloads.metabase.com/enterprise/v0.54.1/metabase.jar
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+  
+  <Step title="Create a directory">
+    Create a dedicated directory for Metabase (important for H2 database files):
+    
+    ```bash
+    mkdir ~/metabase
+    mv metabase.jar ~/metabase/
+    cd ~/metabase
+    ```
+  </Step>
+  
+  <Step title="Run Metabase">
+    ```bash
+    java --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar
+    ```
+    
+    <Note>
+    The `--add-opens` flag is required for Java 9+.
+    </Note>
+  </Step>
+  
+  <Step title="Access Metabase">
+    Once you see "Metabase Initialization Complete", visit:
+    
+    `http://localhost:3000`
+    
+    Complete the setup wizard to create your admin account.
+  </Step>
+</Steps>
+
+### Understanding the startup logs
+
+You'll see logs like:
+
+```
+2024-03-02 10:29:34 INFO metabase.core :: Starting Metabase version v0.54.1
+2024-03-02 10:29:35 INFO metabase.db :: Setting up database...
+2024-03-02 10:29:38 INFO metabase.core :: Metabase Initialization COMPLETE
+```
+
+Wait for "Metabase Initialization COMPLETE" before accessing.
+
+### Using a different port
+
+By default, Metabase runs on port 3000. To use a different port:
+
+```bash
+export MB_JETTY_PORT=8080
+java --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar
+```
+
+Access at `http://localhost:8080`
+
+## Production installation
+
+<Warning>
+Do not use the default H2 database for production. Set up PostgreSQL or MySQL for your application database.
+</Warning>
+
+For production deployments, you need:
+
+1. A production-ready application database (PostgreSQL or MySQL)
+2. Process management (systemd, supervisor, or similar)
+3. Reverse proxy (nginx, Apache) for SSL/TLS
+4. Regular backups
+5. Monitoring and logging
+
+### Set up the application database
+
+<Tabs>
+  <Tab title="PostgreSQL">
+    Create an empty database:
+    
+    ```bash
+    createdb --encoding=UTF8 -e metabaseappdb
+    ```
+    
+    Configure environment variables:
+    
+    ```bash
+    export MB_DB_TYPE=postgres
+    export MB_DB_DBNAME=metabaseappdb
+    export MB_DB_PORT=5432
+    export MB_DB_USER=metabase_user
+    export MB_DB_PASS=secure_password
+    export MB_DB_HOST=localhost
+    ```
+  </Tab>
+  
+  <Tab title="MySQL">
+    Create a database:
+    
+    ```sql
+    CREATE DATABASE metabaseappdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    ```
+    
+    Configure environment variables:
+    
+    ```bash
+    export MB_DB_TYPE=mysql
+    export MB_DB_DBNAME=metabaseappdb
+    export MB_DB_PORT=3306
+    export MB_DB_USER=metabase_user
+    export MB_DB_PASS=secure_password
+    export MB_DB_HOST=localhost
+    ```
+  </Tab>
+</Tabs>
+
+[Learn more about configuring the application database](/operations/configuring-database)
+
+### Run with production database
+
+```bash
+export MB_DB_TYPE=postgres
+export MB_DB_DBNAME=metabaseappdb
+export MB_DB_PORT=5432
+export MB_DB_USER=metabase_user
+export MB_DB_PASS=secure_password
+export MB_DB_HOST=localhost
+java --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar
+```
+
+Metabase will create all necessary tables on first startup.
+
+## Running as a system service
+
+For production, run Metabase as a systemd service for automatic startup and management.
+
+### Create a systemd service
+
+<Steps>
+  <Step title="Create metabase user">
+    ```bash
+    sudo useradd -r -s /bin/false metabase
+    ```
+  </Step>
+  
+  <Step title="Set up directories">
+    ```bash
+    sudo mkdir -p /opt/metabase
+    sudo cp metabase.jar /opt/metabase/
+    sudo chown -R metabase:metabase /opt/metabase
+    ```
+  </Step>
+  
+  <Step title="Create environment file">
+    Create `/etc/default/metabase`:
+    
+    ```bash
+    MB_DB_TYPE=postgres
+    MB_DB_DBNAME=metabaseappdb
+    MB_DB_PORT=5432
+    MB_DB_USER=metabase_user
+    MB_DB_PASS=secure_password
+    MB_DB_HOST=localhost
+    
+    MB_JETTY_HOST=0.0.0.0
+    MB_JETTY_PORT=3000
+    
+    JAVA_OPTS="-Xmx2g"
+    ```
+    
+    Secure the file:
+    ```bash
+    sudo chmod 600 /etc/default/metabase
+    sudo chown metabase:metabase /etc/default/metabase
+    ```
+  </Step>
+  
+  <Step title="Create service file">
+    Create `/etc/systemd/system/metabase.service`:
+    
+    ```ini
+    [Unit]
+    Description=Metabase Analytics Server
+    After=network.target
+    
+    [Service]
+    Type=simple
+    User=metabase
+    Group=metabase
+    EnvironmentFile=/etc/default/metabase
+    WorkingDirectory=/opt/metabase
+    ExecStart=/usr/bin/java --add-opens java.base/java.nio=ALL-UNNAMED -jar /opt/metabase/metabase.jar
+    Restart=on-failure
+    RestartSec=10
+    StandardOutput=journal
+    StandardError=journal
+    SyslogIdentifier=metabase
+    
+    [Install]
+    WantedBy=multi-user.target
+    ```
+  </Step>
+  
+  <Step title="Enable and start service">
+    ```bash
+    sudo systemctl daemon-reload
+    sudo systemctl enable metabase
+    sudo systemctl start metabase
+    ```
+  </Step>
+  
+  <Step title="Check status">
+    ```bash
+    sudo systemctl status metabase
+    sudo journalctl -u metabase -f
+    ```
+  </Step>
+</Steps>
+
+### Manage the service
+
+<CodeGroup>
+
+```bash Start
+sudo systemctl start metabase
+```
+
+```bash Stop
+sudo systemctl stop metabase
+```
+
+```bash Restart
+sudo systemctl restart metabase
+```
+
+```bash View logs
+sudo journalctl -u metabase -f
+```
+
+```bash View status
+sudo systemctl status metabase
+```
+
+</CodeGroup>
+
+## Configuration options
+
+### Memory settings
+
+Set Java heap size for optimal performance:
+
+```bash
+export JAVA_OPTS="-Xmx4g"  # 4GB max heap
+java $JAVA_OPTS --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar
+```
+
+Recommended heap sizes:
+- **Small deployments**: 2GB (`-Xmx2g`)
+- **Medium deployments**: 4GB (`-Xmx4g`)
+- **Large deployments**: 8GB+ (`-Xmx8g`)
+
+### Timezone configuration
+
+Set timezone for reports and queries:
+
+```bash
+export JAVA_TIMEZONE=US/Pacific
+java --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar
+```
+
+### Binding address
+
+Listen on all interfaces (required for remote access):
+
+```bash
+export MB_JETTY_HOST=0.0.0.0
+java --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar
+```
+
+### SSL/HTTPS configuration
+
+Enable HTTPS directly in Metabase:
+
+```bash
+export MB_JETTY_SSL=true
+export MB_JETTY_SSL_PORT=8443
+export MB_JETTY_SSL_KEYSTORE=/path/to/keystore.jks
+export MB_JETTY_SSL_KEYSTORE_PASSWORD=keystorepassword
+java --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar
+```
+
+<Note>
+For production, we recommend using a reverse proxy (nginx, Apache) for SSL instead of Metabase's built-in SSL.
+</Note>
+
+## All environment variables
+
+See the complete list of configuration options:
+
+<Card title="Environment variables reference" icon="code" href="/operations/environment-variables">
+  Complete guide to all Metabase configuration options
+</Card>
+
+## Upgrading Metabase
+
+<Steps>
+  <Step title="Back up your database">
+    Always back up before upgrading:
+    
+    ```bash
+    # PostgreSQL
+    pg_dump -h localhost -U metabase_user metabaseappdb > backup.sql
+    
+    # MySQL
+    mysqldump -u metabase_user -p metabaseappdb > backup.sql
+    ```
+    
+    [Learn more about backing up](/operations/backing-up)
+  </Step>
+  
+  <Step title="Stop Metabase">
+    ```bash
+    # If running as service
+    sudo systemctl stop metabase
+    
+    # If running manually
+    # Press Ctrl+C to stop
+    ```
+  </Step>
+  
+  <Step title="Download new version">
+    ```bash
+    wget https://downloads.metabase.com/v0.54.1/metabase.jar -O metabase-new.jar
+    ```
+  </Step>
+  
+  <Step title="Replace JAR file">
+    ```bash
+    # Backup old JAR
+    mv /opt/metabase/metabase.jar /opt/metabase/metabase.jar.backup
+    
+    # Install new JAR
+    mv metabase-new.jar /opt/metabase/metabase.jar
+    sudo chown metabase:metabase /opt/metabase/metabase.jar
+    ```
+  </Step>
+  
+  <Step title="Start Metabase">
+    ```bash
+    sudo systemctl start metabase
+    ```
+    
+    Monitor logs for successful startup:
+    ```bash
+    sudo journalctl -u metabase -f
+    ```
+  </Step>
+</Steps>
+
+Metabase will automatically run database migrations on startup.
+
+<Card title="Full upgrade guide" icon="arrow-up" href="/operations/upgrading">
+  Complete upgrade documentation with troubleshooting
+</Card>
+
+## Reverse proxy configuration
+
+For production deployments, use a reverse proxy for SSL and better security.
+
+### Nginx example
+
+```nginx
+server {
+    listen 80;
+    server_name analytics.company.com;
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name analytics.company.com;
+    
+    ssl_certificate /etc/ssl/certs/metabase.crt;
+    ssl_certificate_key /etc/ssl/private/metabase.key;
+    
+    # SSL configuration
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+    
+    # Increase timeouts for long-running queries
+    proxy_connect_timeout 300;
+    proxy_send_timeout 300;
+    proxy_read_timeout 300;
+    send_timeout 300;
+    
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+### Apache example
+
+```apache
+<VirtualHost *:80>
+    ServerName analytics.company.com
+    Redirect permanent / https://analytics.company.com/
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName analytics.company.com
+    
+    SSLEngine on
+    SSLCertificateFile /etc/ssl/certs/metabase.crt
+    SSLCertificateKeyFile /etc/ssl/private/metabase.key
+    
+    ProxyPreserveHost On
+    ProxyPass / http://localhost:3000/
+    ProxyPassReverse / http://localhost:3000/
+    
+    # WebSocket support
+    RewriteEngine On
+    RewriteCond %{HTTP:Upgrade} websocket [NC]
+    RewriteCond %{HTTP:Connection} upgrade [NC]
+    RewriteRule ^/?(.*) "ws://localhost:3000/$1" [P,L]
+    
+    # Increase timeout for long queries
+    ProxyTimeout 300
+</VirtualHost>
+```
+
+## Troubleshooting
+
+### Port already in use
+
+```bash
+# Find process using port 3000
+lsof -i :3000
+
+# Kill the process or use a different port
+export MB_JETTY_PORT=8080
+```
+
+### Out of memory errors
+
+Increase Java heap size:
+
+```bash
+export JAVA_OPTS="-Xmx4g"
+java $JAVA_OPTS --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar
+```
+
+### Can't connect to database
+
+1. Verify database is running: `pg_isready` or `mysqladmin ping`
+2. Check credentials in environment variables
+3. Test connection: `psql -h localhost -U metabase_user metabaseappdb`
+4. Check firewall rules
+
+### Slow startup
+
+- Check available memory
+- Verify database performance
+- Review logs for errors: `journalctl -u metabase`
+- Increase timeout for database operations
+
+## Best practices
+
+<Steps>
+  <Step title="Use a production database">
+    Never use H2 in production. Configure PostgreSQL or MySQL.
+  </Step>
+  
+  <Step title="Run as a service">
+    Use systemd or similar for automatic startup and process management.
+  </Step>
+  
+  <Step title="Set up SSL/TLS">
+    Use a reverse proxy (nginx, Apache) for HTTPS.
+  </Step>
+  
+  <Step title="Configure backups">
+    Implement regular database backups and test restoration.
+  </Step>
+  
+  <Step title="Monitor resources">
+    Track CPU, memory, and database performance.
+  </Step>
+  
+  <Step title="Set appropriate memory">
+    Allocate sufficient heap size based on usage.
+  </Step>
+  
+  <Step title="Use a dedicated user">
+    Run Metabase as an unprivileged user for security.
+  </Step>
+  
+  <Step title="Centralize logs">
+    Forward logs to a logging system for monitoring.
+  </Step>
+</Steps>
+
+## Migrating from H2 to production
+
+If you've been using the default H2 database and need to migrate:
+
+<Card title="Migrate from H2" icon="database" href="https://www.metabase.com/docs/latest/installation-and-operation/migrating-from-h2">
+  Complete guide to migrating your data to PostgreSQL or MySQL
+</Card>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Configure database" icon="database" href="/operations/configuring-database">
+    Set up PostgreSQL or MySQL for production
+  </Card>
+  
+  <Card title="Environment variables" icon="code" href="/operations/environment-variables">
+    Complete configuration reference
+  </Card>
+  
+  <Card title="Backing up" icon="server" href="/operations/backing-up">
+    Implement backup procedures
+  </Card>
+  
+  <Card title="Upgrading" icon="arrow-up" href="/operations/upgrading">
+    Learn how to upgrade Metabase safely
+  </Card>
+</CardGroup>

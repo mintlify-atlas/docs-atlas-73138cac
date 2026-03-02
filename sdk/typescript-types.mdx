@@ -1,0 +1,519 @@
+---
+title: TypeScript types
+description: TypeScript type definitions for the Metabase Embedding SDK
+---
+
+The Metabase Embedding SDK is written in TypeScript and exports comprehensive type definitions for all components and APIs.
+
+## Importing types
+
+```typescript
+import type {
+  // Components
+  InteractiveQuestionProps,
+  StaticQuestionProps,
+  InteractiveDashboardProps,
+  StaticDashboardProps,
+  CollectionBrowserProps,
+  MetabaseProviderProps,
+  
+  // Data types
+  MetabaseQuestion,
+  MetabaseDashboard,
+  MetabaseCollectionItem,
+  MetabaseUser,
+  
+  // Configuration
+  MetabaseAuthConfig,
+  MetabaseTheme,
+  MetabasePluginsConfig,
+  SdkEventHandlersConfig,
+  
+  // IDs and tokens
+  SdkQuestionId,
+  SdkDashboardId,
+  SdkCollectionId,
+  SdkEntityToken,
+} from '@metabase/embedding-sdk-react';
+```
+
+## Component props
+
+### InteractiveQuestionProps
+
+```typescript
+import type { InteractiveQuestionProps } from '@metabase/embedding-sdk-react';
+
+const props: InteractiveQuestionProps = {
+  questionId: 1,
+  height: 400,
+  withChartTypeSelector: true,
+  isSaveEnabled: true,
+  onRun: (question) => console.log(question),
+  onSave: (question) => console.log(question),
+};
+```
+
+### StaticQuestionProps
+
+```typescript
+import type { StaticQuestionProps } from '@metabase/embedding-sdk-react';
+
+const props: StaticQuestionProps = {
+  questionId: 1,
+  height: 400,
+  token: 'abc123...',
+  withDownloads: true,
+  initialSqlParameters: {
+    user_id: '123',
+  },
+};
+```
+
+### InteractiveDashboardProps
+
+```typescript
+import type { InteractiveDashboardProps } from '@metabase/embedding-sdk-react';
+
+const props: InteractiveDashboardProps = {
+  dashboardId: 1,
+  initialParameters: {
+    region: 'North America',
+  },
+  withTitle: true,
+  autoRefreshInterval: 300,
+  onLoad: (dashboard) => console.log(dashboard),
+};
+```
+
+### StaticDashboardProps
+
+```typescript
+import type { StaticDashboardProps } from '@metabase/embedding-sdk-react';
+
+const props: StaticDashboardProps = {
+  dashboardId: 1,
+  token: 'abc123...',
+  withTitle: false,
+  withCardTitle: true,
+};
+```
+
+### CollectionBrowserProps
+
+```typescript
+import type { CollectionBrowserProps } from '@metabase/embedding-sdk-react';
+
+const props: CollectionBrowserProps = {
+  collectionId: 'root',
+  pageSize: 25,
+  visibleEntityTypes: ['dashboard', 'question'],
+  onClick: (item) => console.log(item),
+};
+```
+
+### MetabaseProviderProps
+
+```typescript
+import type { MetabaseProviderProps } from '@metabase/embedding-sdk-react';
+
+const props: MetabaseProviderProps = {
+  children: <div>App</div>,
+  authConfig: {
+    metabaseInstanceUrl: 'https://metabase.example.com',
+    jwtProviderUri: 'https://api.example.com/sso/metabase',
+  },
+  theme: {
+    colors: {
+      brand: '#9333EA',
+    },
+  },
+  locale: 'en',
+};
+```
+
+## Authentication types
+
+### MetabaseAuthConfig
+
+```typescript
+import type { 
+  MetabaseAuthConfig,
+  MetabaseAuthConfigWithJwt,
+  MetabaseAuthConfigWithApiKey,
+  MetabaseAuthConfigWithSaml,
+  MetabaseIsGuestAuthConfig,
+} from '@metabase/embedding-sdk-react';
+
+// JWT authentication
+const jwtAuth: MetabaseAuthConfigWithJwt = {
+  metabaseInstanceUrl: 'https://metabase.example.com',
+  jwtProviderUri: 'https://api.example.com/sso/metabase',
+  preferredAuthMethod: 'jwt',
+};
+
+// API key (development only)
+const apiKeyAuth: MetabaseAuthConfigWithApiKey = {
+  metabaseInstanceUrl: 'http://localhost:3000',
+  apiKey: 'dev-api-key',
+};
+
+// SAML authentication
+const samlAuth: MetabaseAuthConfigWithSaml = {
+  metabaseInstanceUrl: 'https://metabase.example.com',
+  preferredAuthMethod: 'saml',
+};
+
+// Guest mode
+const guestAuth: MetabaseIsGuestAuthConfig = {
+  metabaseInstanceUrl: 'https://metabase.example.com',
+  isGuest: true,
+};
+```
+
+## Theme types
+
+### MetabaseTheme
+
+```typescript
+import type { 
+  MetabaseTheme,
+  MetabaseColors,
+  MetabaseComponentTheme,
+  MetabaseThemePreset,
+} from '@metabase/embedding-sdk-react';
+
+const theme: MetabaseTheme = {
+  preset: 'light',
+  fontFamily: 'Inter',
+  fontSize: '14px',
+  lineHeight: 1.5,
+  colors: {
+    brand: '#9333EA',
+    'text-primary': '#1F2937',
+  },
+  components: {
+    dashboard: {
+      backgroundColor: '#F9FAFB',
+      card: {
+        backgroundColor: '#FFFFFF',
+        border: '1px solid #E5E7EB',
+      },
+    },
+  },
+};
+```
+
+### MetabaseColors
+
+```typescript
+import type { MetabaseColors } from '@metabase/embedding-sdk-react';
+
+const colors: MetabaseColors = {
+  brand: '#9333EA',
+  'brand-hover': '#7C3AED',
+  'text-primary': '#1F2937',
+  'text-secondary': '#6B7280',
+  background: '#FFFFFF',
+  border: '#E5E7EB',
+  positive: '#10B981',
+  negative: '#EF4444',
+  charts: ['#9333EA', '#3B82F6', '#10B981'],
+};
+```
+
+## Data types
+
+### MetabaseQuestion
+
+```typescript
+import type { MetabaseQuestion } from '@metabase/embedding-sdk-react';
+
+function handleQuestion(question: MetabaseQuestion) {
+  const id = question.id();
+  const name = question.displayName();
+  const display = question.display();
+  const query = question.query();
+  
+  console.log({ id, name, display, query });
+}
+```
+
+### MetabaseDashboard
+
+```typescript
+import type { MetabaseDashboard } from '@metabase/embedding-sdk-react';
+
+function handleDashboard(dashboard: MetabaseDashboard | null) {
+  if (!dashboard) return;
+  
+  console.log('ID:', dashboard.id);
+  console.log('Name:', dashboard.name);
+  console.log('Description:', dashboard.description);
+  console.log('Cards:', dashboard.dashcards?.length);
+  console.log('Tabs:', dashboard.tabs?.length);
+}
+```
+
+### MetabaseCollectionItem
+
+```typescript
+import type { MetabaseCollectionItem } from '@metabase/embedding-sdk-react';
+
+function handleCollectionItem(item: MetabaseCollectionItem) {
+  console.log('ID:', item.id);
+  console.log('Name:', item.name);
+  console.log('Type:', item.model); // 'dashboard' | 'card' | 'dataset' | 'collection'
+  console.log('Description:', item.description);
+  console.log('Entity ID:', item.entity_id);
+}
+```
+
+### MetabaseUser
+
+```typescript
+import type { MetabaseUser } from '@metabase/embedding-sdk-react';
+import { useCurrentUser } from '@metabase/embedding-sdk-react';
+
+function UserProfile() {
+  const user: MetabaseUser | null = useCurrentUser();
+  
+  if (!user) return null;
+  
+  return (
+    <div>
+      <p>Email: {user.email}</p>
+      <p>Name: {user.first_name} {user.last_name}</p>
+      <p>Admin: {user.is_superuser ? 'Yes' : 'No'}</p>
+    </div>
+  );
+}
+```
+
+## Plugin types
+
+### MetabasePluginsConfig
+
+```typescript
+import type { 
+  MetabasePluginsConfig,
+  MetabaseClickAction,
+  MetabaseDataPointObject,
+} from '@metabase/embedding-sdk-react';
+
+const plugins: MetabasePluginsConfig = {
+  mapQuestionClickActions: (
+    clickActions: MetabaseClickAction[],
+    clickedDataPoint: MetabaseDataPointObject
+  ) => {
+    return clickActions.filter(action => 
+      action.name !== 'automatic-insights'
+    );
+  },
+  dashboard: {
+    dashboardCardMenu: ({ dashcard, result }) => [
+      {
+        name: 'Custom Action',
+        onClick: () => console.log('Clicked'),
+      },
+    ],
+  },
+};
+```
+
+## Event handler types
+
+### SdkEventHandlersConfig
+
+```typescript
+import type { 
+  SdkEventHandlersConfig,
+  MetabaseDashboard,
+} from '@metabase/embedding-sdk-react';
+
+const eventHandlers: SdkEventHandlersConfig = {
+  onDashboardLoad: (dashboard: MetabaseDashboard | null) => {
+    console.log('Dashboard loaded:', dashboard);
+  },
+  onDashboardLoadWithoutCards: (dashboard: MetabaseDashboard | null) => {
+    console.log('Dashboard structure loaded');
+  },
+};
+```
+
+## ID types
+
+### SdkQuestionId
+
+```typescript
+import type { SdkQuestionId } from '@metabase/embedding-sdk-react';
+
+// Can be a number, string, or special values
+const questionIds: SdkQuestionId[] = [
+  1,                    // Numeric ID
+  'abc123',             // Entity ID
+  'new',                // New query builder question
+  'new-native',         // New SQL question
+];
+```
+
+### SdkDashboardId
+
+```typescript
+import type { SdkDashboardId } from '@metabase/embedding-sdk-react';
+
+const dashboardId: SdkDashboardId = 1;           // Numeric ID
+const entityId: SdkDashboardId = 'abc123';       // Entity ID
+```
+
+### SdkCollectionId
+
+```typescript
+import type { SdkCollectionId } from '@metabase/embedding-sdk-react';
+
+const collectionIds: SdkCollectionId[] = [
+  1,            // Numeric ID
+  'personal',   // User's personal collection
+  'root',       // Root collection
+  'tenant',     // Tenant collection
+];
+```
+
+## Parameter types
+
+### ParameterValues
+
+```typescript
+import type { ParameterValues } from '@metabase/embedding-sdk-react';
+
+const parameters: ParameterValues = {
+  region: 'North America',
+  date_range: '2024-01-01~2024-12-31',
+  status: 'active',
+};
+```
+
+### SqlParameterValues
+
+```typescript
+import type { SqlParameterValues } from '@metabase/embedding-sdk-react';
+
+const sqlParams: SqlParameterValues = {
+  user_id: '123',
+  start_date: '2024-01-01',
+  category: 'sales',
+};
+```
+
+## Utility types
+
+### SdkErrorComponent
+
+```typescript
+import type { 
+  SdkErrorComponent,
+  SdkErrorComponentProps,
+} from '@metabase/embedding-sdk-react';
+
+const ErrorComponent: SdkErrorComponent = ({ message }: SdkErrorComponentProps) => (
+  <div>
+    <h2>Error</h2>
+    <p>{message}</p>
+  </div>
+);
+```
+
+## Hook return types
+
+### useCurrentUser
+
+```typescript
+import { useCurrentUser } from '@metabase/embedding-sdk-react';
+import type { MetabaseUser } from '@metabase/embedding-sdk-react';
+
+function Component() {
+  const user: MetabaseUser | null = useCurrentUser();
+  // ...
+}
+```
+
+### useMetabaseAuthStatus
+
+```typescript
+import { useMetabaseAuthStatus } from '@metabase/embedding-sdk-react';
+import type { LoginStatus } from '@metabase/embedding-sdk-react';
+
+function Component() {
+  const status: LoginStatus = useMetabaseAuthStatus();
+  
+  if (status.status === 'success') {
+    console.log('Authenticated');
+  }
+}
+```
+
+## Type guards
+
+Create type guards for runtime type checking:
+
+```typescript
+import type { MetabaseCollectionItem } from '@metabase/embedding-sdk-react';
+
+function isDashboard(item: MetabaseCollectionItem): boolean {
+  return item.model === 'dashboard';
+}
+
+function isQuestion(item: MetabaseCollectionItem): boolean {
+  return item.model === 'card';
+}
+
+function isCollection(item: MetabaseCollectionItem): boolean {
+  return item.model === 'collection';
+}
+
+// Usage
+const item: MetabaseCollectionItem = /* ... */;
+
+if (isDashboard(item)) {
+  console.log('Dashboard:', item.name);
+}
+```
+
+## Generic component props
+
+```typescript
+import type { FC } from 'react';
+import type { InteractiveQuestionProps } from '@metabase/embedding-sdk-react';
+import { InteractiveQuestion } from '@metabase/embedding-sdk-react';
+
+type QuestionWrapperProps = {
+  title: string;
+} & InteractiveQuestionProps;
+
+const QuestionWrapper: FC<QuestionWrapperProps> = ({ title, ...questionProps }) => (
+  <div>
+    <h2>{title}</h2>
+    <InteractiveQuestion {...questionProps} />
+  </div>
+);
+```
+
+## Extending types
+
+```typescript
+import type { MetabaseTheme } from '@metabase/embedding-sdk-react';
+
+interface ExtendedTheme extends MetabaseTheme {
+  customProperty?: string;
+}
+
+const theme: ExtendedTheme = {
+  preset: 'light',
+  customProperty: 'value',
+};
+```
+
+## Related
+
+- [Configuration](/sdk/configuration) - SDK configuration
+- [Event handlers](/sdk/event-handlers) - Event handling

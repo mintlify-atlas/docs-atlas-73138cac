@@ -1,0 +1,398 @@
+---
+title: Development environment
+description: Set up your local development environment for Metabase
+---
+
+The Metabase application has two main components:
+
+1. **Backend** - Written in Clojure with a REST API for database queries
+2. **Frontend** - JavaScript single-page application providing the web UI
+
+Both components are built and assembled into a single JAR file. This guide will help you set up your development environment to work on either or both.
+
+## Quick start
+
+<Warning>
+New to the project? Use the automated setup script to install all required tools.
+</Warning>
+
+<Steps>
+  <Step title="Run the automated setup">
+    The setup script installs [mise](https://mise.jdx.dev) (a tool version manager) and all required dependencies:
+    
+    ```bash
+    ./bin/dev-install
+    ```
+    
+    This installs Node.js, Java, Clojure, Bun, and Babashka at the correct versions. Follow the prompts, then open a new terminal.
+  </Step>
+  
+  <Step title="Verify your setup (optional)">
+    If you already have your own setup or want to verify everything is configured correctly:
+    
+    ```bash
+    ./bin/mage doctor
+    ```
+  </Step>
+  
+  <Step title="Start the development environment">
+    Run both frontend and backend together:
+    
+    ```bash
+    bun run dev
+    ```
+    
+    Or run them separately in two terminal sessions (see below).
+  </Step>
+</Steps>
+
+Once everything is running, open your browser to `http://localhost:3000` to see Metabase.
+
+## Prerequisites
+
+If you prefer to install dependencies manually:
+
+### Required tools
+
+<CodeGroup>
+```bash macOS (Homebrew)
+# Install Xcode Command Line Tools first
+xcode-select --install
+
+# Install dependencies
+brew install clojure
+brew install openjdk@21
+brew install node
+curl -fsSL https://bun.sh/install | bash
+```
+
+```bash Ubuntu/Debian
+sudo apt update
+sudo apt install openjdk-21-jdk nodejs
+
+# Install Clojure
+curl -O https://download.clojure.org/install/linux-install-1.11.1.1413.sh
+chmod +x linux-install-1.11.1.1413.sh
+sudo ./linux-install-1.11.1.1413.sh
+
+# Install Bun
+curl -fsSL https://bun.sh/install | bash
+```
+
+```bash Windows (WSL)
+# Use Windows Subsystem for Linux and follow Ubuntu instructions
+wsl --install -d Ubuntu
+```
+</CodeGroup>
+
+### Tool versions
+
+- **Java** - JDK 21 (required)
+- **Node.js** - Latest LTS release
+- **Clojure** - Latest stable version
+- **Bun** - 1.0.0 or higher
+
+<Note>
+If you have multiple JDK versions installed, make sure Java 21 is active:
+
+```bash
+sudo update-alternatives --config java
+```
+</Note>
+
+### Special requirements
+
+#### Apple M1/M2 computers
+
+Install Rosetta 2 before building the frontend:
+
+```bash
+/usr/sbin/softwareupdate --install-rosetta --agree-to-license
+```
+
+#### VS Code / IDE setup
+
+If your IDE runs commands outside your interactive shell, configure mise shims:
+
+<Accordion title="IDE configuration for mise">
+  **Add to your shell profile** (`.zshrc`, `.bashrc`, etc.):
+  
+  ```bash
+  export PATH="$HOME/.local/share/mise/shims:$PATH"
+  ```
+  
+  **VS Code settings.json**:
+  
+  ```json
+  {
+    "terminal.integrated.env.osx": {
+      "PATH": "${env:HOME}/.local/share/mise/shims:${env:PATH}"
+    },
+    "terminal.integrated.env.linux": {
+      "PATH": "${env:HOME}/.local/share/mise/shims:${env:PATH}"
+    }
+  }
+  ```
+  
+  **Emacs init.el**:
+  
+  ```elisp
+  (add-to-list 'exec-path (expand-file-name "~/.local/share/mise/shims"))
+  (setenv "PATH" (concat (expand-file-name "~/.local/share/mise/shims") ":" (getenv "PATH")))
+  ```
+</Accordion>
+
+## Frontend development
+
+The frontend uses Bun for package management and rspack for bundling.
+
+### Install dependencies
+
+```bash
+bun install
+```
+
+### Build commands
+
+<CodeGroup>
+```bash Hot reload (recommended)
+bun run build-hot
+```
+
+```bash Watch mode
+bun run build-watch
+```
+
+```bash Production build
+bun run build
+```
+</CodeGroup>
+
+### Frontend testing
+
+<CodeGroup>
+```bash All tests
+bun run test
+```
+
+```bash Unit tests only
+bun run test-unit
+```
+
+```bash Unit tests (watch mode)
+bun run test-unit-watch
+```
+
+```bash Cypress e2e tests
+bun run test-cypress
+```
+</CodeGroup>
+
+### Debugging tips
+
+#### Better source maps
+
+For improved debugging with breakpoints in JSX:
+
+```bash
+BETTER_SOURCE_MAPS=true bun run dev
+```
+
+#### Enable ESLint in dev mode
+
+By default, ESLint is disabled during development for faster builds:
+
+```bash
+USE_ESLINT=true bun run build-hot
+```
+
+## Backend development
+
+The backend is written in Clojure and runs on the JVM.
+
+### Start the backend server
+
+```bash
+clojure -M:run
+```
+
+The server will start at `http://localhost:3000`. Wait for the message "Metabase initialization complete."
+
+### Using the REPL
+
+The Clojure REPL is the primary development tool for backend work:
+
+```bash
+clojure -M:repl
+```
+
+Once in the REPL, start the server:
+
+```clojure
+(do (dev) (start!))
+```
+
+### Application database
+
+By default, Metabase uses H2. For development, we recommend PostgreSQL.
+
+<Accordion title="Configure PostgreSQL for development">
+  Create `~/.clojure/deps.edn`:
+  
+  ```clojure
+  {:aliases
+   {:user
+    {:jvm-opts
+     ["-Dmb.db.host=localhost"
+      "-Dmb.db.type=postgres"
+      "-Dmb.db.user=<username>"
+      "-Dmb.db.dbname=<dbname>"
+      "-Dmb.db.pass="]}}}
+  ```
+  
+  Or use a connection string:
+  
+  ```clojure
+  ["-Dmb.db.connection.uri=postgres://<user>:<password>@localhost:5432/<dbname>"]
+  ```
+  
+  Or create a `.lein-env` file in the project directory:
+  
+  ```clojure
+  {:mb-db-type   "postgres"
+   :mb-db-host   "localhost"
+   :mb-db-user   "<username>"
+   :mb-db-dbname "<dbname>"
+   :mb-db-pass   ""}
+  ```
+</Accordion>
+
+### Building drivers
+
+Database drivers live in the `modules/drivers/` directory and must be built separately:
+
+<CodeGroup>
+```bash Build all drivers
+./bin/build-drivers.sh
+```
+
+```bash Build specific driver
+./bin/build-driver.sh postgres
+```
+</CodeGroup>
+
+Driver JARs are placed in the `plugins/` directory.
+
+### Running backend tests
+
+<CodeGroup>
+```bash OSS tests
+clojure -X:dev:test
+```
+
+```bash OSS + Enterprise tests
+clojure -X:dev:ee:ee-dev:test
+```
+
+```bash Specific test namespace
+clojure -X:dev:test :only metabase.api.database-test
+```
+
+```bash Specific test
+clojure -X:dev:test :only metabase.api.database-test/my-test
+```
+</CodeGroup>
+
+#### Testing with specific drivers
+
+By default, tests run against H2. To test other drivers:
+
+```bash
+DRIVERS=h2,postgres,mysql clojure -X:dev:drivers:drivers-dev:test
+```
+
+### Running linters
+
+<CodeGroup>
+```bash clj-kondo
+mage kondo
+```
+
+```bash Eastwood
+clojure -X:dev:ee:ee-dev:drivers:drivers-dev:eastwood
+```
+
+```bash Namespace checker
+clojure -X:dev:ee:ee-dev:drivers:drivers-dev:test:namespace-checker
+```
+</CodeGroup>
+
+## Running multiple instances
+
+To run multiple Metabase instances on the same machine:
+
+### Frontend
+
+```bash
+MB_FRONTEND_DEV_PORT=8089 MB_EDITION=ee bun run build-hot
+```
+
+### Backend
+
+```bash
+MB_JETTY_PORT=3001 MB_FRONTEND_DEV_PORT=8089 clojure -M:run
+```
+
+## Continuous integration
+
+Run all linters and tests:
+
+<CodeGroup>
+```bash All tests
+bun run ci
+```
+
+```bash Frontend only
+bun run ci-frontend
+```
+
+```bash Backend only
+bun run ci-backend
+```
+</CodeGroup>
+
+## Configuration files
+
+To skip the setup wizard and pre-configure your instance, add a [Metabase config file](https://www.metabase.com/docs/latest/configuring-metabase/config-file) to the directory where you run Metabase.
+
+## Troubleshooting
+
+### File watching issues
+
+If your system has trouble detecting file changes, enable filesystem polling in `rspack.main.config.js`:
+
+```javascript
+watchOptions: {
+  poll: true
+}
+```
+
+Then tell git to ignore the change:
+
+```bash
+git update-index --assume-unchanged rspack.main.config.js
+```
+
+### Port conflicts
+
+If port 3000 is already in use, set a different port:
+
+```bash
+MB_JETTY_PORT=3001 clojure -M:run
+```
+
+## Next steps
+
+- Learn about the [code structure](/developers/code-structure)
+- Read the [testing guide](/developers/testing)
+- Understand [how to build drivers](/developers/building-drivers)

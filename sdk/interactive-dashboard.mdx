@@ -1,0 +1,379 @@
+---
+title: InteractiveDashboard
+description: Embed interactive dashboards with drill-downs, click behaviors, and full interactivity
+---
+
+The `InteractiveDashboard` component renders a fully interactive dashboard with drill-down actions, click behaviors, and the ability to view and interact with questions.
+
+## Basic usage
+
+```tsx
+import { InteractiveDashboard } from '@metabase/embedding-sdk-react';
+
+function Analytics() {
+  return <InteractiveDashboard dashboardId={1} />;
+}
+```
+
+## With event handlers
+
+```tsx
+<InteractiveDashboard
+  dashboardId={1}
+  onLoad={(dashboard) => {
+    console.log('Dashboard loaded:', dashboard);
+  }}
+  onLoadWithoutCards={(dashboard) => {
+    console.log('Dashboard structure loaded:', dashboard);
+  }}
+/>
+```
+
+## With initial parameters
+
+Set initial filter values:
+
+```tsx
+<InteractiveDashboard
+  dashboardId={1}
+  initialParameters={{
+    region: 'North America',
+    date_range: '2024-01-01~2024-12-31',
+  }}
+/>
+```
+
+## Hiding parameters
+
+Hide specific dashboard parameters from the UI:
+
+```tsx
+<InteractiveDashboard
+  dashboardId={1}
+  hiddenParameters={['internal_filter', 'debug_mode']}
+/>
+```
+
+## With auto-refresh
+
+Automatically refresh the dashboard at a specified interval (in seconds):
+
+```tsx
+<InteractiveDashboard
+  dashboardId={1}
+  autoRefreshInterval={300} // Refresh every 5 minutes
+/>
+```
+
+## Customizing visibility
+
+```tsx
+<InteractiveDashboard
+  dashboardId={1}
+  withTitle={false}
+  withCardTitle={false}
+  withDownloads={false}
+  withSubscriptions={false}
+/>
+```
+
+## With plugins
+
+Customize click actions and dashboard behavior:
+
+```tsx
+const plugins = {
+  mapQuestionClickActions: (clickActions, clickedDataPoint) => {
+    return [
+      ...clickActions,
+      {
+        name: 'view-details',
+        onClick: () => {
+          console.log('View details:', clickedDataPoint);
+          // Navigate to detail view
+        },
+      },
+    ];
+  },
+  dashboard: {
+    dashboardCardMenu: ({ dashcard, result }) => {
+      return [
+        {
+          name: 'Custom Action',
+          icon: 'star',
+          onClick: () => console.log('Custom action', dashcard),
+        },
+      ];
+    },
+  },
+};
+
+<InteractiveDashboard dashboardId={1} plugins={plugins} />
+```
+
+## Custom drill-through question
+
+Customize the drill-through question view:
+
+```tsx
+import { InteractiveDashboard, InteractiveQuestion } from '@metabase/embedding-sdk-react';
+
+function CustomDashboard() {
+  return (
+    <InteractiveDashboard
+      dashboardId={1}
+      renderDrillThroughQuestion={(questionProps) => (
+        <div className="custom-drill-through">
+          <h2>Drill-through Details</h2>
+          <InteractiveQuestion {...questionProps} />
+        </div>
+      )}
+    />
+  );
+}
+```
+
+## Drill-through question configuration
+
+```tsx
+<InteractiveDashboard
+  dashboardId={1}
+  drillThroughQuestionHeight={600}
+  drillThroughQuestionProps={{
+    withChartTypeSelector: true,
+    withDownloads: true,
+  }}
+/>
+```
+
+## With data picker configuration
+
+Configure which entity types are available in data pickers:
+
+```tsx
+<InteractiveDashboard
+  dashboardId={1}
+  dataPickerProps={{
+    entityTypes: ['questions', 'models'],
+  }}
+/>
+```
+
+## Enable entity navigation
+
+Allow navigation to questions and cards:
+
+```tsx
+<InteractiveDashboard
+  dashboardId={1}
+  enableEntityNavigation={true}
+/>
+```
+
+## With visualization change handler
+
+```tsx
+<InteractiveDashboard
+  dashboardId={1}
+  onVisualizationChange={(question) => {
+    console.log('Visualization changed:', question);
+  }}
+/>
+```
+
+## Complete example
+
+```tsx
+import { InteractiveDashboard } from '@metabase/embedding-sdk-react';
+import { useState } from 'react';
+
+function AnalyticsDashboard() {
+  const [parameters, setParameters] = useState({
+    region: 'Global',
+    period: 'Q4',
+  });
+
+  return (
+    <div className="analytics-container">
+      <div className="dashboard-header">
+        <h1>Sales Analytics</h1>
+        <div className="controls">
+          <select 
+            value={parameters.region}
+            onChange={(e) => setParameters({ ...parameters, region: e.target.value })}
+          >
+            <option value="Global">Global</option>
+            <option value="North America">North America</option>
+            <option value="Europe">Europe</option>
+          </select>
+        </div>
+      </div>
+
+      <InteractiveDashboard
+        dashboardId={1}
+        initialParameters={parameters}
+        withTitle={true}
+        withCardTitle={true}
+        withDownloads={true}
+        withSubscriptions={true}
+        autoRefreshInterval={300}
+        enableEntityNavigation={true}
+        onLoad={(dashboard) => {
+          console.log('Dashboard loaded:', dashboard?.name);
+        }}
+        plugins={{
+          mapQuestionClickActions: (actions, dataPoint) => {
+            return [
+              ...actions,
+              {
+                name: 'export-data',
+                onClick: () => {
+                  console.log('Export:', dataPoint);
+                },
+              },
+            ];
+          },
+        }}
+        style={{
+          border: '1px solid #e5e7eb',
+          borderRadius: '8px',
+          minHeight: '600px',
+        }}
+      />
+    </div>
+  );
+}
+```
+
+## Props
+
+<ParamField path="dashboardId" type="SdkDashboardId" required>
+  The ID of the dashboard. Can be:
+  - Numerical ID (e.g., `1`)
+  - Entity ID string (e.g., `"abc123"`)
+</ParamField>
+
+<ParamField path="token" type="string">
+  Signed token for guest embed scenarios.
+</ParamField>
+
+<ParamField path="initialParameters" type="ParameterValues">
+  Initial parameter values for dashboard filters.
+</ParamField>
+
+<ParamField path="hiddenParameters" type="string[]">
+  List of parameter names to hide from the UI.
+</ParamField>
+
+<ParamField path="withTitle" type="boolean" default="true">
+  Whether to show the dashboard title.
+</ParamField>
+
+<ParamField path="withCardTitle" type="boolean" default="true">
+  Whether to show titles on dashboard cards.
+</ParamField>
+
+<ParamField path="withDownloads" type="boolean" default="true">
+  Whether to enable download functionality.
+</ParamField>
+
+<ParamField path="withSubscriptions" type="boolean" default="true">
+  Whether to enable dashboard subscriptions.
+</ParamField>
+
+<ParamField path="autoRefreshInterval" type="number">
+  Auto-refresh interval in seconds.
+</ParamField>
+
+<ParamField path="enableEntityNavigation" type="boolean" default="false">
+  Whether to enable navigation to individual questions and cards.
+</ParamField>
+
+<ParamField path="style" type="React.CSSProperties">
+  Custom CSS styles.
+</ParamField>
+
+<ParamField path="className" type="string">
+  Custom CSS class name.
+</ParamField>
+
+<ParamField path="plugins" type="MetabasePluginsConfig">
+  Plugin configuration for customizing behavior.
+</ParamField>
+
+<ParamField path="dataPickerProps" type="{ entityTypes?: EntityTypeFilterKeys[] }">
+  Configuration for data picker dialogs.
+</ParamField>
+
+<ParamField path="drillThroughQuestionHeight" type="number">
+  Height for drill-through question views.
+</ParamField>
+
+<ParamField path="drillThroughQuestionProps" type="DrillThroughQuestionProps">
+  Props to pass to drill-through question components.
+</ParamField>
+
+<ParamField path="renderDrillThroughQuestion" type="(props: DrillThroughQuestionProps) => ReactNode">
+  Custom renderer for drill-through questions.
+</ParamField>
+
+<ParamField path="onLoad" type="(dashboard: MetabaseDashboard | null) => void">
+  Callback when the dashboard loads with all cards.
+</ParamField>
+
+<ParamField path="onLoadWithoutCards" type="(dashboard: MetabaseDashboard | null) => void">
+  Callback when the dashboard structure loads (without card content).
+</ParamField>
+
+<ParamField path="onVisualizationChange" type="(question: MetabaseQuestion) => void">
+  Callback when a visualization type changes.
+</ParamField>
+
+<ParamField path="children" type="ReactNode">
+  Custom content (for future extensibility).
+</ParamField>
+
+## TypeScript types
+
+```typescript
+import type {
+  InteractiveDashboardProps,
+  MetabaseDashboard,
+  MetabaseQuestion,
+  ParameterValues,
+  SdkDashboardId,
+  DrillThroughQuestionProps,
+} from '@metabase/embedding-sdk-react';
+```
+
+## Features
+
+### Drill-through actions
+
+Users can click on data points to:
+- Filter by value
+- View underlying records
+- Break out by dimensions
+- Navigate to related questions
+
+### Click behaviors
+
+Dashboard cards support:
+- Custom URL navigation
+- Cross-filtering
+- Dashboard tab switching
+- External link opening
+
+### Real-time updates
+
+Dashboards can automatically refresh at specified intervals to show the latest data.
+
+### Parameter passing
+
+Filters can be passed between cards and synchronized across the dashboard.
+
+## Related
+
+- [StaticDashboard](/sdk/static-dashboard) - Read-only dashboard component
+- [Event handlers](/sdk/event-handlers) - Working with dashboard events
+- [Custom styling](/sdk/custom-styling) - Styling dashboards

@@ -1,0 +1,348 @@
+---
+title: StaticDashboard
+description: Embed lightweight, read-only dashboards without interactive features
+---
+
+The `StaticDashboard` component renders a lightweight dashboard visualization without editing capabilities or drill-through actions. It's ideal for displaying dashboard data in a read-only context.
+
+## Basic usage
+
+```tsx
+import { StaticDashboard } from '@metabase/embedding-sdk-react';
+
+function Reports() {
+  return <StaticDashboard dashboardId={1} />;
+}
+```
+
+## Using entity ID
+
+Reference dashboards by their entity ID:
+
+```tsx
+<StaticDashboard dashboardId="abc123-entity-id" />
+```
+
+## Using signed embed token
+
+For guest embed scenarios:
+
+```tsx
+<StaticDashboard token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." />
+```
+
+<Note>
+When using a `token`, the `dashboardId` prop becomes optional.
+</Note>
+
+## With initial parameters
+
+Set initial filter values:
+
+```tsx
+<StaticDashboard
+  dashboardId={1}
+  initialParameters={{
+    region: 'North America',
+    period: 'Q4 2024',
+    status: 'active',
+  }}
+/>
+```
+
+## Hiding parameters
+
+Hide specific dashboard parameters from the UI:
+
+```tsx
+<StaticDashboard
+  dashboardId={1}
+  hiddenParameters={['internal_filter', 'debug_param']}
+/>
+```
+
+## With auto-refresh
+
+Automatically refresh the dashboard data:
+
+```tsx
+<StaticDashboard
+  dashboardId={1}
+  autoRefreshInterval={300} // Refresh every 5 minutes (in seconds)
+/>
+```
+
+## Customizing visibility
+
+```tsx
+<StaticDashboard
+  dashboardId={1}
+  withTitle={false}
+  withCardTitle={false}
+  withDownloads={false}
+  withSubscriptions={false}
+/>
+```
+
+## With event handlers
+
+```tsx
+<StaticDashboard
+  dashboardId={1}
+  onLoad={(dashboard) => {
+    console.log('Dashboard loaded:', dashboard?.name);
+  }}
+  onLoadWithoutCards={(dashboard) => {
+    console.log('Dashboard structure loaded');
+  }}
+/>
+```
+
+## With plugins
+
+Customize click actions for dashboard cards:
+
+```tsx
+const plugins = {
+  mapQuestionClickActions: (clickActions, clickedDataPoint) => {
+    // Filter out certain actions or add custom ones
+    return clickActions.filter(action => 
+      action.name !== 'automatic-insights'
+    );
+  },
+  dashboard: {
+    dashboardCardMenu: ({ dashcard, result }) => {
+      return [
+        {
+          name: 'View Details',
+          icon: 'eye',
+          onClick: () => {
+            console.log('View details for:', dashcard.card.name);
+          },
+        },
+      ];
+    },
+  },
+};
+
+<StaticDashboard dashboardId={1} plugins={plugins} />
+```
+
+## With data picker configuration
+
+```tsx
+<StaticDashboard
+  dashboardId={1}
+  dataPickerProps={{
+    entityTypes: ['questions', 'models'],
+  }}
+/>
+```
+
+## With visualization change handler
+
+```tsx
+<StaticDashboard
+  dashboardId={1}
+  onVisualizationChange={(question) => {
+    console.log('Card visualization changed:', question);
+  }}
+/>
+```
+
+## Complete example
+
+```tsx
+import { StaticDashboard } from '@metabase/embedding-sdk-react';
+import { useState } from 'react';
+
+function ExecutiveDashboard() {
+  const [refreshInterval, setRefreshInterval] = useState(300);
+
+  return (
+    <div className="dashboard-container">
+      <div className="dashboard-controls">
+        <h1>Executive Summary</h1>
+        <div className="refresh-controls">
+          <label>
+            Auto-refresh:
+            <select 
+              value={refreshInterval}
+              onChange={(e) => setRefreshInterval(Number(e.target.value))}
+            >
+              <option value={0}>Off</option>
+              <option value={60}>1 minute</option>
+              <option value={300}>5 minutes</option>
+              <option value={900}>15 minutes</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <StaticDashboard
+        dashboardId={1}
+        initialParameters={{
+          date_range: 'last-30-days',
+        }}
+        autoRefreshInterval={refreshInterval}
+        withTitle={true}
+        withCardTitle={true}
+        withDownloads={true}
+        withSubscriptions={false}
+        onLoad={(dashboard) => {
+          console.log('Dashboard loaded:', dashboard?.name);
+        }}
+        style={{
+          border: '1px solid #e5e7eb',
+          borderRadius: '8px',
+          padding: '16px',
+          backgroundColor: '#ffffff',
+        }}
+      />
+    </div>
+  );
+}
+```
+
+## Props
+
+<ParamField path="dashboardId" type="SdkDashboardId">
+  The ID of the dashboard. Can be:
+  - Numerical ID (e.g., `1`)
+  - Entity ID string (e.g., `"abc123"`)
+  
+  Optional when using `token`.
+</ParamField>
+
+<ParamField path="token" type="string">
+  Signed token for guest embed. When provided, `dashboardId` becomes optional.
+</ParamField>
+
+<ParamField path="initialParameters" type="ParameterValues">
+  Initial parameter values for dashboard filters.
+</ParamField>
+
+<ParamField path="hiddenParameters" type="string[]">
+  List of parameter names to hide from the UI.
+</ParamField>
+
+<ParamField path="withTitle" type="boolean" default="true">
+  Whether to show the dashboard title.
+</ParamField>
+
+<ParamField path="withCardTitle" type="boolean" default="true">
+  Whether to show titles on dashboard cards.
+</ParamField>
+
+<ParamField path="withDownloads" type="boolean" default="true">
+  Whether to enable download functionality for cards.
+</ParamField>
+
+<ParamField path="withSubscriptions" type="boolean" default="false">
+  Whether to enable dashboard subscriptions.
+</ParamField>
+
+<ParamField path="autoRefreshInterval" type="number">
+  Auto-refresh interval in seconds. Set to `0` to disable.
+</ParamField>
+
+<ParamField path="style" type="React.CSSProperties">
+  Custom CSS styles.
+</ParamField>
+
+<ParamField path="className" type="string">
+  Custom CSS class name.
+</ParamField>
+
+<ParamField path="plugins" type="MetabasePluginsConfig">
+  Plugin configuration for customizing behavior.
+  
+  <Expandable title="plugins properties">
+    <ParamField path="mapQuestionClickActions" type="function">
+      Function to filter or modify click actions on visualizations.
+    </ParamField>
+    
+    <ParamField path="dashboard.dashboardCardMenu" type="function">
+      Function to customize the dashboard card menu.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="dataPickerProps" type="{ entityTypes?: EntityTypeFilterKeys[] }">
+  Configuration for data picker dialogs.
+</ParamField>
+
+<ParamField path="onLoad" type="(dashboard: MetabaseDashboard | null) => void">
+  Callback when the dashboard loads with all cards and their content.
+</ParamField>
+
+<ParamField path="onLoadWithoutCards" type="(dashboard: MetabaseDashboard | null) => void">
+  Callback when the dashboard structure loads (without card content yet).
+</ParamField>
+
+<ParamField path="onVisualizationChange" type="(question: MetabaseQuestion) => void">
+  Callback when a card's visualization type changes.
+</ParamField>
+
+<ParamField path="children" type="ReactNode">
+  Custom content (for future extensibility).
+</ParamField>
+
+## TypeScript types
+
+```typescript
+import type {
+  StaticDashboardProps,
+  MetabaseDashboard,
+  MetabaseQuestion,
+  ParameterValues,
+  SdkDashboardId,
+} from '@metabase/embedding-sdk-react';
+```
+
+## When to use StaticDashboard vs InteractiveDashboard
+
+Use `StaticDashboard` when:
+- You want a lightweight, read-only dashboard
+- Users should only view data without interacting
+- You don't need drill-through or click behaviors
+- You're embedding in contexts where interactivity isn't needed
+- Performance is critical (static dashboards are lighter)
+
+Use `InteractiveDashboard` when:
+- Users need to explore data through drill-downs
+- Click behaviors and actions are required
+- Users should be able to navigate to underlying questions
+- Full dashboard interactivity is needed
+
+## Features
+
+### Parameter support
+
+Static dashboards support dashboard parameters, allowing users to filter data across all cards.
+
+### Auto-refresh
+
+Keep dashboard data up-to-date with automatic refreshing at specified intervals.
+
+### Download support
+
+Users can download data from individual dashboard cards.
+
+### Event handling
+
+Track when dashboards load to integrate with your analytics or UI state.
+
+## Performance considerations
+
+`StaticDashboard` is optimized for display performance:
+- Lighter bundle size compared to `InteractiveDashboard`
+- Faster initial render
+- Reduced memory footprint
+- Ideal for embedding multiple dashboards on a single page
+
+## Related
+
+- [InteractiveDashboard](/sdk/interactive-dashboard) - Interactive dashboard component
+- [Event handlers](/sdk/event-handlers) - Working with dashboard events
+- [Custom styling](/sdk/custom-styling) - Styling dashboards

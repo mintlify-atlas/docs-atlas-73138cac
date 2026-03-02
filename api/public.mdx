@@ -1,0 +1,426 @@
+---
+title: Public
+description: Access publicly shared dashboards and questions without authentication
+---
+
+The Public API provides access to publicly shared Metabase content through UUID-based URLs. No authentication is required for these endpoints.
+
+## Public sharing overview
+
+Public sharing allows you to:
+
+- Share dashboards and questions with anyone via a URL
+- Embed content without signed tokens
+- Allow external users to view data without Metabase accounts
+
+<Warning>
+Public links are accessible by anyone with the URL. Only share links for content you want to be publicly accessible.
+</Warning>
+
+## Enable public sharing
+
+Public sharing must be enabled by an administrator:
+
+1. Go to Admin > Settings > Public Sharing
+2. Enable "Enable Public Sharing"
+3. Optionally enable "Enable Embedding"
+
+<Note>
+Requires admin permissions to enable public sharing instance-wide.
+</Note>
+
+## Create public links
+
+### Create card public link
+
+Generate a public sharing link for a question.
+
+```bash
+POST /api/card/{card-id}/public_link
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/card/1/public_link \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+
+```javascript JavaScript
+const response = await fetch('https://your-metabase.com/api/card/1/public_link', {
+  method: 'POST',
+  headers: { 'X-Metabase-Session': sessionToken }
+});
+
+const { uuid } = await response.json();
+const publicUrl = `https://your-metabase.com/public/question/${uuid}`;
+```
+</CodeGroup>
+
+### Response
+
+```json
+{
+  "uuid": "110c3d96-ff3a-4ec6-9a82-7c2d5e073fa2"
+}
+```
+
+The question can be accessed at:
+```
+https://your-metabase.com/public/question/110c3d96-ff3a-4ec6-9a82-7c2d5e073fa2
+```
+
+### Create dashboard public link
+
+Generate a public sharing link for a dashboard.
+
+```bash
+POST /api/dashboard/{dashboard-id}/public_link
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/dashboard/1/public_link \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+## Delete public links
+
+### Delete card public link
+
+Revoke public access to a question.
+
+```bash
+DELETE /api/card/{card-id}/public_link
+```
+
+<CodeGroup>
+```bash curl
+curl -X DELETE \
+  https://your-metabase.com/api/card/1/public_link \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Delete dashboard public link
+
+Revoke public access to a dashboard.
+
+```bash
+DELETE /api/dashboard/{dashboard-id}/public_link
+```
+
+<CodeGroup>
+```bash curl
+curl -X DELETE \
+  https://your-metabase.com/api/dashboard/1/public_link \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+## Access public content
+
+### Get public card
+
+Retrieve a publicly shared question.
+
+```bash
+GET /api/public/card/{uuid}
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/public/card/110c3d96-ff3a-4ec6-9a82-7c2d5e073fa2
+```
+
+```javascript JavaScript
+const card = await fetch(
+  'https://your-metabase.com/api/public/card/110c3d96-ff3a-4ec6-9a82-7c2d5e073fa2'
+).then(r => r.json());
+```
+</CodeGroup>
+
+<Note>
+No authentication required. Anyone with the UUID can access this endpoint.
+</Note>
+
+### Execute public card query
+
+Run the query for a publicly shared question.
+
+```bash
+GET /api/public/card/{uuid}/query
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/public/card/110c3d96-ff3a-4ec6-9a82-7c2d5e073fa2/query
+```
+</CodeGroup>
+
+### Download public card results
+
+Download query results in a specific format.
+
+```bash
+GET /api/public/card/{uuid}/query/{export-format}
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/public/card/110c3d96-ff3a-4ec6-9a82-7c2d5e073fa2/query/csv \
+  -o results.csv
+```
+</CodeGroup>
+
+#### Parameters
+
+<ParamField path="uuid" type="string" required>
+  Public sharing UUID
+</ParamField>
+
+<ParamField path="export-format" type="string" required>
+  Export format: csv, xlsx, or json
+</ParamField>
+
+### Get public dashboard
+
+Retrieve a publicly shared dashboard.
+
+```bash
+GET /api/public/dashboard/{uuid}
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/public/dashboard/110c3d96-ff3a-4ec6-9a82-7c2d5e073fa2
+```
+</CodeGroup>
+
+### Execute public dashboard card query
+
+Run a query for a card on a public dashboard.
+
+```bash
+GET /api/public/dashboard/{uuid}/dashcard/{dashcard-id}/card/{card-id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/public/dashboard/110c3d96-ff3a-4ec6-9a82-7c2d5e073fa2/dashcard/5/card/10
+```
+</CodeGroup>
+
+## Public parameters
+
+### Get parameter values
+
+Get possible values for a public question parameter.
+
+```bash
+GET /api/public/card/{uuid}/params/{param-key}/values
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/public/card/110c3d96-ff3a-4ec6-9a82-7c2d5e073fa2/params/category/values
+```
+</CodeGroup>
+
+### Search parameter values
+
+Search for parameter values in a public question.
+
+```bash
+GET /api/public/card/{uuid}/params/{param-key}/search/{query}
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/public/card/110c3d96-ff3a-4ec6-9a82-7c2d5e073fa2/params/category/search/electronics
+```
+</CodeGroup>
+
+### Get parameter remapping
+
+Get remapped values for a public question parameter.
+
+```bash
+GET /api/public/card/{uuid}/params/{param-key}/remapping
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  'https://your-metabase.com/api/public/card/110c3d96-ff3a-4ec6-9a82-7c2d5e073fa2/params/category/remapping?value=123'
+```
+</CodeGroup>
+
+## Public actions
+
+### Get public action
+
+Retrieve a publicly shared action.
+
+```bash
+GET /api/public/action/{uuid}
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/public/action/110c3d96-ff3a-4ec6-9a82-7c2d5e073fa2
+```
+</CodeGroup>
+
+### Execute public action
+
+Execute a publicly shared action.
+
+```bash
+POST /api/public/action/{uuid}/execute
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/public/action/110c3d96-ff3a-4ec6-9a82-7c2d5e073fa2/execute \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "parameters": {
+      "name": "John Doe",
+      "email": "john@example.com"
+    }
+  }'
+```
+</CodeGroup>
+
+<Warning>
+Be careful when making actions publicly accessible. Anyone with the link can execute the action.
+</Warning>
+
+## List public content
+
+### List public cards
+
+Get all cards with public links (admin only).
+
+```bash
+GET /api/card/public
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/card/public \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### List public dashboards
+
+Get all dashboards with public links (admin only).
+
+```bash
+GET /api/dashboard/public
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/dashboard/public \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Response
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Sales Dashboard",
+    "public_uuid": "110c3d96-ff3a-4ec6-9a82-7c2d5e073fa2"
+  }
+]
+```
+
+## Embedding public content
+
+Embed public dashboards and questions in iframes:
+
+```html
+<iframe
+  src="https://your-metabase.com/public/dashboard/110c3d96-ff3a-4ec6-9a82-7c2d5e073fa2"
+  frameborder="0"
+  width="800"
+  height="600"
+  allowtransparency
+></iframe>
+```
+
+### URL parameters
+
+Customize public embeds with URL hash parameters:
+
+```
+https://your-metabase.com/public/dashboard/UUID#bordered=false&titled=false
+```
+
+<ParamField query="bordered" type="boolean">
+  Show border (default: true)
+</ParamField>
+
+<ParamField query="titled" type="boolean">
+  Show title (default: true)
+</ParamField>
+
+<ParamField query="theme" type="string">
+  Theme: "night" or "transparent"
+</ParamField>
+
+## Rate limiting
+
+<Note>
+Public endpoints have separate rate limits from authenticated endpoints to prevent abuse.
+</Note>
+
+See [Rate Limits](/api/rate-limits) for details.
+
+## Security considerations
+
+<Tip>
+**Public sharing best practices:**
+- Only share content that's appropriate for public viewing
+- Regularly audit public links and revoke unused ones
+- Use filters to limit data exposure in public questions
+- Monitor public endpoint usage for unusual activity
+- Consider using signed embedding for sensitive data
+</Tip>
+
+## Error codes
+
+<ResponseField name="400 Bad Request" type="error">
+  Invalid UUID format
+</ResponseField>
+
+<ResponseField name="403 Forbidden" type="error">
+  Public sharing is disabled
+</ResponseField>
+
+<ResponseField name="404 Not Found" type="error">
+  Public link not found or has been revoked
+</ResponseField>
+
+<ResponseField name="429 Too Many Requests" type="error">
+  Rate limit exceeded for public endpoints
+</ResponseField>

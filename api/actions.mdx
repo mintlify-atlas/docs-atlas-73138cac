@@ -1,0 +1,453 @@
+---
+title: Actions
+description: Execute database actions to create, update, and delete records
+---
+
+The Actions API enables you to perform write operations on your database through Metabase. Actions allow you to execute INSERT, UPDATE, and DELETE operations programmatically. This API includes 7 endpoints.
+
+## Actions overview
+
+Actions in Metabase allow you to:
+
+- Create new database records
+- Update existing records
+- Delete records
+- Execute custom database operations
+- Trigger actions from dashboards and forms
+
+<Note>
+Actions must be enabled in your database settings and require appropriate permissions.
+</Note>
+
+## List actions
+
+Get all actions you have access to.
+
+```bash
+GET /api/action
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/action \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+
+```javascript JavaScript
+const actions = await fetch('https://your-metabase.com/api/action', {
+  headers: { 'X-Metabase-Session': sessionToken }
+}).then(r => r.json());
+```
+</CodeGroup>
+
+### Response
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Create Order",
+    "description": "Insert a new order",
+    "type": "implicit",
+    "model_id": 5,
+    "database_id": 1,
+    "creator_id": 1,
+    "created_at": "2024-01-15T10:00:00Z"
+  }
+]
+```
+
+## Get action
+
+Get details about a specific action.
+
+```bash
+GET /api/action/{action-id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/action/1 \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="action-id" type="integer" required>
+  Action ID
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="integer">
+  Action ID
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Action name
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Action description
+</ResponseField>
+
+<ResponseField name="type" type="string">
+  Action type: "implicit", "query", or "http"
+</ResponseField>
+
+<ResponseField name="model_id" type="integer">
+  Associated model/question ID
+</ResponseField>
+
+<ResponseField name="database_id" type="integer">
+  Database ID for query actions
+</ResponseField>
+
+<ResponseField name="dataset_query" type="object">
+  Query definition for query-based actions
+</ResponseField>
+
+<ResponseField name="parameters" type="array">
+  Action parameters/inputs
+</ResponseField>
+
+<ResponseField name="visualization_settings" type="object">
+  Form and button display settings
+</ResponseField>
+
+## Create action
+
+Create a new action.
+
+```bash
+POST /api/action
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/action \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "name": "Update Product Price",
+    "description": "Update the price of a product",
+    "type": "query",
+    "model_id": 5,
+    "database_id": 1,
+    "dataset_query": {
+      "type": "native",
+      "native": {
+        "query": "UPDATE products SET price = {{price}} WHERE id = {{product_id}}",
+        "template-tags": {
+          "product_id": {
+            "type": "number",
+            "required": true
+          },
+          "price": {
+            "type": "number",
+            "required": true
+          }
+        }
+      },
+      "database": 1
+    }
+  }'
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="name" type="string" required>
+  Action name
+</ParamField>
+
+<ParamField body="type" type="string" required>
+  Action type:
+  - `"implicit"` - Auto-generated CRUD actions
+  - `"query"` - Custom SQL query actions
+  - `"http"` - HTTP API actions
+</ParamField>
+
+<ParamField body="model_id" type="integer">
+  Model/question ID to associate with
+</ParamField>
+
+<ParamField body="database_id" type="integer">
+  Database ID (required for query actions)
+</ParamField>
+
+<ParamField body="dataset_query" type="object">
+  Query definition with template tags for parameters
+</ParamField>
+
+<ParamField body="description" type="string">
+  Action description
+</ParamField>
+
+<ParamField body="parameters" type="array">
+  Parameter definitions
+</ParamField>
+
+<ParamField body="visualization_settings" type="object">
+  Form appearance and behavior settings
+</ParamField>
+
+## Update action
+
+Update an existing action.
+
+```bash
+PUT /api/action/{id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X PUT \
+  https://your-metabase.com/api/action/1 \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "name": "Updated Action Name",
+    "description": "Updated description"
+  }'
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="id" type="integer" required>
+  Action ID
+</ParamField>
+
+### Request body
+
+All fields are optional. Only include fields you want to update.
+
+## Delete action
+
+Delete an action.
+
+```bash
+DELETE /api/action/{action-id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X DELETE \
+  https://your-metabase.com/api/action/1 \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+<Warning>
+Deleting an action cannot be undone. Any dashboard buttons or forms using this action will stop working.
+</Warning>
+
+## Execute action
+
+Execute an action with provided parameters.
+
+```bash
+POST /api/action/{id}/execute
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/action/1/execute \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "parameters": {
+      "product_id": 123,
+      "price": 29.99
+    }
+  }'
+```
+
+```javascript JavaScript
+const result = await fetch('https://your-metabase.com/api/action/1/execute', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Metabase-Session': sessionToken
+  },
+  body: JSON.stringify({
+    parameters: {
+      product_id: 123,
+      price: 29.99
+    }
+  })
+}).then(r => r.json());
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="parameters" type="object" required>
+  Map of parameter names to values
+  
+  Example:
+  ```json
+  {
+    "product_id": 123,
+    "price": 29.99,
+    "name": "Widget"
+  }
+  ```
+</ParamField>
+
+### Response
+
+<ResponseField name="rows-affected" type="array">
+  Number of rows affected by the action
+</ResponseField>
+
+<ResponseField name="success" type="boolean">
+  Whether the action succeeded
+</ResponseField>
+
+```json
+{
+  "rows-affected": [1],
+  "success": true
+}
+```
+
+<Note>
+Action execution is transactional. If the action fails, changes are rolled back.
+</Note>
+
+## Preview action execution
+
+Preview what an action would do without actually executing it.
+
+```bash
+GET /api/action/{action-id}/execute
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  'https://your-metabase.com/api/action/1/execute?parameters={"product_id":123}' \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Query parameters
+
+<ParamField query="parameters" type="object">
+  JSON string of parameter values
+</ParamField>
+
+## Public actions
+
+### List public actions
+
+Get all actions with public links.
+
+```bash
+GET /api/action/public
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/action/public \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+<Note>
+Requires admin permissions. Returns actions that have public UUIDs for embedding.
+</Note>
+
+### Create public link
+
+Generate a public link for an action.
+
+```bash
+POST /api/action/{id}/public_link
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/action/1/public_link \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Response
+
+```json
+{
+  "uuid": "110c3d96-ff3a-4ec6-9a82-7c2d5e073fa2"
+}
+```
+
+The action can be accessed publicly at `/api/public/action/{uuid}`.
+
+### Delete public link
+
+Remove the public link for an action.
+
+```bash
+DELETE /api/action/{id}/public_link
+```
+
+<CodeGroup>
+```bash curl
+curl -X DELETE \
+  https://your-metabase.com/api/action/1/public_link \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+## Action types
+
+### Implicit actions
+
+Auto-generated CRUD actions based on a model:
+
+- **Create** - Insert new rows
+- **Update** - Modify existing rows
+- **Delete** - Remove rows
+
+### Query actions
+
+Custom SQL actions with template tags for parameters. Useful for:
+
+- Complex business logic
+- Bulk operations
+- Custom validation
+
+### HTTP actions
+
+Call external APIs:
+
+- POST to webhooks
+- Trigger external workflows
+- Sync with other systems
+
+## Error codes
+
+<ResponseField name="400 Bad Request" type="error">
+  Invalid action configuration or parameters
+</ResponseField>
+
+<ResponseField name="403 Forbidden" type="error">
+  Insufficient permissions to execute action
+</ResponseField>
+
+<ResponseField name="404 Not Found" type="error">
+  Action not found
+</ResponseField>
+
+<ResponseField name="500 Internal Server Error" type="error">
+  Action execution failed
+</ResponseField>

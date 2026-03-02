@@ -1,0 +1,407 @@
+---
+title: Backing up Metabase
+description: Protect your Metabase data by implementing regular backup procedures for your application database.
+---
+
+Avoid losing your application data (questions, dashboards, collections, users, and settings) by regularly backing up your Metabase application database.
+
+<Note>
+Metabase uses a single SQL database for all runtime application data. Back up this database to protect your Metabase configuration and content.
+</Note>
+
+## What to back up
+
+The Metabase application database contains:
+
+- User accounts and permissions
+- Questions (saved queries)
+- Dashboards and visualizations
+- Collections and organization
+- Data source connections
+- Settings and configuration
+- Alerts and subscriptions
+- Audit logs (if enabled)
+
+<Warning>
+The application database does **not** contain your actual data. It only stores Metabase's metadata and configuration. Your data remains in your connected databases.
+</Warning>
+
+## When to back up
+
+Create backups:
+
+- **Before every upgrade** - Essential for safe rollback
+- **On a regular schedule** - Daily or weekly depending on usage
+- **Before major configuration changes** - Like permission updates or integrations
+- **After creating important content** - New dashboards or critical questions
+
+## Backing up PostgreSQL
+
+PostgreSQL is the recommended application database for production deployments.
+
+### Using pg_dump
+
+<Tabs>
+  <Tab title="Full backup">
+    Create a complete backup of your Metabase database:
+
+    ```bash
+    pg_dump -h localhost -U username -d metabase -F c -b -v -f metabase_backup_$(date +%Y%m%d).dump
+    ```
+
+    This creates a compressed binary backup with timestamps.
+  </Tab>
+  
+  <Tab title="SQL format">
+    Create a plain SQL backup for easier inspection:
+
+    ```bash
+    pg_dump -h localhost -U username -d metabase > metabase_backup_$(date +%Y%m%d).sql
+    ```
+  </Tab>
+  
+  <Tab title="With password">
+    If prompted for a password, use the `PGPASSWORD` environment variable:
+
+    ```bash
+    PGPASSWORD=your_password pg_dump -h localhost -U username -d metabase -F c -b -v -f metabase_backup.dump
+    ```
+  </Tab>
+</Tabs>
+
+### Restoring PostgreSQL backups
+
+<CodeGroup>
+
+```bash Binary format (.dump)
+pg_restore -h localhost -U username -d metabase -v metabase_backup.dump
+```
+
+```bash SQL format (.sql)
+psql -h localhost -U username -d metabase < metabase_backup.sql
+```
+
+```bash Clean restore
+# Drop and recreate the database first
+dropdb -h localhost -U username metabase
+createdb -h localhost -U username --encoding=UTF8 metabase
+pg_restore -h localhost -U username -d metabase metabase_backup.dump
+```
+
+</CodeGroup>
+
+### Automated PostgreSQL backups
+
+Create a backup script and schedule it with cron:
+
+```bash backup_metabase.sh
+#!/bin/bash
+
+# Configuration
+DB_HOST="localhost"
+DB_USER="metabase"
+DB_NAME="metabase"
+BACKUP_DIR="/backups/metabase"
+RETENTION_DAYS=30
+
+# Create backup directory if it doesn't exist
+mkdir -p "$BACKUP_DIR"
+
+# Generate backup filename with timestamp
+BACKUP_FILE="$BACKUP_DIR/metabase_backup_$(date +%Y%m%d_%H%M%S).dump"
+
+# Perform backup
+pg_dump -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -F c -b -v -f "$BACKUP_FILE"
+
+# Compress backup
+gzip "$BACKUP_FILE"
+
+# Delete backups older than retention period
+find "$BACKUP_DIR" -name "metabase_backup_*.dump.gz" -mtime +$RETENTION_DAYS -delete
+
+echo "Backup completed: ${BACKUP_FILE}.gz"
+```
+
+Schedule with cron (daily at 2 AM):
+
+```bash
+0 2 * * * /path/to/backup_metabase.sh >> /var/log/metabase_backup.log 2>&1
+```
+
+## Backing up MySQL or MariaDB
+
+### Using mysqldump
+
+<Tabs>
+  <Tab title="Full backup">
+    ```bash
+    mysqldump -u username -p metabase > metabase_backup_$(date +%Y%m%d).sql
+    ```
+    
+    You'll be prompted for the password.
+  </Tab>
+  
+  <Tab title="With password in command">
+    ```bash
+    mysqldump -u username -pYourPassword metabase > metabase_backup.sql
+    ```
+    
+    Note: No space between `-p` and the password.
+  </Tab>
+  
+  <Tab title="Compressed backup">
+    ```bash
+    mysqldump -u username -p metabase | gzip > metabase_backup_$(date +%Y%m%d).sql.gz
+    ```
+  </Tab>
+</Tabs>
+
+### Restoring MySQL backups
+
+<CodeGroup>
+
+```bash Standard restore
+mysql -u username -p metabase < metabase_backup.sql
+```
+
+```bash Compressed backup
+gunzip < metabase_backup.sql.gz | mysql -u username -p metabase
+```
+
+```bash Clean restore  
+# Drop and recreate database first
+mysql -u username -p -e "DROP DATABASE IF EXISTS metabase; CREATE DATABASE metabase CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u username -p metabase < metabase_backup.sql
+```
+
+</CodeGroup>
+
+### Automated MySQL backups
+
+```bash backup_metabase.sh
+#!/bin/bash
+
+# Configuration
+DB_USER="metabase"
+DB_PASS="your_password"
+DB_NAME="metabase"
+BACKUP_DIR="/backups/metabase"
+RETENTION_DAYS=30
+
+# Create backup directory
+mkdir -p "$BACKUP_DIR"
+
+# Backup filename
+BACKUP_FILE="$BACKUP_DIR/metabase_backup_$(date +%Y%m%d_%H%M%S).sql"
+
+# Perform backup
+mysqldump -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" > "$BACKUP_FILE"
+
+# Compress
+gzip "$BACKUP_FILE"
+
+# Delete old backups
+find "$BACKUP_DIR" -name "metabase_backup_*.sql.gz" -mtime +$RETENTION_DAYS -delete
+
+echo "Backup completed: ${BACKUP_FILE}.gz"
+```
+
+## Backing up H2 database
+
+<Warning>
+**The H2 database should not be used in production.** If you're still using H2, migrate to PostgreSQL as soon as possible.
+</Warning>
+
+If you must back up an H2 database:
+
+### For Docker deployments
+
+<Steps>
+  <Step title="Stop the Metabase container">
+    ```bash
+    docker stop metabase
+    ```
+  </Step>
+  
+  <Step title="Copy the database file out">
+    ```bash
+    docker cp metabase:/metabase.db/metabase.db.mv.db ./metabase_backup_$(date +%Y%m%d).mv.db
+    ```
+  </Step>
+  
+  <Step title="Restart Metabase">
+    ```bash
+    docker start metabase
+    ```
+  </Step>
+</Steps>
+
+### For JAR deployments
+
+<Steps>
+  <Step title="Stop Metabase">
+    Stop the Metabase process (Ctrl+C or stop the service)
+  </Step>
+  
+  <Step title="Copy the database file">
+    ```bash
+    cp metabase.db.mv.db metabase_backup_$(date +%Y%m%d).mv.db
+    ```
+  </Step>
+  
+  <Step title="Restart Metabase">
+    ```bash
+    java --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar
+    ```
+  </Step>
+</Steps>
+
+<Note>
+H2 database files must be backed up while Metabase is stopped to ensure consistency.
+</Note>
+
+## Cloud-managed databases
+
+### Amazon RDS
+
+If you're using Amazon RDS for your Metabase application database:
+
+1. **Enable automated backups** in the RDS console
+2. **Set backup retention period** (7-35 days)
+3. **Configure backup window** during low-usage hours
+4. **Enable point-in-time recovery** for additional protection
+
+<Card title="Amazon RDS Backup Guide" icon="aws" href="https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_WorkingWithAutomatedBackups.html">
+  Official AWS documentation for RDS backups
+</Card>
+
+Manual RDS snapshots:
+
+```bash
+aws rds create-db-snapshot \
+  --db-instance-identifier metabase-db \
+  --db-snapshot-identifier metabase-backup-$(date +%Y%m%d)
+```
+
+### Azure Database
+
+Azure Database for PostgreSQL automatically backs up your server. Configure:
+
+- Backup retention period (7-35 days)
+- Geo-redundant backup (optional)
+- Point-in-time restore capability
+
+### Google Cloud SQL
+
+Cloud SQL provides automatic backups:
+
+- Configure automated backup window
+- Enable binary logging for point-in-time recovery
+- Set backup retention period
+
+## Backup best practices
+
+<Steps>
+  <Step title="Test your backups regularly">
+    Regularly test restoration to ensure backups are valid:
+    
+    - Restore to a test environment monthly
+    - Verify data integrity
+    - Document restoration procedures
+    - Train team members on restoration process
+  </Step>
+  
+  <Step title="Store backups securely">
+    Protect your backup files:
+    
+    - Use encryption for backup files
+    - Store in multiple locations (3-2-1 rule)
+    - Restrict access to backup storage
+    - Use separate infrastructure from production
+  </Step>
+  
+  <Step title="Implement retention policies">
+    Balance storage costs with recovery needs:
+    
+    - Keep daily backups for 7-30 days
+    - Keep weekly backups for 3 months
+    - Keep monthly backups for 1 year
+    - Archive critical snapshots longer
+  </Step>
+  
+  <Step title="Monitor backup jobs">
+    Ensure backups are running successfully:
+    
+    - Set up alerts for backup failures
+    - Monitor backup file sizes
+    - Verify backup timestamps
+    - Log all backup operations
+  </Step>
+</Steps>
+
+## Backup storage options
+
+<CardGroup cols={2}>
+  <Card title="Amazon S3" icon="aws">
+    Upload backups to S3 for durable, scalable storage
+    
+    ```bash
+    aws s3 cp metabase_backup.dump.gz s3://my-backups/metabase/
+    ```
+  </Card>
+  
+  <Card title="Azure Blob Storage" icon="microsoft">
+    Use Azure CLI to upload backups
+    
+    ```bash
+    az storage blob upload --account-name myaccount --container-name backups --file metabase_backup.sql.gz
+    ```
+  </Card>
+  
+  <Card title="Google Cloud Storage" icon="google">
+    Upload with gsutil
+    
+    ```bash
+    gsutil cp metabase_backup.dump.gz gs://my-backups/metabase/
+    ```
+  </Card>
+  
+  <Card title="Network storage" icon="server">
+    Mount NFS or SMB shares for backup storage
+    
+    ```bash
+    cp metabase_backup.sql.gz /mnt/backups/metabase/
+    ```
+  </Card>
+</CardGroup>
+
+## Disaster recovery plan
+
+A complete disaster recovery plan should include:
+
+1. **Backup procedures** - Documented and automated
+2. **Restoration procedures** - Step-by-step guides
+3. **Recovery time objective (RTO)** - How long to restore
+4. **Recovery point objective (RPO)** - Acceptable data loss window
+5. **Emergency contacts** - Who to notify
+6. **Escalation procedures** - When to escalate
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Upgrading Metabase" icon="arrow-up" href="/operations/upgrading">
+    Always back up before upgrading
+  </Card>
+  
+  <Card title="Configuring database" icon="database" href="/operations/configuring-database">
+    Set up a production-ready application database
+  </Card>
+  
+  <Card title="Migrating from H2" icon="database" href="https://www.metabase.com/docs/latest/installation-and-operation/migrating-from-h2">
+    Move from H2 to PostgreSQL or MySQL
+  </Card>
+  
+  <Card title="Running on Docker" icon="docker" href="/operations/running-docker">
+    Deploy with proper volume management
+  </Card>
+</CardGroup>

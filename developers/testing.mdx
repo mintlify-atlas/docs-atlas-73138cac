@@ -1,0 +1,477 @@
+---
+title: Testing
+description: How to write and run tests in Metabase
+---
+
+Metabase has comprehensive test coverage across frontend and backend. Understanding our testing practices will help you write effective tests and catch bugs before they reach production.
+
+## Testing philosophy
+
+<Note>
+**All code must be tested.** Unit tests should be preferred over end-to-end tests as they're faster to run and debug.
+</Note>
+
+### Test types
+
+1. **Unit tests** - Test individual functions and components in isolation
+2. **Integration tests** - Test how multiple units work together
+3. **End-to-end tests** - Test complete user workflows
+4. **Visual regression tests** - Catch unintended UI changes
+
+## Frontend testing
+
+### Running frontend tests
+
+<CodeGroup>
+```bash All tests
+bun run test
+```
+
+```bash Unit tests only
+bun run test-unit
+```
+
+```bash Watch mode
+bun run test-unit-watch
+```
+
+```bash With ClojureScript rebuild
+bun run test-unit-watch:cljs
+```
+
+```bash Timezone tests
+bun run test-timezones
+```
+</CodeGroup>
+
+### Unit test setup
+
+Frontend unit tests use Jest and React Testing Library. New tests should be placed alongside the components they test.
+
+#### File naming convention
+
+Unit tests use the `.unit.spec.tsx` or `.unit.spec.ts` extension:
+
+```
+Button.tsx
+Button.unit.spec.tsx  ✅
+```
+
+#### Standard test pattern
+
+Use this pattern for setting up component tests:
+
+```typescript
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { renderWithProviders } from "__support__/ui";
+import { Collection } from "metabase-types/api";
+import { createMockCollection } from "metabase-types/api/mocks";
+import CollectionHeader from "./CollectionHeader";
+
+interface SetupOpts {
+  collection: Collection;
+}
+
+const setup = ({ collection }: SetupOpts) => {
+  const onUpdateCollection = jest.fn();
+
+  renderWithProviders(
+    <CollectionHeader
+      collection={collection}
+      onUpdateCollection={onUpdateCollection}
+    />,
+  );
+
+  return { onUpdateCollection };
+};
+
+describe("CollectionHeader", () => {
+  it("should update collection name", async () => {
+    const collection = createMockCollection({
+      name: "Old name",
+    });
+
+    const { onUpdateCollection } = setup({ collection });
+
+    await userEvent.clear(screen.getByDisplayValue("Old name"));
+    await userEvent.type(
+      screen.getByPlaceholderText("Add title"),
+      "New name"
+    );
+    await userEvent.tab();
+
+    expect(onUpdateCollection).toHaveBeenCalledWith({
+      ...collection,
+      name: "New name",
+    });
+  });
+});
+```
+
+### Key testing utilities
+
+<Accordion title="renderWithProviders">
+  Renders components with all necessary providers (Redux, Router, Theme):
+  
+  ```typescript
+  import { renderWithProviders } from "__support__/ui";
+  
+  renderWithProviders(<MyComponent />);
+  ```
+</Accordion>
+
+<Accordion title="Mock creators">
+  Create mock data for tests:
+  
+  ```typescript
+  import {
+    createMockCollection,
+    createMockDatabase,
+    createMockCard,
+  } from "metabase-types/api/mocks";
+  
+  const collection = createMockCollection({ name: "Test" });
+  ```
+</Accordion>
+
+<Accordion title="Server mocks">
+  Mock API responses using fetch-mock:
+  
+  ```typescript
+  import { setupCollectionsEndpoints } from "__support__/server-mocks";
+  
+  const setup = () => {
+    setupCollectionsEndpoints({ collections: [collection] });
+    renderWithProviders(<Component />);
+  };
+  ```
+</Accordion>
+
+### API request mocking
+
+Use `fetch-mock` to mock HTTP requests:
+
+```typescript
+import fetchMock from "fetch-mock";
+import { setupDatabasesEndpoints } from "__support__/server-mocks";
+
+const setup = () => {
+  const databases = [
+    createMockDatabase({ id: 1, name: "Test DB" }),
+  ];
+  
+  setupDatabasesEndpoints({ databases });
+  
+  renderWithProviders(<DatabaseList />);
+};
+
+describe("DatabaseList", () => {
+  beforeEach(() => {
+    fetchMock.reset();
+  });
+
+  it("displays databases", async () => {
+    setup();
+    expect(await screen.findByText("Test DB")).toBeInTheDocument();
+  });
+});
+```
+
+### Testing best practices
+
+<Warning>
+**Do not** use `fetch-mock` outside of the setup function. Always use helper functions from `__support__/server-mocks`.
+</Warning>
+
+1. **Test behavior, not implementation** - Focus on what users see and do
+2. **Use semantic queries** - Prefer `getByRole`, `getByLabelText` over `getByTestId`
+3. **Wait for async updates** - Use `findBy*` queries or `waitFor` for async operations
+4. **Keep tests isolated** - Each test should be independent
+5. **Mock external dependencies** - Don't make real API calls
+
+## Backend testing
+
+### Running backend tests
+
+<CodeGroup>
+```bash OSS tests
+clojure -X:dev:test
+```
+
+```bash OSS + Enterprise
+clojure -X:dev:ee:ee-dev:test
+```
+
+```bash Specific namespace
+clojure -X:dev:test :only metabase.api.database-test
+```
+
+```bash Specific test
+clojure -X:dev:test :only metabase.api.database-test/list-databases-test
+```
+
+```bash Tests in directory
+clojure -X:dev:test :only '"test/metabase/api"'
+```
+</CodeGroup>
+
+### Writing backend tests
+
+Backend tests use `clojure.test` and are located in `/test/metabase/`:
+
+```clojure
+(ns metabase.api.database-test
+  (:require
+   [clojure.test :refer :all]
+   [metabase.test :as mt]))
+
+(deftest list-databases-test
+  (testing "GET /api/database"
+    (mt/with-temp [:model/Database {db-id :id} {}]
+      (is (= [{:id db-id}]
+             (mt/user-http-request :crowberto :get 200 "database"))))))
+```
+
+### Test utilities
+
+<Accordion title="mt/with-temp">
+  Create temporary database records for testing:
+  
+  ```clojure
+  (mt/with-temp [:model/Database {db-id :id} {:name "Test DB"}
+                 :model/Table {table-id :id} {:db_id db-id}]
+    ;; Test code here
+    )
+  ```
+</Accordion>
+
+<Accordion title="mt/user-http-request">
+  Make authenticated API requests:
+  
+  ```clojure
+  (mt/user-http-request :crowberto :get 200 "database")
+  (mt/user-http-request :rasta :post 403 "database" {:name "Test"})
+  ```
+</Accordion>
+
+<Accordion title="mt/dataset">
+  Use specific test datasets:
+  
+  ```clojure
+  (mt/dataset test-data
+    (mt/run-mbql-query venues
+      {:aggregation [:count]}))
+  ```
+</Accordion>
+
+### Testing with multiple drivers
+
+By default, tests run against H2. To test other drivers:
+
+```bash
+DRIVERS=h2,postgres,mysql,mongo clojure -X:dev:drivers:drivers-dev:test
+```
+
+In the REPL:
+
+```clojure
+(mt/set-test-drivers! #{:postgres :mysql :h2})
+```
+
+### Driver-specific test data
+
+Each driver can provide test data in `metabase.test.data.<driver>`:
+
+```clojure
+(ns metabase.test.data.postgres
+  (:require [metabase.test.data.interface :as tx]))
+
+(defmethod tx/dbdef->connection-details :postgres
+  [_ context {:keys [database-name]}]
+  {:host     (tx/db-test-env-var-or-throw :postgresql :host "localhost")
+   :port     (tx/db-test-env-var-or-throw :postgresql :port 5432)
+   :user     (tx/db-test-env-var :postgresql :user)
+   :password (tx/db-test-env-var :postgresql :password)
+   :db       (when (= context :db) database-name)})
+```
+
+### REPL-driven testing
+
+Run tests from the REPL for faster feedback:
+
+```clojure
+;; Run a single test
+(clojure.test/run-test-var #'metabase.api.database-test/list-databases-test)
+
+;; Run all tests in namespace
+(clojure.test/run-tests 'metabase.api.database-test)
+
+;; Run tests matching pattern
+(metabase.test-runner/find-and-run-tests-repl 
+  {:namespace-pattern ".*database.*"})
+```
+
+## End-to-end testing
+
+E2E tests use Cypress and simulate real user workflows.
+
+### Running Cypress tests
+
+<CodeGroup>
+```bash All e2e tests
+bun run test-cypress
+```
+
+```bash Open Cypress UI
+npx cypress open
+```
+
+```bash Specific spec
+npx cypress run --spec "e2e/test/scenarios/question/new.cy.spec.js"
+```
+</CodeGroup>
+
+### Writing Cypress tests
+
+Cypress tests use the `.cy.spec.js` extension:
+
+```javascript
+import { restore, popover } from "e2e/support/helpers";
+
+describe("scenarios > question > new", () => {
+  beforeEach(() => {
+    restore();
+    cy.signInAsAdmin();
+  });
+
+  it("should create a new question", () => {
+    cy.visit("/");
+    cy.findByText("New").click();
+    
+    popover().within(() => {
+      cy.findByText("Question").click();
+    });
+    
+    cy.findByText("Sample Database").click();
+    cy.findByText("Orders").click();
+    
+    cy.findByTestId("qb-header").findByText("Visualize").click();
+    
+    cy.findByText("18,760");
+  });
+});
+```
+
+### Cypress best practices
+
+1. **Use custom commands** - Defined in `/e2e/support/commands.js`
+2. **Wait for elements** - Use `cy.findBy*` which automatically waits
+3. **Use helpers** - Import from `/e2e/support/helpers`
+4. **Reset state** - Use `restore()` before each test
+5. **Avoid hardcoded waits** - Don't use `cy.wait(1000)`
+
+## Visual regression testing
+
+Metabase uses Loki for visual regression tests:
+
+```bash
+# Run visual tests
+bun run test-visual:loki
+
+# Approve differences
+bun run test-visual:loki-approve-diff
+
+# Generate report
+bun run test-visual:loki-report
+```
+
+Visual tests run against Storybook stories.
+
+## Test data and fixtures
+
+### Frontend test data
+
+Create mock data using factory functions:
+
+```typescript
+import { createMockCard } from "metabase-types/api/mocks";
+
+const card = createMockCard({
+  name: "Test Question",
+  dataset_query: {
+    type: "query",
+    database: 1,
+  },
+});
+```
+
+### Backend test data
+
+Use `mt/with-temp` or test datasets:
+
+```clojure
+;; Temporary data
+(mt/with-temp [:model/Card {card-id :id} {:name "Test"}]
+  ;; Test code
+  )
+
+;; Test datasets
+(mt/dataset test-data
+  (mt/id :venues))  ; => table ID
+```
+
+## Continuous integration
+
+All tests run in CI on every pull request:
+
+- Frontend unit tests
+- Backend unit tests
+- Cypress e2e tests
+- Visual regression tests
+- Linters
+
+<Warning>
+PRs must pass all tests before merging. Fix failing tests or explain why they're expected to fail.
+</Warning>
+
+## Debugging tests
+
+### Frontend debugging
+
+```bash
+# Run with Node debugger
+bun run test-debug
+
+# Run specific test file
+bun run test-unit frontend/src/metabase/components/Button.unit.spec.tsx
+```
+
+### Backend debugging
+
+From the REPL:
+
+```clojure
+;; Set breakpoint
+(require '[clojure.tools.trace :as trace])
+(trace/trace-ns 'metabase.api.database)
+
+;; Run test
+(clojure.test/run-test-var #'metabase.api.database-test/list-databases-test)
+```
+
+### Cypress debugging
+
+Open Cypress UI for interactive debugging:
+
+```bash
+npx cypress open
+```
+
+Use browser DevTools and time-travel debugging.
+
+## Next steps
+
+- Learn about [building drivers](/developers/building-drivers)
+- Understand [code review practices](/developers/contributing#code-review-process)
+- Read about the [driver interface](/developers/driver-interface)

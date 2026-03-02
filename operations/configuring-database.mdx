@@ -1,0 +1,289 @@
+---
+title: Configuring the application database
+description: Set up a production-ready database to store Metabase's application data including users, questions, and dashboards.
+---
+
+The application database is where Metabase stores information about user accounts, questions, dashboards, and any other data needed to run the Metabase application. This is distinct from your data warehouse where your actual data lives.
+
+<Note>
+For production deployments, we strongly recommend using PostgreSQL as your Metabase application database.
+</Note>
+
+## Supported databases
+
+Metabase supports the following databases for storing application data:
+
+- **PostgreSQL** (recommended for production)
+- **MySQL or MariaDB** (also works for production)
+- **H2** (default for local demos - avoid in production)
+
+<Warning>
+Metabase reads the database configuration when the application starts. You cannot change the application database while Metabase is running.
+</Warning>
+
+## PostgreSQL (recommended)
+
+PostgreSQL is the recommended database for production Metabase deployments. Metabase supports PostgreSQL versions from the oldest supported version through the latest stable version.
+
+### Create the database
+
+First, create an empty PostgreSQL database for Metabase:
+
+```bash
+createb --encoding=UTF8 -e metabase
+```
+
+Metabase will automatically create all necessary tables on first startup.
+
+### Configure with environment variables
+
+<Tabs>
+  <Tab title="Individual parameters">
+    Set each connection parameter separately:
+
+    ```bash
+    export MB_DB_TYPE=postgres
+    export MB_DB_DBNAME=metabase
+    export MB_DB_PORT=5432
+    export MB_DB_USER=<username>
+    export MB_DB_PASS=<password>
+    export MB_DB_HOST=localhost
+    java --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar
+    ```
+  </Tab>
+  
+  <Tab title="Connection URI">
+    Use a full JDBC connection string for advanced parameters:
+
+    ```bash
+    export MB_DB_CONNECTION_URI="jdbc:postgresql://localhost:5432/metabase?user=<username>&password=<password>"
+    java --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar
+    ```
+  </Tab>
+  
+  <Tab title="URI with separate credentials">
+    Combine connection URI with separate credentials (useful for passwords with special characters):
+
+    ```bash
+    export MB_DB_CONNECTION_URI="jdbc:postgresql://localhost:5432/metabase"
+    export MB_DB_USER=<username>
+    export MB_DB_PASS=<password>
+    java --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar
+    ```
+  </Tab>
+</Tabs>
+
+### Docker configuration
+
+For Docker deployments, pass environment variables with the `-e` flag:
+
+```bash
+docker run -d -p 3000:3000 \
+  -e "MB_DB_TYPE=postgres" \
+  -e "MB_DB_DBNAME=metabase" \
+  -e "MB_DB_PORT=5432" \
+  -e "MB_DB_USER=<username>" \
+  -e "MB_DB_PASS=<password>" \
+  -e "MB_DB_HOST=my-database-host" \
+  --name metabase metabase/metabase
+```
+
+### SSL configuration
+
+For PostgreSQL connections with SSL certificate validation:
+
+```bash
+export MB_DB_CONNECTION_URI="postgres://localhost:5432/metabase?user=<username>&password=<password>&sslmode=verify-ca&sslrootcert=<path to certificate>"
+```
+
+<Warning>
+Metabase removed the PostgreSQL `NonValidatingFactory` in version 0.38. If upgrading, configure SSL certificate validation or enable the factory manually (not recommended for production).
+</Warning>
+
+## MySQL or MariaDB
+
+While we recommend PostgreSQL, MySQL and MariaDB are also supported for production deployments.
+
+### Version requirements
+
+- **MySQL**: version 8.0.17 or higher
+- **MariaDB**: version 10.2.2 or higher
+- **Character set**: `utf8mb4` is required
+
+<Note>
+ApsaraDB MySQL is not supported. Use ApsaraDB PostgreSQL instead.
+</Note>
+
+### Create the database
+
+Create a MySQL database with the correct character set:
+
+```sql
+CREATE DATABASE metabase CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+### Configure with environment variables
+
+<CodeGroup>
+
+```bash Individual parameters
+export MB_DB_TYPE=mysql
+export MB_DB_DBNAME=metabase
+export MB_DB_PORT=3306
+export MB_DB_USER=<username>
+export MB_DB_PASS=<password>
+export MB_DB_HOST=localhost
+java --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar
+```
+
+```bash Connection URI
+export MB_DB_CONNECTION_URI="jdbc:mysql://localhost:3306/metabase?user=<username>&password=<password>"
+java --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar
+```
+
+```bash URI with credentials
+export MB_DB_CONNECTION_URI="jdbc:mysql://localhost:3306/metabase"
+export MB_DB_USER=<username>
+export MB_DB_PASS=<password>
+java --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar
+```
+
+</CodeGroup>
+
+## H2 database (development only)
+
+<Warning>
+**For production installations, replace the default H2 database with PostgreSQL.** H2 is file-based and only suitable for local testing.
+</Warning>
+
+By default, Metabase ships with an embedded H2 database for easy demos on your local machine. If you don't provide environment variables specifying a production database, Metabase will create an H2 database in the same directory as the JAR file.
+
+### H2 database files
+
+You can see the H2 database files in your Metabase directory:
+
+```bash
+ls metabase.*
+# Output:
+# metabase.db.h2.db  (or metabase.db.mv.db)
+# metabase.db.trace.db
+```
+
+### Custom H2 location
+
+To use an H2 database file in a specific directory:
+
+```bash
+export MB_DB_TYPE=h2
+export MB_DB_FILE=/the/path/to/my/h2.db
+java --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar
+```
+
+<Note>
+H2 automatically appends `.mv.db` or `.h2.db` to the path you specify. Exclude these extensions in `MB_DB_FILE`.
+</Note>
+
+## Key environment variables
+
+<ResponseField name="MB_DB_TYPE" type="string">
+  Database type: `postgres`, `mysql`, or `h2`
+</ResponseField>
+
+<ResponseField name="MB_DB_DBNAME" type="string">
+  Name of the Metabase application database
+</ResponseField>
+
+<ResponseField name="MB_DB_PORT" type="integer">
+  Database port (5432 for PostgreSQL, 3306 for MySQL)
+</ResponseField>
+
+<ResponseField name="MB_DB_USER" type="string">
+  Database username
+</ResponseField>
+
+<ResponseField name="MB_DB_PASS" type="string">
+  Database password
+</ResponseField>
+
+<ResponseField name="MB_DB_HOST" type="string">
+  Database hostname or IP address
+</ResponseField>
+
+<ResponseField name="MB_DB_CONNECTION_URI" type="string">
+  Full JDBC connection string (overrides individual parameters)
+</ResponseField>
+
+<ResponseField name="MB_DB_FILE" type="string">
+  Path to H2 database file (H2 only)
+</ResponseField>
+
+## Cloud database services
+
+### Amazon RDS
+
+Metabase works well with Amazon RDS for PostgreSQL or MySQL. Follow AWS best practices for:
+
+- Automated backups
+- Multi-AZ deployments for high availability
+- Parameter groups for performance tuning
+- Security groups for network access control
+
+See the [Amazon RDS documentation](https://docs.aws.amazon.com/rds/) for setup instructions.
+
+### Creating an RDS instance
+
+For guidance on creating an RDS database specifically for Metabase, see our [AWS RDS setup guide](https://www.metabase.com/docs/latest/installation-and-operation/creating-RDS-database-on-AWS).
+
+## Troubleshooting
+
+### Connection timeout
+
+If you experience connection timeouts, especially over SSH tunnels:
+
+```bash
+export MB_DB_CONNECTION_TIMEOUT_MS=30000  # 30 seconds instead of default 10
+```
+
+### Query timeout
+
+For long-running queries during migrations or heavy usage:
+
+```bash
+export MB_DB_QUERY_TIMEOUT_MINUTES=30  # 30 minutes instead of default 20
+```
+
+### SSL certificate issues
+
+If you can't enable certificate validation, you can temporarily enable `NonValidatingFactory` (not recommended):
+
+```bash
+export MB_DB_CONNECTION_URI="postgres://localhost:5432/metabase?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory"
+```
+
+## Migrating from H2
+
+If you've been using the default H2 database and want to migrate to a production database without losing your data:
+
+<Card title="Migrate from H2 to production" icon="database" href="/operations/backing-up">
+  Learn how to migrate your H2 data to PostgreSQL or MySQL
+</Card>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Environment variables" icon="code" href="/operations/environment-variables">
+    View all available configuration options
+  </Card>
+  
+  <Card title="Backing up Metabase" icon="server" href="/operations/backing-up">
+    Set up regular backups of your application database
+  </Card>
+  
+  <Card title="Running on Docker" icon="docker" href="/operations/running-docker">
+    Deploy Metabase with Docker and database configuration
+  </Card>
+  
+  <Card title="Upgrading Metabase" icon="arrow-up" href="/operations/upgrading">
+    Learn how to safely upgrade your Metabase instance
+  </Card>
+</CardGroup>

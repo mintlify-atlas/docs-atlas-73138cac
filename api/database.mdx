@@ -1,0 +1,503 @@
+---
+title: Database
+description: Manage database connections, schemas, tables, and metadata through the Metabase API
+---
+
+The Database API allows you to manage database connections, browse schemas and tables, and access metadata. This API includes 25 endpoints for comprehensive database management.
+
+## List databases
+
+Get a list of all databases the current user has access to.
+
+```bash
+GET /api/database
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/database \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+
+```javascript JavaScript
+const databases = await fetch('https://your-metabase.com/api/database', {
+  headers: { 'X-Metabase-Session': sessionToken }
+}).then(r => r.json());
+```
+
+```python Python
+response = requests.get(
+    'https://your-metabase.com/api/database',
+    headers={'X-Metabase-Session': session_token}
+)
+databases = response.json()
+```
+</CodeGroup>
+
+### Response
+
+Returns an array of database objects with connection details and metadata.
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "Sample Database",
+      "engine": "postgres",
+      "created_at": "2024-01-15T10:00:00Z",
+      "is_sample": false,
+      "features": ["basic-aggregations", "nested-queries"]
+    }
+  ]
+}
+```
+
+## Get database
+
+Get details about a specific database.
+
+```bash
+GET /api/database/{id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/database/1 \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="id" type="integer" required>
+  Database ID
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="integer">
+  Database ID
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Database name
+</ResponseField>
+
+<ResponseField name="engine" type="string">
+  Database engine (postgres, mysql, h2, etc.)
+</ResponseField>
+
+<ResponseField name="details" type="object">
+  Connection details (host, port, dbname, etc.)
+</ResponseField>
+
+<ResponseField name="features" type="array">
+  Supported database features
+</ResponseField>
+
+## Create database
+
+Add a new database connection.
+
+```bash
+POST /api/database
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/database \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "name": "Production DB",
+    "engine": "postgres",
+    "details": {
+      "host": "localhost",
+      "port": 5432,
+      "dbname": "production",
+      "user": "metabase",
+      "password": "secret"
+    }
+  }'
+```
+
+```javascript JavaScript
+const database = await fetch('https://your-metabase.com/api/database', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Metabase-Session': sessionToken
+  },
+  body: JSON.stringify({
+    name: 'Production DB',
+    engine: 'postgres',
+    details: {
+      host: 'localhost',
+      port: 5432,
+      dbname: 'production',
+      user: 'metabase',
+      password: 'secret'
+    }
+  })
+}).then(r => r.json());
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="name" type="string" required>
+  Display name for the database
+</ParamField>
+
+<ParamField body="engine" type="string" required>
+  Database engine type (postgres, mysql, h2, mongo, etc.)
+</ParamField>
+
+<ParamField body="details" type="object" required>
+  Connection details specific to the database engine
+  
+  Common fields:
+  - `host` - Database host
+  - `port` - Database port
+  - `dbname` - Database name
+  - `user` - Username
+  - `password` - Password
+</ParamField>
+
+<ParamField body="is_full_sync" type="boolean">
+  Whether to perform a full sync (default: true)
+</ParamField>
+
+<ParamField body="schedules" type="object">
+  Sync and cache field values schedules
+</ParamField>
+
+## Update database
+
+Update an existing database connection.
+
+```bash
+PUT /api/database/{id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X PUT \
+  https://your-metabase.com/api/database/1 \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "name": "Updated Database Name",
+    "details": {
+      "host": "new-host.example.com"
+    }
+  }'
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="id" type="integer" required>
+  Database ID
+</ParamField>
+
+### Request body
+
+All fields are optional. Only include fields you want to update.
+
+<ParamField body="name" type="string">
+  Database display name
+</ParamField>
+
+<ParamField body="details" type="object">
+  Connection details to update
+</ParamField>
+
+<ParamField body="is_full_sync" type="boolean">
+  Enable or disable full sync
+</ParamField>
+
+## Delete database
+
+Permanently delete a database connection.
+
+```bash
+DELETE /api/database/{id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X DELETE \
+  https://your-metabase.com/api/database/1 \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+<Warning>
+Deleting a database will also delete all questions, dashboards, and other content that depends on it. This action cannot be undone.
+</Warning>
+
+## List schemas
+
+Get all schemas for a database.
+
+```bash
+GET /api/database/{id}/schemas
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/database/1/schemas \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Response
+
+Returns an array of schema names.
+
+```json
+["public", "analytics", "staging"]
+```
+
+## List tables
+
+Get all tables in a database or schema.
+
+```bash
+GET /api/database/{id}/metadata
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/database/1/metadata \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Response
+
+<ResponseField name="tables" type="array">
+  Array of table objects with fields and metadata
+</ResponseField>
+
+<ResponseField name="fields" type="array">
+  Array of field objects across all tables
+</ResponseField>
+
+## Get table metadata
+
+Get detailed metadata for a specific table including fields, field types, and relationships.
+
+```bash
+GET /api/database/{id}/metadata
+```
+
+Query parameters can filter to specific tables or schemas.
+
+## Sync database schema
+
+Trigger a manual sync of the database schema.
+
+```bash
+POST /api/database/{id}/sync_schema
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/database/1/sync_schema \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+<Note>
+Schema syncs run automatically on a schedule, but you can trigger a manual sync to immediately pick up schema changes.
+</Note>
+
+## Rescan field values
+
+Rescan and cache field values for a database.
+
+```bash
+POST /api/database/{id}/rescan_values
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/database/1/rescan_values \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+## Discard cached field values
+
+Clear cached field values for a database.
+
+```bash
+POST /api/database/{id}/discard_values
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/database/1/discard_values \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+## Validate database connection
+
+Test database connection details before saving.
+
+```bash
+POST /api/database/validate
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/database/validate \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "engine": "postgres",
+    "details": {
+      "host": "localhost",
+      "port": 5432,
+      "dbname": "test",
+      "user": "user",
+      "password": "pass"
+    }
+  }'
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="engine" type="string" required>
+  Database engine type
+</ParamField>
+
+<ParamField body="details" type="object" required>
+  Connection details to validate
+</ParamField>
+
+### Response
+
+<ResponseField name="valid" type="boolean">
+  Whether the connection is valid
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Error message if connection failed
+</ResponseField>
+
+```json
+{
+  "valid": true
+}
+```
+
+## Get autocomplete suggestions
+
+Get SQL autocomplete suggestions for native queries.
+
+```bash
+GET /api/database/{id}/autocomplete_suggestions
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  'https://your-metabase.com/api/database/1/autocomplete_suggestions?query=SELECT%20*%20FROM%20' \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="id" type="integer" required>
+  Database ID
+</ParamField>
+
+<ParamField query="query" type="string" required>
+  Partial SQL query to get suggestions for
+</ParamField>
+
+### Response
+
+Returns an array of autocomplete suggestions including table names, column names, and SQL keywords.
+
+## Sample database
+
+Create or restore the sample database.
+
+```bash
+POST /api/database/sample_database
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/database/sample_database \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+<Note>
+The sample database is useful for testing and demonstrations. It contains sample data across multiple tables.
+</Note>
+
+## Database healthcheck
+
+Check the health and connectivity of a database.
+
+```bash
+GET /api/database/{id}/healthcheck
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/database/1/healthcheck \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Response
+
+<ResponseField name="status" type="string">
+  Health status: "ok" or "error"
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Error message if health check failed
+</ResponseField>
+
+## Error codes
+
+Common error codes for database endpoints:
+
+<ResponseField name="400 Bad Request" type="error">
+  Invalid database configuration or connection details
+</ResponseField>
+
+<ResponseField name="403 Forbidden" type="error">
+  Insufficient permissions to manage databases (requires admin)
+</ResponseField>
+
+<ResponseField name="404 Not Found" type="error">
+  Database not found
+</ResponseField>
+
+<ResponseField name="500 Internal Server Error" type="error">
+  Database connection or sync error
+</ResponseField>

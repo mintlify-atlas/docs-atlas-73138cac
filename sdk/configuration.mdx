@@ -1,0 +1,281 @@
+---
+title: Configuration
+description: Configure authentication, theming, and global settings for the Metabase Embedding SDK
+---
+
+The Metabase Embedding SDK is configured through the `MetabaseProvider` component. This page covers all available configuration options.
+
+## Authentication configuration
+
+Authentication is configured via the `authConfig` prop on `MetabaseProvider`. The SDK supports multiple authentication methods.
+
+### JWT authentication (recommended)
+
+JSON Web Token (JWT) authentication is the recommended method for production environments:
+
+```tsx
+import { MetabaseProvider } from '@metabase/embedding-sdk-react';
+
+const authConfig = {
+  metabaseInstanceUrl: 'https://metabase.example.com',
+  jwtProviderUri: 'https://your-api.example.com/sso/metabase',
+};
+
+function App() {
+  return (
+    <MetabaseProvider authConfig={authConfig}>
+      {/* Your app */}
+    </MetabaseProvider>
+  );
+}
+```
+
+#### JWT with custom token fetching
+
+You can provide a custom function to fetch JWT tokens:
+
+```tsx
+const authConfig = {
+  metabaseInstanceUrl: 'https://metabase.example.com',
+  fetchRequestToken: async () => {
+    const response = await fetch('/api/metabase-token');
+    const data = await response.json();
+    return data;
+  },
+};
+```
+
+### SAML authentication
+
+For SAML-based authentication:
+
+```tsx
+const authConfig = {
+  metabaseInstanceUrl: 'https://metabase.example.com',
+  preferredAuthMethod: 'saml',
+};
+```
+
+### API key (development only)
+
+<Warning>
+API key authentication should only be used for local development. Never expose API keys in production.
+</Warning>
+
+```tsx
+const authConfig = {
+  metabaseInstanceUrl: 'http://localhost:3000',
+  apiKey: 'your-development-api-key',
+};
+```
+
+### Guest mode
+
+For guest embed scenarios:
+
+```tsx
+const authConfig = {
+  metabaseInstanceUrl: 'https://metabase.example.com',
+  isGuest: true,
+};
+```
+
+## Theming
+
+Customize the appearance of embedded components to match your brand:
+
+```tsx
+import { MetabaseProvider, defineMetabaseTheme } from '@metabase/embedding-sdk-react';
+
+const theme = defineMetabaseTheme({
+  colors: {
+    brand: '#9333EA',
+    'text-primary': '#1F2937',
+    'text-secondary': '#6B7280',
+  },
+  fontFamily: 'Inter, sans-serif',
+  fontSize: '14px',
+  components: {
+    dashboard: {
+      card: {
+        backgroundColor: '#FFFFFF',
+        border: '1px solid #E5E7EB',
+      },
+    },
+  },
+});
+
+function App() {
+  return (
+    <MetabaseProvider authConfig={authConfig} theme={theme}>
+      {/* Your app */}
+    </MetabaseProvider>
+  );
+}
+```
+
+Learn more about theming in the [theming guide](/sdk/theming).
+
+## Plugins
+
+Plugins allow you to customize behavior and add functionality:
+
+```tsx
+const pluginsConfig = {
+  mapQuestionClickActions: (clickActions, clickedDataPoint) => {
+    // Filter or modify click actions
+    return clickActions.filter(action => action.name !== 'filter-by');
+  },
+  dashboard: {
+    dashboardCardMenu: ({ dashcard, result }) => {
+      // Custom dashboard card menu items
+      return [
+        {
+          name: 'Custom Action',
+          onClick: () => console.log('Custom action clicked'),
+        },
+      ];
+    },
+  },
+  handleLink: (url) => {
+    // Custom link handling
+    console.log('Link clicked:', url);
+    return { handled: true };
+  },
+};
+
+<MetabaseProvider
+  authConfig={authConfig}
+  pluginsConfig={pluginsConfig}
+>
+  {/* Your app */}
+</MetabaseProvider>
+```
+
+## Event handlers
+
+Subscribe to global events:
+
+```tsx
+const eventHandlers = {
+  onDashboardLoad: (dashboard) => {
+    console.log('Dashboard loaded:', dashboard);
+  },
+  onDashboardLoadWithoutCards: (dashboard) => {
+    console.log('Dashboard structure loaded:', dashboard);
+  },
+};
+
+<MetabaseProvider
+  authConfig={authConfig}
+  eventHandlers={eventHandlers}
+>
+  {/* Your app */}
+</MetabaseProvider>
+```
+
+## Localization
+
+Set the display language using ISO language codes:
+
+```tsx
+<MetabaseProvider
+  authConfig={authConfig}
+  locale="de" // German
+>
+  {/* Your app */}
+</MetabaseProvider>
+```
+
+## Custom components
+
+### Custom loader
+
+Provide a custom loading component:
+
+```tsx
+const CustomLoader = ({ label }) => (
+  <div>
+    <Spinner />
+    {label && <p>{label}</p>}
+  </div>
+);
+
+<MetabaseProvider
+  authConfig={authConfig}
+  loaderComponent={CustomLoader}
+>
+  {/* Your app */}
+</MetabaseProvider>
+```
+
+### Custom error component
+
+Handle errors with a custom component:
+
+```tsx
+const CustomError = ({ message }) => (
+  <div className="error-container">
+    <h2>Something went wrong</h2>
+    <p>{message}</p>
+  </div>
+);
+
+<MetabaseProvider
+  authConfig={authConfig}
+  errorComponent={CustomError}
+>
+  {/* Your app */}
+</MetabaseProvider>
+```
+
+## Debug options
+
+Control console logging:
+
+```tsx
+<MetabaseProvider
+  authConfig={authConfig}
+  allowConsoleLog={false} // Disable SDK logs
+>
+  {/* Your app */}
+</MetabaseProvider>
+```
+
+## MetabaseProvider props reference
+
+<ParamField path="authConfig" type="MetabaseAuthConfig" required>
+  Authentication configuration for connecting to your Metabase instance.
+</ParamField>
+
+<ParamField path="theme" type="MetabaseEmbeddingTheme">
+  Theme configuration to customize the appearance of embedded components.
+</ParamField>
+
+<ParamField path="pluginsConfig" type="MetabaseGlobalPluginsConfig">
+  Plugin configuration for customizing behavior and adding functionality.
+</ParamField>
+
+<ParamField path="eventHandlers" type="SdkEventHandlersConfig">
+  Global event handlers for dashboard and question events.
+</ParamField>
+
+<ParamField path="locale" type="string">
+  ISO language code (e.g., `en`, `de`, `fr`). Defaults to the instance locale.
+</ParamField>
+
+<ParamField path="loaderComponent" type="React.ComponentType<{ label?: string }>">
+  Custom loader component displayed while the SDK is loading.
+</ParamField>
+
+<ParamField path="errorComponent" type="SdkErrorComponent">
+  Custom error component displayed when the SDK encounters an error.
+</ParamField>
+
+<ParamField path="allowConsoleLog" type="boolean" default="true">
+  Whether to allow logging to the DevTools console.
+</ParamField>
+
+<ParamField path="children" type="ReactNode" required>
+  Your application components.
+</ParamField>

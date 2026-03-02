@@ -1,0 +1,208 @@
+---
+title: Models
+description: Create curated datasets that serve as starting points for analysis
+---
+
+Models are a fundamental building block in Metabase. They curate data from tables to anticipate the kinds of questions people will ask. Think of them as derived tables or special saved questions designed to be reused as starting points for new questions.
+
+<Info>
+Models can be based on SQL or query builder questions, allowing you to include custom calculated columns and complex transformations.
+</Info>
+
+## What models can do
+
+Models provide powerful capabilities for organizing and enhancing your data:
+
+- **Enhanced metadata**: Update column descriptions and customize metadata to create intuitive starting points for exploration
+- **Improved discoverability**: Show up higher in search results and get highlighted when users start new questions
+- **Organized in collections**: Keep models separate from complex database schemas by storing them in collections
+- **Searchable records**: Surface individual records in search results by indexing specific columns
+- **Performance optimization**: Can be persisted for faster loading times
+
+## Use cases for models
+
+<CardGroup cols={2}>
+  <Card title="Business concepts" icon="building">
+    Create intuitive representations of business concepts like "Customer" by pulling together data from multiple tables and adding calculated columns like lifetime value (LTV)
+  </Card>
+  <Card title="Enable exploration" icon="compass">
+    Let people explore SQL query results with the query builder by properly setting column types
+  </Card>
+  <Card title="Summary tables" icon="table">
+    Create summary tables that aggregate and combine data from multiple sources
+  </Card>
+  <Card title="Clean datasets" icon="filter">
+    Simplify tables by filtering out unnecessary columns and rows
+  </Card>
+</CardGroup>
+
+## Creating a model
+
+Before creating a new model, search for existing ones that might meet your needs.
+
+<Tabs>
+  <Tab title="From scratch">
+    <Steps>
+      <Step title="Open the model creation dialog">
+        Navigate to the Models tab in the sidebar (under **Data** section) and click the **+** button, or use the command palette (Cmd/Ctrl + K) and type "model"
+      </Step>
+      <Step title="Choose your query method">
+        Select either the query builder or SQL. The query builder allows Metabase to automatically fill out some metadata; SQL requires manual metadata configuration
+      </Step>
+      <Step title="Build and save your query">
+        Select your data source, create your query, and save it. Models are automatically pinned to the current collection
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="From a saved question">
+    <Steps>
+      <Step title="Create or open a question">
+        Ask a question using the query builder or SQL editor, or open an existing saved question
+      </Step>
+      <Step title="Save the question">
+        Make sure your question is saved
+      </Step>
+      <Step title="Convert to model">
+        Click the **...** menu and select **Turn this into a model**
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## Model metadata
+
+Metadata is the key to making models powerful. When you write SQL queries, Metabase can display results but doesn't automatically understand the data types. Adding metadata enables query builder exploration and improves filtering and visualization.
+
+<Note>
+If you only set one type of metadata, set the **Column type** to enable Metabase's query builder features.
+</Note>
+
+<AccordionGroup>
+  <Accordion title="Display name">
+    The user-facing name for the column that appears throughout Metabase
+  </Accordion>
+  <Accordion title="Description">
+    Helpful context about what the column contains and how it should be used
+  </Accordion>
+  <Accordion title="Database column mapping">
+    For SQL-based models, map columns to existing database columns to inherit their types
+  </Accordion>
+  <Accordion title="Column type">
+    Set the semantic type (e.g., Email, URL, Currency). Required for SQL models to enable query builder exploration
+  </Accordion>
+  <Accordion title="Visibility settings">
+    Choose whether columns appear in table views, detail views only, or both
+  </Accordion>
+  <Accordion title="Display format">
+    Configure how values display (as text or clickable links)
+  </Accordion>
+  <Accordion title="Search indexing">
+    Enable individual records to appear in search results by indexing string fields with integer primary keys. Limited to 25,000 unique values per field
+  </Accordion>
+</AccordionGroup>
+
+## Model list view
+
+List view helps you explore records one by one instead of sorting through large tables.
+
+<Steps>
+  <Step title="Open metadata settings">
+    Visit the model and click the three-dot menu, then select **Edit metadata**
+  </Step>
+  <Step title="Navigate to Settings">
+    Go to the **Settings** tab
+  </Step>
+  <Step title="Enable list view">
+    Under "What should the default view of this data be?", toggle to **List**
+  </Step>
+  <Step title="Customize layout">
+    Click **Customize the List layout** to configure which columns appear and their positioning
+  </Step>
+</Steps>
+
+### Customizing list layout
+
+Each list item includes:
+
+- **Entity icon**: Displays an image if the record has an image link
+- **Left column**: Shows the title or primary identifier
+- **Right column**: Displays up to 5 additional columns
+
+You can search for columns, drag them to reorder, and remove unwanted columns. A preview with sample data updates as you make changes.
+
+## Referencing models in SQL
+
+You can reference models in SQL queries just like tables:
+
+```sql
+SELECT * FROM {{#1-customer-model}}
+```
+
+Or use them as common table expressions (CTEs):
+
+```sql
+WITH model AS {{#3807-invoice-model}}
+SELECT *
+FROM model;
+```
+
+<Tip>
+Type `{{#}}` in the SQL editor to search for models, questions, and tables. You can also use the data reference sidebar (book icon) to browse available models.
+</Tip>
+
+## Editing models
+
+Click the down arrow next to a model's name and select **Edit query definition** to modify the underlying query.
+
+<Warning>
+Changes to models overwrite the existing definition. To create a new model from an existing one, use **Duplicate this model** instead.
+</Warning>
+
+### Checking for breaking changes
+
+<Info>
+Available on Pro and Enterprise plans
+</Info>
+
+When saving model changes, Metabase detects whether changes would break dependent questions and dashboards. For example, removing or renaming a column triggers a warning if downstream entities use that column.
+
+Currently, Metabase detects broken column references but cannot detect changes to column types or computation logic.
+
+## Model details and history
+
+Click the **info** button to view:
+
+- **Overview**: Description, creator, last editor, field list, and Entity ID
+- **History**: Change log with previous 15 versions (you can revert to earlier versions)
+- **Relationships**: Questions using the model and linked tables
+- **Actions**: Actions created based on the model
+- **Insights**: Usage analytics (Pro/Enterprise only)
+
+## Model persistence
+
+Models can be persisted to improve query performance. Persisted models cache results in your database, allowing faster loading times for frequently accessed data.
+
+For detailed information, see the [Model persistence documentation](./model-persistence).
+
+## Verification and permissions
+
+Admins and users with appropriate permissions can verify models to indicate they're trusted and ready for use. Verified models display a checkmark badge in the interface.
+
+For more information, see [Content verification](../exploration-and-organization/content-verification).
+
+## Further reading
+
+<CardGroup cols={2}>
+  <Card title="Model persistence" icon="database" href="./model-persistence">
+    Learn how to persist models for faster query performance
+  </Card>
+  <Card title="Metrics" icon="chart-line" href="./metrics">
+    Create reusable calculations based on models
+  </Card>
+  <Card title="Troubleshooting models" icon="wrench" href="../troubleshooting-guide/models">
+    Common issues and solutions for working with models
+  </Card>
+  <Card title="Models tutorial" icon="graduation-cap" href="https://www.metabase.com/learn/metabase-basics/getting-started/models">
+    Step-by-step guide to using models effectively
+  </Card>
+</CardGroup>

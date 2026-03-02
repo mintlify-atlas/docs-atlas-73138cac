@@ -1,0 +1,436 @@
+---
+title: Agent API
+description: The Agent API is a REST API for building headless, agentic BI applications on top of Metabase's semantic layer, scoped to an authenticated user's permissions.
+---
+
+<Info>
+The Agent API is available on Metabase Pro and Enterprise plans.
+</Info>
+
+The Agent API is a REST API for building headless, agentic BI applications on top of Metabase's semantic layer, scoped to an authenticated user's permissions.
+
+## Why use the Agent API
+
+The Agent API offers several advantages over the standard Metabase API:
+
+- **Explicitly supported for agents** - Endpoints are designed specifically for building agentic BI applications
+- **Versioned and stable** - Your apps can rely on consistent responses across updates
+- **JWT authentication** - Requests can be scoped to a user's permissions
+- **No MBQL required** - You don't need to work with Metabase's internal querying language
+
+## Supported features
+
+The Agent API currently supports:
+
+- **Discovering tables and metrics** - List available data sources
+- **Inspecting fields** - Get detailed field information and metadata
+- **Constructing and executing queries** - Build and run queries programmatically
+
+<Note>
+Base path: `/api/agent`
+
+View the [full API reference](https://www.metabase.com/docs/latest/api#tag/apiagent) for detailed endpoint documentation.
+</Note>
+
+## Authentication
+
+The Agent API supports two authentication modes, both requiring JWT to be configured in Metabase admin settings (**Admin > Settings > Authentication > JWT**).
+
+### Stateless JWT (recommended for agents)
+
+Pass a signed JWT directly in each request. This is the recommended approach for AI agents and headless applications.
+
+```http
+Authorization: Bearer <jwt>
+```
+
+The JWT must be signed with the shared secret configured in Metabase.
+
+#### Required JWT claims
+
+| Claim | Type | Required | Description |
+|-------|------|----------|-------------|
+| `iat` | int | Yes | Issued-at time (Unix seconds). JWT must be less than 180 seconds old. |
+| `email` | string | Yes | Email matching a Metabase user. The claim name is configurable via the `jwt-attribute-email` admin setting (default: "email"). |
+| `first_name` | string | No | User's first name. |
+| `last_name` | string | No | User's last name. |
+| `groups` | array | No | List of groups for group sync. |
+
+#### Example JWT payload
+
+<CodeGroup>
+
+```json JWT Payload
+{
+  "iat": 1706640000,
+  "email": "analyst@example.com"
+}
+```
+
+```python Python Example
+import jwt
+import time
+from datetime import datetime
+
+# Your Metabase JWT secret
+SECRET = "your-jwt-secret"
+
+# Create JWT payload
+payload = {
+    "iat": int(time.time()),
+    "email": "analyst@example.com"
+}
+
+# Sign the JWT
+token = jwt.encode(payload, SECRET, algorithm="HS256")
+
+# Make API request
+import requests
+
+response = requests.get(
+    "https://your-metabase.com/api/agent/tables",
+    headers={"Authorization": f"Bearer {token}"}
+)
+```
+
+```javascript Node.js Example
+const jwt = require('jsonwebtoken');
+const axios = require('axios');
+
+// Your Metabase JWT secret
+const SECRET = 'your-jwt-secret';
+
+// Create JWT payload
+const payload = {
+  iat: Math.floor(Date.now() / 1000),
+  email: 'analyst@example.com'
+};
+
+// Sign the JWT
+const token = jwt.sign(payload, SECRET);
+
+// Make API request
+const response = await axios.get(
+  'https://your-metabase.com/api/agent/tables',
+  {
+    headers: { Authorization: `Bearer ${token}` }
+  }
+);
+```
+
+</CodeGroup>
+
+### Session-based authentication
+
+Alternatively, exchange a JWT at `POST /auth/sso` to get a session token, then pass the session token via:
+
+```http
+X-Metabase-Session: <session-token>
+```
+
+This approach is useful when you want to maintain a longer-lived session instead of generating JWTs for each request.
+
+## Common use cases
+
+### Building an AI agent
+
+The Agent API is designed for AI agents that need to:
+
+1. **Discover available data** - Query what tables and metrics exist
+2. **Understand schema** - Inspect fields and relationships
+3. **Generate queries** - Construct queries based on user questions
+4. **Execute queries** - Run queries and return results
+
+<Steps>
+  <Step title="Configure JWT authentication">
+    Set up JWT in **Admin > Settings > Authentication > JWT** with a shared secret
+  </Step>
+  
+  <Step title="Generate JWT tokens">
+    Create JWTs signed with your secret for each request, including the user's email
+  </Step>
+  
+  <Step title="Discover available data">
+    Call `/api/agent/tables` to list available tables and metrics the user can access
+  </Step>
+  
+  <Step title="Build and execute queries">
+    Use the Agent API endpoints to construct and run queries based on user questions
+  </Step>
+</Steps>
+
+### Example: Building a Slack bot
+
+Here's how you might use the Agent API to build a Slack bot that answers data questions:
+
+<CodeGroup>
+
+```python Python Slack Bot
+import jwt
+import time
+import requests
+from slack_sdk import WebClient
+
+METABASE_URL = "https://your-metabase.com"
+JWT_SECRET = "your-jwt-secret"
+
+def create_jwt(user_email):
+    """Create a JWT for the given user."""
+    payload = {
+        "iat": int(time.time()),
+        "email": user_email
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
+
+def get_tables(user_email):
+    """Get available tables for a user."""
+    token = create_jwt(user_email)
+    response = requests.get(
+        f"{METABASE_URL}/api/agent/tables",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    return response.json()
+
+def handle_slack_message(message, user_email):
+    """Handle a Slack message asking for data."""
+    # Get available tables
+    tables = get_tables(user_email)
+    
+    # Your AI logic here to parse message and build query
+    # ...
+    
+    # Execute query using Agent API
+    # ...
+    
+    return "Here are your results..."
+```
+
+```javascript Node.js Slack Bot
+const jwt = require('jsonwebtoken');
+const axios = require('axios');
+const { WebClient } = require('@slack/web-api');
+
+const METABASE_URL = 'https://your-metabase.com';
+const JWT_SECRET = 'your-jwt-secret';
+
+function createJWT(userEmail) {
+  const payload = {
+    iat: Math.floor(Date.now() / 1000),
+    email: userEmail
+  };
+  return jwt.sign(payload, JWT_SECRET);
+}
+
+async function getTables(userEmail) {
+  const token = createJWT(userEmail);
+  const response = await axios.get(
+    `${METABASE_URL}/api/agent/tables`,
+    {
+      headers: { Authorization: `Bearer ${token}` }
+    }
+  );
+  return response.data;
+}
+
+async function handleSlackMessage(message, userEmail) {
+  // Get available tables
+  const tables = await getTables(userEmail);
+  
+  // Your AI logic here to parse message and build query
+  // ...
+  
+  // Execute query using Agent API
+  // ...
+  
+  return 'Here are your results...';
+}
+```
+
+</CodeGroup>
+
+## Permissions and security
+
+The Agent API respects Metabase's permission system:
+
+- **User-scoped** - All requests are scoped to the authenticated user's permissions
+- **Data permissions** - Users can only access tables and fields they have permission to see
+- **Collection permissions** - Users can only access metrics and models they have permission to use
+- **Row-level security** - Sandboxing and row-level permissions apply to Agent API requests
+
+<Info>
+Because the Agent API uses JWT authentication, you can dynamically scope requests to different users by including their email in the JWT. This makes it perfect for multi-tenant applications.
+</Info>
+
+## Rate limiting and quotas
+
+The Agent API follows standard Metabase API rate limits:
+
+- Rate limits apply per authenticated user
+- Quotas depend on your Metabase plan
+- Failed authentication attempts are rate limited separately
+
+<Note>
+For high-volume applications, consider implementing caching and request batching to stay within rate limits.
+</Note>
+
+## Best practices
+
+### JWT token management
+
+<Steps>
+  <Step title="Generate fresh tokens">
+    Generate a new JWT for each request or set of related requests. JWTs expire after 180 seconds.
+  </Step>
+  
+  <Step title="Keep secrets secure">
+    Store your JWT secret securely using environment variables or a secrets manager. Never commit secrets to version control.
+  </Step>
+  
+  <Step title="Use service accounts">
+    For system-level operations, create dedicated Metabase service accounts instead of using individual user credentials.
+  </Step>
+</Steps>
+
+### Query optimization
+
+- **Cache results** - Cache frequently accessed data to reduce API calls
+- **Batch requests** - When possible, batch multiple operations into fewer requests
+- **Use filters** - Apply filters to limit result set sizes
+- **Monitor performance** - Track query execution times and optimize slow queries
+
+### Error handling
+
+<CodeGroup>
+
+```python Python Error Handling
+import jwt
+import requests
+from typing import Optional, Dict, Any
+
+def safe_api_call(endpoint: str, user_email: str) -> Optional[Dict[str, Any]]:
+    """Make an Agent API call with proper error handling."""
+    try:
+        token = create_jwt(user_email)
+        response = requests.get(
+            f"{METABASE_URL}/api/agent/{endpoint}",
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=30
+        )
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.Timeout:
+        print("Request timed out")
+        return None
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 403:
+            print("User doesn't have permission")
+        elif e.response.status_code == 404:
+            print("Resource not found")
+        else:
+            print(f"HTTP error: {e}")
+        return None
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return None
+```
+
+```javascript Node.js Error Handling
+async function safeAPICall(endpoint, userEmail) {
+  try {
+    const token = createJWT(userEmail);
+    const response = await axios.get(
+      `${METABASE_URL}/api/agent/${endpoint}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 30000
+      }
+    );
+    return response.data;
+  } catch (error) {
+    if (error.code === 'ECONNABORTED') {
+      console.error('Request timed out');
+    } else if (error.response) {
+      if (error.response.status === 403) {
+        console.error("User doesn't have permission");
+      } else if (error.response.status === 404) {
+        console.error('Resource not found');
+      } else {
+        console.error(`HTTP error: ${error.response.status}`);
+      }
+    } else {
+      console.error(`Unexpected error: ${error.message}`);
+    }
+    return null;
+  }
+}
+```
+
+</CodeGroup>
+
+## Example workflows
+
+### Workflow 1: Answer a natural language question
+
+<Steps>
+  <Step title="Receive user question">
+    User asks: "What were our top selling products last month?"
+  </Step>
+  
+  <Step title="Discover available data">
+    Call `/api/agent/tables` to find relevant tables (e.g., `products`, `orders`)
+  </Step>
+  
+  <Step title="Inspect schema">
+    Call `/api/agent/tables/{id}/fields` to understand field structure
+  </Step>
+  
+  <Step title="Construct query">
+    Build a query using the Agent API's query construction endpoints
+  </Step>
+  
+  <Step title="Execute and return results">
+    Run the query and format results for the user
+  </Step>
+</Steps>
+
+### Workflow 2: Build a custom BI dashboard
+
+<Steps>
+  <Step title="Authenticate user">
+    Generate JWT based on the logged-in user's email
+  </Step>
+  
+  <Step title="Load available metrics">
+    Fetch metrics the user has access to via `/api/agent/metrics`
+  </Step>
+  
+  <Step title="Display metric cards">
+    Show metrics in your custom UI with refresh capabilities
+  </Step>
+  
+  <Step title="Execute on demand">
+    When a user clicks a metric, execute it and display results
+  </Step>
+</Steps>
+
+## Migrating from standard API
+
+If you're currently using the standard Metabase API:
+
+| Standard API | Agent API | Notes |
+|--------------|-----------|-------|
+| Session-based auth | JWT-based auth | Agent API uses stateless JWT |
+| MBQL queries | Simplified queries | No need to construct MBQL |
+| `/api/database` | `/api/agent/tables` | Simpler table discovery |
+| `/api/card/:id/query` | `/api/agent/query` | Streamlined query execution |
+
+<Info>
+The Agent API is designed to be simpler and more stable than the standard API, but it currently supports fewer features. Use the standard API for features not yet available in the Agent API.
+</Info>
+
+## Further reading
+
+- [Metabase API documentation](https://www.metabase.com/docs/latest/api)
+- [JWT authentication guide](https://www.metabase.com/docs/latest/people-and-groups/authenticating-with-jwt)
+- [Metabase permissions](https://www.metabase.com/docs/latest/permissions/introduction)
+- [Building with the Embedding SDK](https://www.metabase.com/docs/latest/embedding/sdk/introduction)

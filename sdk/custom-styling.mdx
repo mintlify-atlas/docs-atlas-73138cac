@@ -1,0 +1,491 @@
+---
+title: Custom styling
+description: Apply custom CSS and styles to embedded Metabase components
+---
+
+Beyond theming, you can apply custom CSS styles to Metabase SDK components for fine-grained control over their appearance.
+
+## Using className
+
+Apply custom CSS classes to components:
+
+```tsx
+import { StaticQuestion } from '@metabase/embedding-sdk-react';
+
+function Dashboard() {
+  return (
+    <StaticQuestion 
+      questionId={1}
+      className="my-custom-question"
+    />
+  );
+}
+```
+
+```css
+.my-custom-question {
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+```
+
+## Using inline styles
+
+Apply styles directly via the `style` prop:
+
+```tsx
+<StaticQuestion
+  questionId={1}
+  style={{
+    border: '1px solid #E5E7EB',
+    borderRadius: '8px',
+    padding: '16px',
+    backgroundColor: '#FFFFFF',
+  }}
+/>
+```
+
+## Styling dashboard cards
+
+```tsx
+<InteractiveDashboard
+  dashboardId={1}
+  style={{
+    padding: '20px',
+    backgroundColor: '#F9FAFB',
+  }}
+/>
+```
+
+Customize card appearance through theming:
+
+```tsx
+const theme = defineMetabaseTheme({
+  components: {
+    dashboard: {
+      card: {
+        backgroundColor: '#FFFFFF',
+        border: '1px solid #E5E7EB',
+      },
+    },
+  },
+});
+```
+
+## Responsive styling
+
+### Responsive dimensions
+
+```tsx
+<StaticQuestion
+  questionId={1}
+  width="100%"
+  height={400}
+  style={{
+    minHeight: '300px',
+    maxHeight: '600px',
+  }}
+/>
+```
+
+### Using CSS media queries
+
+```tsx
+<StaticQuestion
+  questionId={1}
+  className="responsive-question"
+/>
+```
+
+```css
+.responsive-question {
+  height: 400px;
+}
+
+@media (max-width: 768px) {
+  .responsive-question {
+    height: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .responsive-question {
+    height: 250px;
+  }
+}
+```
+
+## Layout examples
+
+### Side-by-side questions
+
+```tsx
+import { StaticQuestion } from '@metabase/embedding-sdk-react';
+
+function Dashboard() {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+      <StaticQuestion 
+        questionId={1}
+        style={{
+          border: '1px solid #E5E7EB',
+          borderRadius: '8px',
+          padding: '16px',
+        }}
+      />
+      <StaticQuestion 
+        questionId={2}
+        style={{
+          border: '1px solid #E5E7EB',
+          borderRadius: '8px',
+          padding: '16px',
+        }}
+      />
+    </div>
+  );
+}
+```
+
+### Stacked layout
+
+```tsx
+function VerticalDashboard() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <StaticQuestion questionId={1} height={300} />
+      <StaticQuestion questionId={2} height={400} />
+      <StaticQuestion questionId={3} height={300} />
+    </div>
+  );
+}
+```
+
+### Grid layout
+
+```tsx
+function GridDashboard() {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: '16px',
+        padding: '20px',
+      }}
+    >
+      <StaticQuestion questionId={1} />
+      <StaticQuestion questionId={2} />
+      <StaticQuestion questionId={3} />
+      <StaticQuestion questionId={4} />
+    </div>
+  );
+}
+```
+
+## Styling with CSS Modules
+
+```tsx
+import styles from './Dashboard.module.css';
+import { StaticQuestion } from '@metabase/embedding-sdk-react';
+
+function Dashboard() {
+  return (
+    <div className={styles.container}>
+      <StaticQuestion 
+        questionId={1}
+        className={styles.question}
+      />
+    </div>
+  );
+}
+```
+
+```css
+/* Dashboard.module.css */
+.container {
+  padding: 20px;
+  background-color: #f9fafb;
+}
+
+.question {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.question:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
+}
+```
+
+## Styling with Tailwind CSS
+
+```tsx
+import { StaticQuestion } from '@metabase/embedding-sdk-react';
+
+function Dashboard() {
+  return (
+    <div className="p-6 bg-gray-50">
+      <StaticQuestion
+        questionId={1}
+        className="border border-gray-200 rounded-lg shadow-sm bg-white"
+      />
+    </div>
+  );
+}
+```
+
+## Styling with styled-components
+
+```tsx
+import styled from 'styled-components';
+import { StaticQuestion } from '@metabase/embedding-sdk-react';
+
+const StyledQuestion = styled(StaticQuestion)`
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  
+  &:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+`;
+
+function Dashboard() {
+  return <StyledQuestion questionId={1} />;
+}
+```
+
+## Styling sub-components
+
+```tsx
+import { InteractiveQuestion } from '@metabase/embedding-sdk-react';
+
+function CustomQuestion() {
+  return (
+    <InteractiveQuestion questionId={1}>
+      <div className="question-header">
+        <InteractiveQuestion.Title />
+        <div className="question-actions">
+          <InteractiveQuestion.SaveButton />
+          <InteractiveQuestion.DownloadWidget />
+        </div>
+      </div>
+      <InteractiveQuestion.QuestionVisualization />
+    </InteractiveQuestion>
+  );
+}
+```
+
+```css
+.question-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.question-actions {
+  display: flex;
+  gap: 8px;
+}
+```
+
+## Container styling
+
+### Fixed dimensions
+
+```tsx
+<div style={{ width: '800px', height: '600px' }}>
+  <StaticQuestion questionId={1} />
+</div>
+```
+
+### Responsive container
+
+```tsx
+<div style={{ width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
+  <InteractiveDashboard dashboardId={1} />
+</div>
+```
+
+### Scrollable container
+
+```tsx
+<div style={{ height: '500px', overflow: 'auto' }}>
+  <StaticQuestion questionId={1} height={800} />
+</div>
+```
+
+## Custom card styling example
+
+```tsx
+import { StaticQuestion } from '@metabase/embedding-sdk-react';
+
+function StyledCard({ questionId, title }) {
+  return (
+    <div
+      style={{
+        border: '1px solid #E5E7EB',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        backgroundColor: 'white',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+      }}
+    >
+      <div
+        style={{
+          padding: '16px',
+          borderBottom: '1px solid #E5E7EB',
+          backgroundColor: '#F9FAFB',
+        }}
+      >
+        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>
+          {title}
+        </h3>
+      </div>
+      <div style={{ padding: '16px' }}>
+        <StaticQuestion questionId={questionId} />
+      </div>
+    </div>
+  );
+}
+```
+
+## Dark mode support
+
+```tsx
+import { useState } from 'react';
+import { MetabaseProvider, defineMetabaseTheme, StaticQuestion } from '@metabase/embedding-sdk-react';
+
+const lightTheme = defineMetabaseTheme({ preset: 'light' });
+const darkTheme = defineMetabaseTheme({ preset: 'dark' });
+
+function App() {
+  const [isDark, setIsDark] = useState(false);
+
+  return (
+    <div
+      style={{
+        backgroundColor: isDark ? '#1F2937' : '#FFFFFF',
+        minHeight: '100vh',
+        transition: 'background-color 0.3s',
+      }}
+    >
+      <button onClick={() => setIsDark(!isDark)}>
+        Toggle Theme
+      </button>
+      
+      <MetabaseProvider
+        authConfig={authConfig}
+        theme={isDark ? darkTheme : lightTheme}
+      >
+        <StaticQuestion
+          questionId={1}
+          style={{
+            border: isDark ? '1px solid #374151' : '1px solid #E5E7EB',
+          }}
+        />
+      </MetabaseProvider>
+    </div>
+  );
+}
+```
+
+## Common styling patterns
+
+### Card with shadow
+
+```css
+.card {
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  overflow: hidden;
+}
+
+.card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
+}
+```
+
+### Bordered container
+
+```css
+.bordered-container {
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  background-color: white;
+}
+```
+
+### Glassmorphism effect
+
+```css
+.glass-container {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  padding: 20px;
+}
+```
+
+## Best practices
+
+### Use consistent spacing
+
+```tsx
+const SPACING = {
+  xs: '4px',
+  sm: '8px',
+  md: '16px',
+  lg: '24px',
+  xl: '32px',
+};
+
+<StaticQuestion
+  questionId={1}
+  style={{ padding: SPACING.md }}
+/>
+```
+
+### Maintain accessibility
+
+Ensure sufficient color contrast and focus states:
+
+```css
+.question-card:focus-within {
+  outline: 2px solid #9333EA;
+  outline-offset: 2px;
+}
+```
+
+### Use CSS custom properties
+
+```css
+:root {
+  --card-border-radius: 8px;
+  --card-padding: 16px;
+  --card-border-color: #e5e7eb;
+}
+
+.question-card {
+  border-radius: var(--card-border-radius);
+  padding: var(--card-padding);
+  border: 1px solid var(--card-border-color);
+}
+```
+
+## Related
+
+- [Theming](/sdk/theming) - Global theme configuration
+- [Configuration](/sdk/configuration) - SDK configuration options

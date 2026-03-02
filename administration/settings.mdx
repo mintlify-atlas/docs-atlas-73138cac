@@ -1,0 +1,164 @@
+---
+title: General settings
+description: Configure your Metabase instance settings including site URL, timezone, and feature toggles.
+---
+
+General settings allow you to configure instance-wide options that affect all users in your Metabase. Access these settings by clicking the **grid icon** in the upper right, then navigating to **Admin** > **Settings** > **General**.
+
+## Site configuration
+
+### Site name
+
+Define how you'd like to refer to this instance of Metabase. This name appears throughout the interface and in email notifications.
+
+### Site URL
+
+<Info>
+The site URL is only configurable for self-hosted Metabases. For Metabase Cloud customers, use [Custom domains](https://docs.metabase.com/cloud/custom-domain.html) instead.
+</Info>
+
+The site URL is the web address people use to access your Metabase instance. Always include the protocol (`http://` or `https://`) to ensure proper connectivity.
+
+<Steps>
+  <Step title="Set your site URL">
+    Enter the full URL including protocol (e.g., `https://metabase.example.com`)
+  </Step>
+  <Step title="Verify connectivity">
+    Metabase will validate that the URL is accessible
+  </Step>
+  <Step title="Save changes">
+    Click Save to apply your configuration
+  </Step>
+</Steps>
+
+### Redirect to HTTPS
+
+By default, Metabase is served over HTTP. You can force all traffic to use HTTPS via redirect.
+
+<Warning>
+Metabase will not allow HTTPS redirect if HTTPS is not properly configured on your server. You'll see a warning: "It looks like HTTPS is not properly configured."
+</Warning>
+
+When enabled, users entering `http://example.com/data` will automatically be redirected to `https://example.com/data`.
+
+## User experience settings
+
+### Custom homepage
+
+Admins can designate a dashboard to serve as the homepage for your organization.
+
+<Note>
+If users lack permissions to view the selected dashboard, Metabase will redirect them to the default homepage instead.
+</Note>
+
+To revert to the default Metabase homepage, disable the **Enabled** toggle in the Custom Homepage section.
+
+### Email address for help requests
+
+This email address is displayed throughout Metabase when users need admin assistance, such as:
+- Password reset requests
+- Permission issues
+- Account creation questions
+
+## Data and display options
+
+### Friendly table and field names
+
+<Accordion title="How friendly names work">
+  By default, Metabase transforms database field names for better readability. For example, `somehorriblename` becomes `Some Horrible Name`.
+  
+  **Limitations:**
+  - Works best for English language databases
+  - May not handle abbreviations or codes well
+  - Not recommended for non-English languages
+</Accordion>
+
+When you re-enable this setting, Metabase runs a [scan](https://docs.metabase.com/databases/sync-scan.html#how-database-scans-work) to review table and column names.
+
+For manual control over field names, use:
+- [Table Metadata](https://docs.metabase.com/data-modeling/metadata-editing.html) editor
+- [Models](https://docs.metabase.com/data-modeling/models.html) for curated metadata
+
+### Reporting timezone
+
+Set the default timezone for displaying dates and times across all reports. This affects:
+- Question results
+- Dashboard visualizations
+- Scheduled reports
+- Timestamps in exports
+
+## Feature toggles
+
+### Enable X-rays
+
+[X-rays](https://docs.metabase.com/exploration-and-organization/x-rays.html) provide automatic summary statistics for your data.
+
+<Warning>
+If X-ray queries become too slow or expensive on your database, you can disable this feature. Users will no longer see the X-ray option on tables and fields.
+</Warning>
+
+### Anonymous tracking
+
+Control whether anonymous usage data is sent to Metabase to help improve the product.
+
+<Info>
+**Your database data is never tracked or sent.** Only anonymous usage statistics about Metabase features are collected. Learn more about [information collection](https://docs.metabase.com/installation-and-operation/information-collection.html).
+</Info>
+
+## Security settings
+
+### Allowed domains for iframes in dashboards
+
+Control which external domains can be embedded as iframes in dashboard cards.
+
+<Warning>
+Only allow domains you trust. Untrusted iframes could pose security risks.
+</Warning>
+
+<Accordion title="Understanding domain vs subdomain restrictions">
+  **Domain-level allowlisting** (e.g., `example.com`):
+  - Allows iframes from `example.com` and all subdomains
+  - Permits `data.example.com`, `docs.example.com`, etc.
+
+  **Subdomain-level allowlisting** (e.g., `data.example.com`):
+  - Restricts iframes to only that specific subdomain
+  - Blocks `example.com` and other subdomains like `docs.example.com`
+</Accordion>
+
+#### Configuration examples
+
+```text
+data.example.com,docs.example.com
+```
+
+This configuration:
+- ✅ Allows: `data.example.com`, `docs.example.com`
+- ❌ Blocks: `example.com`, `api.example.com`, all other domains
+
+<Note>
+Separate multiple domains with commas and no spaces.
+</Note>
+
+## Best practices
+
+<Steps>
+  <Step title="Configure site URL first">
+    Set your site URL before configuring email or SSO to ensure proper redirect URLs
+  </Step>
+  <Step title="Test HTTPS redirect">
+    Verify HTTPS is working before enabling the redirect to avoid locking users out
+  </Step>
+  <Step title="Review iframe domains regularly">
+    Audit allowed domains periodically to maintain security
+  </Step>
+  <Step title="Document custom homepage">
+    If setting a custom homepage, document this for other admins
+  </Step>
+</Steps>
+
+## Related settings
+
+- [Email configuration](/administration/email) - Set up SMTP for notifications
+- [Authentication](/administration/authentication) - Configure SSO and login options
+- [Permissions](/administration/permissions) - Control data access
+- [Caching](/administration/caching) - Optimize query performance

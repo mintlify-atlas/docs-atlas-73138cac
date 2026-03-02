@@ -1,0 +1,372 @@
+---
+title: Settings
+description: Manage Metabase instance settings and configuration
+---
+
+The Settings API allows you to view and modify Metabase instance settings programmatically. Settings control various aspects of your Metabase instance including email, authentication, appearance, and more.
+
+## Settings overview
+
+Metabase settings are organized into categories:
+
+- **Email** - SMTP configuration for email notifications
+- **Authentication** - SSO, LDAP, and login settings
+- **Public sharing** - Public links and embedding settings
+- **Slack** - Slack integration configuration
+- **Maps** - Custom map configuration
+- **Formatting** - Date, time, and number formatting
+- **Localization** - Language and timezone settings
+
+<Note>
+Most settings endpoints require admin permissions.
+</Note>
+
+## Get all settings
+
+Retrieve all instance settings.
+
+```bash
+GET /api/setting
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/setting \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+
+```javascript JavaScript
+const settings = await fetch('https://your-metabase.com/api/setting', {
+  headers: { 'X-Metabase-Session': sessionToken }
+}).then(r => r.json());
+```
+</CodeGroup>
+
+<Note>
+Requires admin permissions. Returns all configurable settings with their current values.
+</Note>
+
+### Response
+
+```json
+[
+  {
+    "key": "site-name",
+    "value": "Metabase",
+    "description": "The name used for this instance of Metabase.",
+    "default": "Metabase",
+    "type": "string"
+  },
+  {
+    "key": "admin-email",
+    "value": "admin@example.com",
+    "description": "The email address users should be referred to if they encounter a problem.",
+    "type": "string"
+  }
+]
+```
+
+## Get specific setting
+
+Get the value of a specific setting.
+
+```bash
+GET /api/setting/{key}
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/setting/site-name \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="key" type="string" required>
+  Setting key (e.g., "site-name", "admin-email")
+</ParamField>
+
+### Response
+
+```json
+"Metabase"
+```
+
+## Update setting
+
+Update the value of a specific setting.
+
+```bash
+PUT /api/setting/{key}
+```
+
+<CodeGroup>
+```bash curl
+curl -X PUT \
+  https://your-metabase.com/api/setting/site-name \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "value": "My Company Analytics"
+  }'
+```
+
+```javascript JavaScript
+await fetch('https://your-metabase.com/api/setting/site-name', {
+  method: 'PUT',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Metabase-Session': sessionToken
+  },
+  body: JSON.stringify({
+    value: 'My Company Analytics'
+  })
+});
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="value" required>
+  New setting value (type depends on the setting)
+</ParamField>
+
+<Warning>
+Changing certain settings (like email or authentication) can affect all users. Test changes carefully.
+</Warning>
+
+## Common settings
+
+### Site configuration
+
+<ParamField path="site-name" type="string">
+  The name of your Metabase instance
+</ParamField>
+
+<ParamField path="site-url" type="string">
+  The base URL where Metabase is hosted (e.g., "https://metabase.company.com")
+</ParamField>
+
+<ParamField path="admin-email" type="string">
+  Email address for admin contact
+</ParamField>
+
+<ParamField path="anon-tracking-enabled" type="boolean">
+  Whether anonymous usage tracking is enabled
+</ParamField>
+
+### Email settings
+
+<ParamField path="email-smtp-host" type="string">
+  SMTP server host
+</ParamField>
+
+<ParamField path="email-smtp-port" type="integer">
+  SMTP server port
+</ParamField>
+
+<ParamField path="email-smtp-username" type="string">
+  SMTP username
+</ParamField>
+
+<ParamField path="email-smtp-password" type="string">
+  SMTP password
+</ParamField>
+
+<ParamField path="email-smtp-security" type="string">
+  Security protocol: "none", "tls", or "starttls"
+</ParamField>
+
+<ParamField path="email-from-address" type="string">
+  Email address to send from
+</ParamField>
+
+### Public sharing
+
+<ParamField path="enable-public-sharing" type="boolean">
+  Enable public sharing of dashboards and questions
+</ParamField>
+
+<ParamField path="enable-embedding" type="boolean">
+  Enable signed embedding
+</ParamField>
+
+<ParamField path="embedding-secret-key" type="string">
+  Secret key for signing embedding tokens
+</ParamField>
+
+### Authentication
+
+<ParamField path="google-auth-client-id" type="string">
+  Google OAuth client ID
+</ParamField>
+
+<ParamField path="ldap-enabled" type="boolean">
+  Enable LDAP authentication
+</ParamField>
+
+<ParamField path="ldap-host" type="string">
+  LDAP server host
+</ParamField>
+
+<ParamField path="ldap-port" type="integer">
+  LDAP server port
+</ParamField>
+
+### Formatting
+
+<ParamField path="custom-formatting" type="object">
+  Custom number and date formatting options
+</ParamField>
+
+<ParamField path="report-timezone" type="string">
+  Default timezone for reports (e.g., "America/New_York")
+</ParamField>
+
+## Update multiple settings
+
+Update multiple settings at once.
+
+```bash
+PUT /api/setting
+```
+
+<CodeGroup>
+```bash curl
+curl -X PUT \
+  https://your-metabase.com/api/setting \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "site-name": "My Company",
+    "admin-email": "admin@company.com",
+    "report-timezone": "America/Los_Angeles"
+  }'
+```
+</CodeGroup>
+
+### Request body
+
+Provide a JSON object with setting keys and their new values:
+
+```json
+{
+  "site-name": "My Company Analytics",
+  "admin-email": "analytics@company.com",
+  "enable-public-sharing": true
+}
+```
+
+## Test email settings
+
+Test SMTP email configuration by sending a test email.
+
+```bash
+POST /api/email/test
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/email/test \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "email": "test@example.com"
+  }'
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="email" type="string" required>
+  Email address to send test email to
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean">
+  Whether the test email was sent successfully
+</ResponseField>
+
+<ResponseField name="error" type="string">
+  Error message if sending failed
+</ResponseField>
+
+## Environment variables
+
+Many settings can be configured via environment variables:
+
+```bash
+# Site configuration
+MB_SITE_NAME="My Company"
+MB_SITE_URL="https://metabase.company.com"
+
+# Email
+MB_EMAIL_SMTP_HOST="smtp.gmail.com"
+MB_EMAIL_SMTP_PORT=587
+MB_EMAIL_SMTP_USERNAME="your-email@gmail.com"
+MB_EMAIL_SMTP_PASSWORD="your-password"
+MB_EMAIL_SMTP_SECURITY="starttls"
+
+# Public sharing
+MB_ENABLE_PUBLIC_SHARING=true
+MB_EMBEDDING_SECRET_KEY="your-secret-key"
+```
+
+<Note>
+Environment variables take precedence over database settings and cannot be changed via the API.
+</Note>
+
+## Setting types
+
+Settings have different data types:
+
+- **string** - Text values
+- **integer** - Numeric values
+- **boolean** - true/false values
+- **json** - Complex object values
+- **csv** - Comma-separated values
+
+## Reset settings
+
+Reset a setting to its default value by setting it to `null`:
+
+```bash
+curl -X PUT \
+  https://your-metabase.com/api/setting/site-name \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "value": null
+  }'
+```
+
+## Best practices
+
+<Tip>
+**Settings management tips:**
+- Document any custom settings you configure
+- Use environment variables for sensitive values
+- Test email settings before relying on notifications
+- Keep a backup of your configuration
+- Review settings after upgrades
+- Use descriptive site names for multiple instances
+</Tip>
+
+## Error codes
+
+<ResponseField name="400 Bad Request" type="error">
+  Invalid setting value or type
+</ResponseField>
+
+<ResponseField name="403 Forbidden" type="error">
+  Must be an admin to modify settings
+</ResponseField>
+
+<ResponseField name="404 Not Found" type="error">
+  Setting key not found
+</ResponseField>

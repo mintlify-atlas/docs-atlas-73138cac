@@ -1,0 +1,467 @@
+---
+title: 'SQL editor'
+description: 'Write SQL queries directly in Metabase for advanced analysis and complex questions that go beyond the query builder.'
+---
+
+The SQL editor lets you write queries in SQL (or your database's native query language) when you need more control or complexity than the query builder provides.
+
+## When to use the SQL editor
+
+Consider using SQL when you need to:
+
+<CardGroup cols={2}>
+  <Card title="Complex joins" icon="diagram-project">
+    Join multiple tables with specific conditions or use self-joins
+  </Card>
+  
+  <Card title="Subqueries" icon="layer-group">
+    Nest queries or use common table expressions (CTEs)
+  </Card>
+  
+  <Card title="Window functions" icon="window">
+    Calculate running totals, rankings, or moving averages
+  </Card>
+  
+  <Card title="Database-specific features" icon="database">
+    Use features unique to your database like JSON functions or full-text search
+  </Card>
+</CardGroup>
+
+<Info>
+Even if you don't know SQL, someone on your team might share SQL-based questions that could be useful to you. You can still view, run, and modify filter values on SQL questions.
+</Info>
+
+## Starting a new SQL query
+
+<Steps>
+  <Step title="Create a new SQL query">
+    Click **+ New** in the main navigation and select **SQL query** (look for the console icon).
+  </Step>
+  
+  <Step title="Select your database">
+    Choose which database you want to query. Make sure you have the proper permissions to use the SQL editor for that database.
+  </Step>
+  
+  <Step title="Write your query">
+    Enter your SQL in the editor. The editor provides:
+    - Syntax highlighting
+    - Auto-completion for table and column names
+    - Multiple lines and formatting
+  </Step>
+  
+  <Step title="Run your query">
+    Click **Run query** or press **Ctrl + Enter** (Windows/Linux) or **⌘ + Return** (Mac).
+  </Step>
+</Steps>
+
+## SQL editor interface
+
+The native query editor provides a clean interface for writing SQL:
+
+![SQL editor](https://metabase.com/images/docs/sql-editor-interface.png)
+
+### Editor features
+
+<AccordionGroup>
+  <Accordion title="Syntax highlighting and auto-complete">
+    The editor recognizes SQL syntax and provides suggestions as you type. Press Tab to accept suggestions for table names, column names, and SQL keywords.
+  </Accordion>
+  
+  <Accordion title="Run partial queries">
+    Highlight a portion of your SQL and run just that section. Useful for testing parts of complex queries or running multiple statements.
+  </Accordion>
+  
+  <Accordion title="Format SQL">
+    Click the **document** icon in the sidebar to automatically format your SQL for readability.
+    
+    <Note>SQL formatting works for most databases but is not available for SQLite and SQL Server.</Note>
+  </Accordion>
+  
+  <Accordion title="Reference models and questions">
+    Use other saved questions and models in your queries by referencing them with special syntax: `{{#1234}}` where 1234 is the question ID.
+  </Accordion>
+</AccordionGroup>
+
+## Running queries
+
+### Full query execution
+
+Click **Run query** or use the keyboard shortcut:
+- **Windows/Linux**: Ctrl + Enter
+- **Mac**: ⌘ + Return
+
+### Running query selections
+
+To run only part of your query:
+
+1. Highlight the SQL you want to execute
+2. Click **Run query** or use the keyboard shortcut
+
+<Tip>
+This is helpful when developing complex queries. You can test individual parts before running the entire query.
+</Tip>
+
+## SQL query formatting
+
+Metabase can automatically format your SQL:
+
+**Before formatting:**
+```sql
+select sum(subtotal), created_at from orders group by created_at;
+```
+
+**After formatting:**
+```sql
+SELECT
+  sum(subtotal),
+  created_at
+FROM
+  orders
+GROUP BY
+  created_at;
+```
+
+Click the **document icon** in the editor sidebar to format your query.
+
+## Adding variables and filters
+
+Make your SQL queries interactive by adding variables (also called parameters):
+
+<Tabs>
+  <Tab title="Field filters">
+    Create smart filter widgets that connect to database columns:
+    
+    ```sql
+    SELECT *
+    FROM orders
+    WHERE {{created_at}}
+    ```
+    
+    Field filters provide:
+    - Date pickers for date columns
+    - Dropdown menus for categorical data
+    - Auto-complete search boxes
+    - Proper SQL generation based on filter type
+  </Tab>
+  
+  <Tab title="Basic variables">
+    Simple text or number inputs:
+    
+    ```sql
+    SELECT *
+    FROM orders
+    WHERE total > {{minimum_amount}}
+    ```
+    
+    Basic variables are useful when you can't use field filters, but field filters are generally preferred for their smarter UI.
+  </Tab>
+  
+  <Tab title="Time grouping">
+    Let users change date grouping dynamically:
+    
+    ```sql
+    SELECT 
+      date_trunc({{interval}}, created_at) as date,
+      count(*) as total
+    FROM orders
+    GROUP BY date
+    ```
+    
+    Users can switch between day, week, month, quarter, or year views.
+  </Tab>
+</Tabs>
+
+When you add variables to your SQL, Metabase displays filter widgets above your results. Configure each variable in the sidebar:
+
+1. **Variable type**: Field filter, text, number, or date
+2. **Label**: What users see above the widget
+3. **Widget style**: Dropdown, search box, or input box
+4. **Default value**: Optional starting value
+
+<Info>
+Variables are required for SQL questions to work with dashboard filters. Add at least one variable to make your SQL question compatible with dashboard filtering.
+</Info>
+
+## Database-specific considerations
+
+<Tabs>
+  <Tab title="PostgreSQL">
+    **JSON operator workaround**
+    
+    Use `??` instead of `?` for JSON operations:
+    
+    ```sql
+    SELECT data ?? 'key'
+    FROM json_table
+    ```
+    
+    This is required because JDBC interprets `?` as a parameter placeholder.
+  </Tab>
+  
+  <Tab title="MongoDB">
+    Write queries in MongoDB's native query language:
+    
+    ```javascript
+    db.collection.aggregate([
+      { $match: { status: "active" } },
+      { $group: { _id: "$category", total: { $sum: 1 } } }
+    ])
+    ```
+  </Tab>
+  
+  <Tab title="MySQL / MariaDB">
+    Use database-specific functions:
+    
+    ```sql
+    SELECT 
+      JSON_EXTRACT(data, '$.name') as name,
+      COUNT(*) as total
+    FROM orders
+    GROUP BY name
+    ```
+  </Tab>
+</Tabs>
+
+## How Metabase executes SQL
+
+<Warning>
+Metabase sends your SQL query directly to your database exactly as written. Any results or errors come straight from your database. If your SQL syntax doesn't match your database's SQL dialect, the query will fail.
+</Warning>
+
+The native query editor is designed for **reading data**, not modifying it. Avoid:
+
+- Multi-statement queries
+- Stored procedures and function calls
+- DDL statements (`CREATE`, `ALTER`, `DROP`)
+- DML statements (`INSERT`, `UPDATE`, `DELETE`)
+
+While some operations may work depending on your connection's privileges, they are not officially supported.
+
+## Visualizing SQL query results
+
+### Selecting a visualization
+
+Unlike query builder questions, SQL questions don't automatically select a visualization. After running your query:
+
+1. Click **Visualization** at the bottom of the screen
+2. Choose the chart type that fits your data
+3. Configure visualization settings
+
+<Note>
+Pivot tables are currently not available for SQL questions. All other visualization types work as long as your result shape matches the chart requirements.
+</Note>
+
+### Visualization requirements
+
+Different chart types require specific result structures:
+
+<Tabs>
+  <Tab title="Line charts">
+    - One date/time column
+    - One or more numeric columns
+    
+    ```sql
+    SELECT 
+      date_trunc('month', created_at) as month,
+      sum(total) as revenue
+    FROM orders
+    GROUP BY month
+    ORDER BY month
+    ```
+  </Tab>
+  
+  <Tab title="Bar charts">
+    - One category column
+    - One or more numeric columns
+    
+    ```sql
+    SELECT 
+      category,
+      count(*) as total
+    FROM products
+    GROUP BY category
+    ORDER BY total DESC
+    ```
+  </Tab>
+  
+  <Tab title="Pie charts">
+    - One category column
+    - One numeric column
+    
+    ```sql
+    SELECT 
+      status,
+      count(*) as count
+    FROM orders
+    GROUP BY status
+    ```
+  </Tab>
+</Tabs>
+
+## Exploring SQL results
+
+### Explore results button
+
+For SQL questions without parameters, you'll see an **Explore results** button. This creates a new query builder question using your SQL results as the data source, letting you:
+
+- Add additional filters
+- Create new summaries
+- Join with other data
+- Use the full drill-through capabilities
+
+### Limited drill-through
+
+SQL questions have limited drill-through compared to query builder questions:
+
+**Available:**
+- Filter by clicking on data points
+- Zoom in on time series and maps
+- Some column header actions
+
+**Not available:**
+- Drill down to unaggregated records
+- Change time granularity
+- Break out by categories or locations
+
+<Tip>
+If you need full drill-through capabilities, use the query builder instead, or use the **Explore results** feature to convert your SQL results into a query builder question.
+</Tip>
+
+## Advanced SQL features
+
+<AccordionGroup>
+  <Accordion title="Using snippets">
+    Save reusable SQL code as snippets:
+    
+    ```sql
+    SELECT *
+    FROM orders
+    WHERE {{snippet: active_filters}}
+    ```
+    
+    Snippets help you:
+    - Standardize common logic
+    - Share SQL code across questions
+    - Simplify complex queries
+    - Maintain consistency
+  </Accordion>
+  
+  <Accordion title="Referencing saved questions">
+    Use other questions as data sources in SQL:
+    
+    ```sql
+    SELECT 
+      category,
+      avg(total) as avg_total
+    FROM {{#1234}}
+    GROUP BY category
+    ```
+    
+    Replace `1234` with the question ID from the URL.
+  </Accordion>
+  
+  <Accordion title="Setting values via URL">
+    Pass variable values through the URL:
+    
+    ```
+    /question/42?category=Widgets&min_price=100
+    ```
+    
+    Useful for:
+    - Direct links with filters applied
+    - Bookmarkable filtered views
+    - Integration with other tools
+  </Accordion>
+</AccordionGroup>
+
+## Connecting SQL questions to dashboards
+
+To use a SQL question on a dashboard with filters:
+
+<Steps>
+  <Step title="Add variables to your SQL">
+    Include at least one variable (field filter or basic variable) in your query.
+  </Step>
+  
+  <Step title="Add question to dashboard">
+    Place your SQL question on the dashboard.
+  </Step>
+  
+  <Step title="Add dashboard filter">
+    Create a dashboard filter that matches your variable type.
+  </Step>
+  
+  <Step title="Connect filter to question">
+    Map the dashboard filter to your SQL variable.
+  </Step>
+</Steps>
+
+<Info>
+The type of dashboard filter you can use depends on the variable type in your SQL. Field filters offer more flexibility than basic variables.
+</Info>
+
+## Version history and collaboration
+
+SQL questions include version history:
+
+- Metabase saves the last 15 versions
+- View what changed in each version
+- See who made changes and when
+- Revert to previous versions if needed
+
+Access history from the info panel (click the **i** icon in the top right).
+
+## Best practices
+
+<CardGroup cols={2}>
+  <Card title="Use field filters" icon="filter">
+    Prefer field filters over basic variables for better UI and more flexible dashboard filtering.
+  </Card>
+  
+  <Card title="Add comments" icon="comment">
+    Document complex SQL with comments to help future maintainers understand your logic.
+  </Card>
+  
+  <Card title="Test incrementally" icon="flask">
+    Build complex queries piece by piece. Use query selections to test parts independently.
+  </Card>
+  
+  <Card title="Optimize for performance" icon="gauge">
+    Consider indexes, avoid SELECT *, and test queries on representative data volumes.
+  </Card>
+  
+  <Card title="Format for readability" icon="align-left">
+    Use the formatting tool or manually format SQL for better maintainability.
+  </Card>
+  
+  <Card title="Name columns clearly" icon="tag">
+    Use aliases to give result columns clear, descriptive names.
+  </Card>
+</CardGroup>
+
+## Permissions
+
+<Warning>
+To use the SQL editor, you need native query permissions for the database. Administrators control these permissions separately from query builder access.
+</Warning>
+
+Your admin might grant:
+- **Query builder only**: Can't use SQL editor
+- **Native query access**: Can write SQL
+- **View SQL only**: Can see generated SQL from query builder but can't write SQL
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Native queries" icon="database" href="/questions/native-queries">
+    Learn about database-specific query languages and capabilities
+  </Card>
+  
+  <Card title="Query builder" icon="wand-magic-sparkles" href="/questions/query-builder">
+    Understand when to use the query builder instead of SQL
+  </Card>
+  
+  <Card title="Dashboard filters" icon="filter" href="/dashboards/dashboard-filters">
+    Connect SQL questions to dashboard filters using variables
+  </Card>
+</CardGroup>

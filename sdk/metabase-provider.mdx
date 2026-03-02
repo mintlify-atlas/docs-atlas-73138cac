@@ -1,0 +1,291 @@
+---
+title: MetabaseProvider
+description: The MetabaseProvider component wraps your application and provides context for all Metabase SDK components
+---
+
+The `MetabaseProvider` component is the root component for the Metabase Embedding SDK. It provides authentication, theming, and configuration context to all child components.
+
+## Basic usage
+
+```tsx
+import { MetabaseProvider } from '@metabase/embedding-sdk-react';
+
+const authConfig = {
+  metabaseInstanceUrl: 'https://metabase.example.com',
+  jwtProviderUri: 'https://your-api.example.com/sso/metabase',
+};
+
+function App() {
+  return (
+    <MetabaseProvider authConfig={authConfig}>
+      {/* Your app components */}
+    </MetabaseProvider>
+  );
+}
+```
+
+## Usage with theme
+
+```tsx
+import { MetabaseProvider, defineMetabaseTheme } from '@metabase/embedding-sdk-react';
+
+const theme = defineMetabaseTheme({
+  colors: {
+    brand: '#9333EA',
+    'text-primary': '#1F2937',
+  },
+  fontFamily: 'Inter, sans-serif',
+});
+
+function App() {
+  return (
+    <MetabaseProvider authConfig={authConfig} theme={theme}>
+      {/* Your app components */}
+    </MetabaseProvider>
+  );
+}
+```
+
+## Usage with event handlers
+
+```tsx
+import { MetabaseProvider } from '@metabase/embedding-sdk-react';
+
+const eventHandlers = {
+  onDashboardLoad: (dashboard) => {
+    console.log('Dashboard loaded:', dashboard.name);
+    // Track analytics, update UI, etc.
+  },
+};
+
+function App() {
+  return (
+    <MetabaseProvider authConfig={authConfig} eventHandlers={eventHandlers}>
+      {/* Your app components */}
+    </MetabaseProvider>
+  );
+}
+```
+
+## Usage with plugins
+
+```tsx
+import { MetabaseProvider } from '@metabase/embedding-sdk-react';
+
+const pluginsConfig = {
+  mapQuestionClickActions: (clickActions, clickedDataPoint) => {
+    // Add a custom click action
+    return [
+      ...clickActions,
+      {
+        name: 'view-details',
+        onClick: () => {
+          console.log('Clicked data:', clickedDataPoint);
+        },
+      },
+    ];
+  },
+  handleLink: (url) => {
+    // Custom link handling (e.g., React Router navigation)
+    if (url.startsWith('/dashboard/')) {
+      navigate(url);
+      return { handled: true };
+    }
+    return { handled: false };
+  },
+};
+
+function App() {
+  return (
+    <MetabaseProvider authConfig={authConfig} pluginsConfig={pluginsConfig}>
+      {/* Your app components */}
+    </MetabaseProvider>
+  );
+}
+```
+
+## Complete example with all options
+
+```tsx
+import { MetabaseProvider, defineMetabaseTheme } from '@metabase/embedding-sdk-react';
+
+const authConfig = {
+  metabaseInstanceUrl: 'https://metabase.example.com',
+  jwtProviderUri: 'https://your-api.example.com/sso/metabase',
+};
+
+const theme = defineMetabaseTheme({
+  colors: {
+    brand: '#9333EA',
+  },
+});
+
+const pluginsConfig = {
+  handleLink: (url) => {
+    navigate(url);
+    return { handled: true };
+  },
+};
+
+const eventHandlers = {
+  onDashboardLoad: (dashboard) => {
+    console.log('Dashboard loaded:', dashboard);
+  },
+};
+
+const CustomLoader = ({ label }) => (
+  <div className="loading">
+    <Spinner />
+    {label && <span>{label}</span>}
+  </div>
+);
+
+const CustomError = ({ message }) => (
+  <div className="error">
+    <h2>Error</h2>
+    <p>{message}</p>
+  </div>
+);
+
+function App() {
+  return (
+    <MetabaseProvider
+      authConfig={authConfig}
+      theme={theme}
+      pluginsConfig={pluginsConfig}
+      eventHandlers={eventHandlers}
+      locale="en"
+      loaderComponent={CustomLoader}
+      errorComponent={CustomError}
+      allowConsoleLog={true}
+    >
+      {/* Your app components */}
+    </MetabaseProvider>
+  );
+}
+```
+
+## Props
+
+<ParamField path="authConfig" type="MetabaseAuthConfig" required>
+  Configuration for authenticating with your Metabase instance.
+
+  <Expandable title="authConfig properties">
+    <ParamField path="metabaseInstanceUrl" type="string" required>
+      The URL of your Metabase instance (e.g., `https://metabase.example.com`).
+    </ParamField>
+
+    <ParamField path="jwtProviderUri" type="string">
+      URI of the JWT provider. If provided, the SDK will use JWT authentication.
+    </ParamField>
+
+    <ParamField path="fetchRequestToken" type="MetabaseFetchRequestTokenFn">
+      Custom function to fetch the JWT refresh token.
+    </ParamField>
+
+    <ParamField path="preferredAuthMethod" type="'jwt' | 'saml'">
+      Preferred authentication method when both JWT and SAML are enabled.
+    </ParamField>
+
+    <ParamField path="apiKey" type="string">
+      API key for authentication. **For development only.**
+    </ParamField>
+
+    <ParamField path="isGuest" type="boolean">
+      Whether to work in Guest Embed mode.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="theme" type="MetabaseEmbeddingTheme">
+  Theme configuration to customize the appearance of embedded components. See [theming](/sdk/theming) for details.
+</ParamField>
+
+<ParamField path="pluginsConfig" type="MetabaseGlobalPluginsConfig">
+  Plugin configuration for customizing behavior.
+
+  <Expandable title="pluginsConfig properties">
+    <ParamField path="mapQuestionClickActions" type="(clickActions, clickedDataPoint) => MetabaseClickAction[] | { onClick: () => void }">
+      Function to filter or modify click actions on question visualizations.
+    </ParamField>
+
+    <ParamField path="dashboard.dashboardCardMenu" type="DashboardCardMenu">
+      Custom dashboard card menu configuration.
+    </ParamField>
+
+    <ParamField path="handleLink" type="(url: string) => { handled: boolean }">
+      Function to handle link clicks within embedded components.
+    </ParamField>
+
+    <ParamField path="getNoDataIllustration" type="() => string | null">
+      Function returning a base64-encoded image string for the no-data state.
+    </ParamField>
+
+    <ParamField path="getNoObjectIllustration" type="() => string | null">
+      Function returning a base64-encoded image string for the no-object state.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="eventHandlers" type="SdkEventHandlersConfig">
+  Global event handlers.
+
+  <Expandable title="eventHandlers properties">
+    <ParamField path="onDashboardLoad" type="(dashboard: MetabaseDashboard | null) => void">
+      Triggered when a dashboard loads with all visible cards and their content.
+    </ParamField>
+
+    <ParamField path="onDashboardLoadWithoutCards" type="(dashboard: MetabaseDashboard | null) => void">
+      Triggered after a dashboard loads, but without its cards (only the dashboard title, tabs, and cards grid are rendered).
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="locale" type="string">
+  Display language as an ISO language code (e.g., `en`, `de`, `fr`). Defaults to the instance locale.
+</ParamField>
+
+<ParamField path="loaderComponent" type="React.ComponentType<{ label?: string }>">
+  Custom loader component to display while the SDK is loading. The component receives an optional `label` prop.
+</ParamField>
+
+<ParamField path="errorComponent" type="SdkErrorComponent">
+  Custom error component to display when the SDK encounters an error.
+</ParamField>
+
+<ParamField path="allowConsoleLog" type="boolean" default="true">
+  Whether to allow logging to the DevTools console.
+</ParamField>
+
+<ParamField path="children" type="ReactNode" required>
+  Your application components that will have access to the Metabase SDK context.
+</ParamField>
+
+## Important notes
+
+<Note>
+Ensure only one instance of `MetabaseProvider` is rendered at a time. Multiple instances may cause unexpected behavior.
+</Note>
+
+<Warning>
+The `MetabaseProvider` must be an ancestor of all Metabase SDK components in your component tree.
+</Warning>
+
+## TypeScript types
+
+```typescript
+import type {
+  MetabaseProviderProps,
+  MetabaseAuthConfig,
+  MetabaseAuthConfigWithJwt,
+  MetabaseAuthConfigWithSaml,
+  MetabaseAuthConfigWithApiKey,
+  MetabaseIsGuestAuthConfig,
+} from '@metabase/embedding-sdk-react';
+```
+
+## Related
+
+- [Configuration](/sdk/configuration) - Detailed configuration guide
+- [Theming](/sdk/theming) - Theme customization
+- [Event handlers](/sdk/event-handlers) - Working with events

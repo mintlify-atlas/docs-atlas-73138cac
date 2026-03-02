@@ -1,0 +1,473 @@
+---
+title: Modular embedding
+description: Embed individual Metabase components using web components that work with any JavaScript framework
+---
+
+Modular embedding lets you embed and customize Metabase components (like dashboards, the query builder, AI chat, and more) into your own application using web components. You don't need to write embedding code from scratch—just use the wizard to create a code snippet and paste it into your app.
+
+<Note>
+  If you're using React, check out the [React Embedding SDK](/embedding/sdk-introduction) for a better developer experience with full TypeScript support and advanced features.
+</Note>
+
+<Frame>
+  <img src="https://www.metabase.com/docs/latest/embedding/images/modular-embedding-wizard.png" alt="Modular embedding wizard" />
+</Frame>
+
+## When to use modular embedding
+
+Modular embedding is ideal when you want to:
+
+- Embed specific components (dashboards, questions, query builder)
+- Use a non-React framework (Vue, Angular, Svelte, etc.)
+- Have granular control over each embedded component
+- Customize appearance and behavior
+- Support both authenticated (SSO) and guest embeds
+
+<Warning>
+  For modular embedding without authentication (available on all plans), see [Guest Embeds](https://www.metabase.com/docs/latest/embedding/guest-embedding).
+</Warning>
+
+## Enable modular embedding
+
+<Steps>
+  <Step title="Go to Admin settings">
+    In Metabase, navigate to **Admin** > **Embedding**
+  </Step>
+  <Step title="Enable modular embedding">
+    Toggle on **Enable modular embedding**
+  </Step>
+  <Step title="Configure CORS (for authenticated embeds)">
+    For authenticated embeds (Pro/Enterprise only):
+    
+    Under **Cross-Origin Resource Sharing (CORS)**, add the URLs of the websites where you want to embed Metabase (such as `https://*.example.com`). For testing embeds, you can use `localhost` which is always included in CORS policy.
+  </Step>
+  <Step title="Handle cross-domain embedding (if needed)">
+    If embedding on a different domain, see the [authentication guide](https://www.metabase.com/docs/latest/embedding/authentication#embedding-metabase-in-a-different-domain) for additional configuration.
+  </Step>
+</Steps>
+
+<Note>
+  For guest embeds, you're done after step 2! Continue to [create a new embed](#create-a-new-embed) or see the [Guest embedding guide](https://www.metabase.com/docs/latest/embedding/guest-embedding) for detailed setup.
+</Note>
+
+## Create a new embed
+
+You can generate a code snippet for embedding a component through the embed wizard:
+
+### 1. Open the embed wizard
+
+There are three ways to open the wizard:
+
+<Tabs>
+  <Tab title="From the item">
+    1. Visit the item you want to embed (question, dashboard, etc.)
+    2. Click the **sharing icon**
+    3. Select **Embed**
+
+    <Frame>
+      <img src="https://www.metabase.com/docs/latest/embedding/images/embed-share-button.png" alt="Embed share button" />
+    </Frame>
+  </Tab>
+  <Tab title="Command palette">
+    1. Press **Ctrl/Cmd+K** to open the command palette
+    2. Type "New embed"
+    3. Follow the wizard
+  </Tab>
+  <Tab title="Admin panel">
+    1. Go to **Admin** > **Embedding** > **Modular embedding**
+    2. Click **New embed**
+
+    <Frame>
+      <img src="https://www.metabase.com/docs/latest/embedding/images/new-modular-embed-from-admin-settings.png" alt="New modular embed from admin" />
+    </Frame>
+  </Tab>
+</Tabs>
+
+### 2. Pick authentication method
+
+<CardGroup cols={2}>
+  <Card title="SSO (Pro/Enterprise)" icon="key">
+    With SSO, Metabase knows who is viewing the embed and can unlock advanced features like drill-through, query builder, and AI chat.
+  </Card>
+  <Card title="Guest embeds (All plans)" icon="user">
+    Simple, secure embedding without individual user accounts. Great for basic dashboards and charts.
+  </Card>
+</CardGroup>
+
+For SSO setup, see the [authentication guide](https://www.metabase.com/docs/latest/embedding/authentication). For guest embeds, see the [guest embedding docs](https://www.metabase.com/docs/latest/embedding/guest-embedding).
+
+### 3. Customize your embed
+
+The wizard shows customization options based on the entity type and your Metabase plan. You'll see a live preview with your customizations.
+
+<Frame>
+  <img src="https://www.metabase.com/docs/latest/embedding/images/embed-flow-options.png" alt="Embed customization options" />
+</Frame>
+
+#### Customization options
+
+<Tabs>
+  <Tab title="OSS/Starter plans">
+    - Light or dark theme selection
+    - Show/hide title
+    - Enable/disable downloads
+  </Tab>
+  <Tab title="Pro/Enterprise plans">
+    All OSS/Starter options, plus:
+    - Custom brand colors
+    - Text and background colors
+    - Filter and summarize colors
+    - Font family and size
+    - Advanced appearance settings
+  </Tab>
+</Tabs>
+
+Example theme customization in the generated code:
+
+```html
+<script>
+  defineMetabaseConfig({
+    instanceUrl: "https://your-metabase-url",
+    theme: {
+      fontFamily: "Lato",
+      fontSize: "16px",
+      colors: {
+        background: "#11123d",
+        "text-primary": "#f9f9fc",
+        brand: "#50e397",
+        filter: "#7172AD",
+        summarize: "#88BF4D",
+      },
+    },
+  });
+</script>
+```
+
+For more appearance options, see [appearance customization](https://www.metabase.com/docs/latest/embedding/appearance).
+
+### 4. Copy the code snippet
+
+Once you're done customizing, click **Next** to get your code snippet.
+
+## Add the embedding script to your app
+
+The wizard generates a complete code snippet that includes:
+
+1. Loading the modular embedding library from your Metabase instance
+2. Global configuration (URL, theme, etc.)
+3. The component(s) to embed with their parameters
+
+### Example code snippet
+
+```html
+<!-- Load embedding library -->
+<script defer src="https://your-metabase-url/app/embed.js"></script>
+
+<!-- Embedding configuration -->
+<script>
+  function defineMetabaseConfig(config) {
+    window.metabaseConfig = config;
+  }
+</script>
+
+<script>
+  defineMetabaseConfig({
+    instanceUrl: "https://your-metabase-url",
+    theme: {
+      colors: {
+        background: "#ffffff",
+      },
+    },
+  });
+</script>
+
+<!-- Embedded entities -->
+<metabase-question question-id="1"></metabase-question>
+
+<metabase-dashboard dashboard-id="2" with-title="false"></metabase-dashboard>
+```
+
+<Warning>
+  Note the `defer` attribute on the script tag. Make sure to use the correct URL for your Metabase instance.
+</Warning>
+
+<Note>
+  If you're embedding multiple components on a single page, you only need to include the `<script>` tags once globally.
+</Note>
+
+## Available components
+
+Modular embedding supports these web components:
+
+### Questions
+
+Embed individual questions (charts):
+
+```html
+<metabase-question 
+  question-id="1"
+  with-downloads="true"
+></metabase-question>
+```
+
+Create new questions with the query builder:
+
+```html
+<!-- Visual query builder -->
+<metabase-question question-id="new"></metabase-question>
+
+<!-- SQL editor -->
+<metabase-question question-id="new-native"></metabase-question>
+```
+
+### Dashboards
+
+Embed interactive dashboards:
+
+```html
+<metabase-dashboard 
+  dashboard-id="2"
+  with-title="true"
+  with-downloads="false"
+></metabase-dashboard>
+```
+
+Set initial parameter values:
+
+```html
+<metabase-dashboard
+  dashboard-id="2"
+  initial-parameters="{ 'productId': '42', 'status': 'active' }"
+></metabase-dashboard>
+```
+
+Hide specific parameters:
+
+```html
+<metabase-dashboard
+  dashboard-id="2"
+  hidden-parameters="['productId', 'status']"
+></metabase-dashboard>
+```
+
+### Browser (authenticated embeds only)
+
+<Note>
+  The browser component is only available for authenticated modular embeds (SSO). It's unavailable for guest embeds.
+</Note>
+
+Embed a collection browser:
+
+```html
+<metabase-browser
+  initial-collection="14"
+  read-only="false"
+  collection-entity-types="['collection', 'dashboard']"
+></metabase-browser>
+```
+
+### AI chat (authenticated embeds only)
+
+<Note>
+  AI chat is only available for authenticated modular embeds (SSO) on Pro and Enterprise plans.
+</Note>
+
+Embed the AI chat interface:
+
+```html
+<metabase-metabot></metabase-metabot>
+```
+
+For detailed component properties, see [modular embedding components](https://www.metabase.com/docs/latest/embedding/components).
+
+## Authentication requirements
+
+### Each end user should have their own Metabase account
+
+<Warning>
+  For authenticated embeds (SSO), each end-user must have their own Metabase account. If you can't provision accounts for every user, use [Guest embeds](https://www.metabase.com/docs/latest/embedding/guest-embedding) instead.
+</Warning>
+
+The problem with sharing accounts:
+
+- All end-users have access to the same session token
+- They could use the token to access Metabase directly via the API
+- They could see data they're not supposed to access
+
+With individual accounts:
+
+- Configure proper permissions in Metabase
+- Everyone only sees data they should have access to
+- Fair usage of modular embedding
+
+## Page-level configuration
+
+The `defineMetabaseConfig()` function sets configuration for all embeds on the page:
+
+```javascript
+defineMetabaseConfig({
+  // Required: Your Metabase instance URL
+  instanceUrl: "https://your-metabase-url",
+
+  // Optional: Theme customization
+  theme: {
+    fontFamily: "Inter",
+    fontSize: "14px",
+    colors: {
+      brand: "#0066FF",
+      background: "#FFFFFF",
+      "text-primary": "#2E3338",
+    },
+  },
+
+  // Optional: For local development only
+  useExistingUserSession: true,  // Chrome only
+  apiKey: "mb_YourAPIKey",        // Alternative for local dev
+
+  // Optional: Custom JWT authentication
+  fetchRequestToken: () => Promise<{ jwt: string }>,
+
+  // Optional: Plugins for custom behavior
+  pluginsConfig: {
+    handleLink: (url) => {
+      // Custom link handling
+      console.log("Navigating to:", url);
+      // Return false to prevent default behavior
+    },
+  },
+});
+```
+
+### Configuration options
+
+<ResponseField name="instanceUrl" type="string" required>
+  The URL of your Metabase instance (e.g., `https://metabase.example.com`)
+</ResponseField>
+
+<ResponseField name="theme" type="object">
+  Appearance customization. See [appearance docs](https://www.metabase.com/docs/latest/embedding/appearance) for details.
+</ResponseField>
+
+<ResponseField name="useExistingUserSession" type="boolean">
+  **Development only.** Preview embeds locally using your Metabase admin session. Only works in Chrome.
+</ResponseField>
+
+<ResponseField name="apiKey" type="string">
+  **Development only.** Alternative way to preview embeds locally using an API key.
+</ResponseField>
+
+<ResponseField name="fetchRequestToken" type="function">
+  Customize how the SDK fetches JWT tokens. See [authentication docs](https://www.metabase.com/docs/latest/embedding/authentication#customizing-jwt-authentication).
+</ResponseField>
+
+<ResponseField name="pluginsConfig" type="object">
+  Configure plugins like `handleLink` to customize behavior. See [plugins docs](https://www.metabase.com/docs/latest/embedding/sdk/plugins).
+</ResponseField>
+
+## Customization options for authenticated embeds
+
+<Note>
+  These options are available on Pro and Enterprise plans for authenticated embeds. For guest embed options, see [guest embedding](https://www.metabase.com/docs/latest/embedding/guest-embedding#component-attributes).
+</Note>
+
+When creating authenticated embeds via **Admin > Embedding > Setup guide**, you'll see these options:
+
+<AccordionGroup>
+  <Accordion title="Allow drill-through on data points">
+    Determines whether people can interact with charts—drilling down to individual records, filtering on click, zooming in, etc.
+    
+    Disabling drill-through for an embedded question also disables adding filters and summaries.
+  </Accordion>
+  
+  <Accordion title="Allow downloads">
+    Determines whether people can download question results and save dashboards as PDFs.
+  </Accordion>
+  
+  <Accordion title="Allow saving new questions">
+    If you embed the query builder but disable this option, people can explore data but can't save their work.
+  </Accordion>
+  
+  <Accordion title="Parameters">
+    For dashboard filters, SQL variables, and time grouping:
+    - Set default values (overrides dashboard/question defaults)
+    - Choose whether to hide the parameter from view
+  </Accordion>
+  
+  <Accordion title="Show title">
+    Display or hide the question/dashboard title.
+  </Accordion>
+  
+  <Accordion title="Allow editing dashboards and questions">
+    Lets people create and edit dashboards or questions in the current collection, including visual and SQL questions.
+    
+    When disabled, they can still filter, summarize, and drill-through, but can't save results.
+  </Accordion>
+  
+  <Accordion title="Allow alerts">
+    Lets people set up [email alerts](https://www.metabase.com/docs/latest/questions/alerts) on embedded questions.
+    
+    Requires [email setup](https://www.metabase.com/docs/latest/configuring-metabase/email). Only for authenticated question embeds.
+  </Accordion>
+</AccordionGroup>
+
+## Authentication setup
+
+For production use with authenticated embeds, you'll need to set up authentication:
+
+<CardGroup cols={2}>
+  <Card title="JWT SSO" icon="key" href="https://www.metabase.com/docs/latest/embedding/authentication#setting-up-jwt-sso">
+    Most common SSO method for embedded analytics
+  </Card>
+  <Card title="SAML SSO" icon="shield" href="https://www.metabase.com/docs/latest/embedding/authentication#setting-up-saml-sso">
+    Enterprise SSO with your identity provider
+  </Card>
+  <Card title="API keys" icon="code" href="https://www.metabase.com/docs/latest/embedding/authentication#authenticating-locally-with-api-keys">
+    For local development only
+  </Card>
+  <Card title="Cross-domain" icon="globe" href="https://www.metabase.com/docs/latest/embedding/authentication#embedding-metabase-in-a-different-domain">
+    Configure CORS for different domains
+  </Card>
+</CardGroup>
+
+See the [authentication guide](https://www.metabase.com/docs/latest/embedding/authentication) for complete setup instructions.
+
+## Dashboard auto-resizing
+
+The `<metabase-dashboard>` web component automatically resizes to fit its content. No additional configuration is needed.
+
+## Best practices
+
+<Steps>
+  <Step title="Use the embed wizard">
+    The wizard generates correct code snippets and helps you avoid common mistakes.
+  </Step>
+  <Step title="Test in your target environment">
+    Always test embeds in the actual environment where they'll be used, including testing CORS and authentication.
+  </Step>
+  <Step title="Configure proper permissions">
+    Remember that hiding UI elements doesn't replace proper Metabase permissions—configure data permissions correctly.
+  </Step>
+  <Step title="Use guest embeds when appropriate">
+    If you don't need drill-through or advanced features, guest embeds are simpler and work on all plans.
+  </Step>
+  <Step title="Consider the React SDK for React apps">
+    If you're using React, the [React SDK](/embedding/sdk-introduction) provides better developer experience and more features.
+  </Step>
+</Steps>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Component reference" icon="puzzle-piece" href="https://www.metabase.com/docs/latest/embedding/components">
+    Detailed documentation for all components
+  </Card>
+  <Card title="Authentication" icon="key" href="https://www.metabase.com/docs/latest/embedding/authentication">
+    Set up JWT or SAML SSO
+  </Card>
+  <Card title="Appearance" icon="palette" href="https://www.metabase.com/docs/latest/embedding/appearance">
+    Customize themes and styling
+  </Card>
+  <Card title="Guest embeds" icon="user" href="https://www.metabase.com/docs/latest/embedding/guest-embedding">
+    Simple embedding without SSO
+  </Card>
+</CardGroup>

@@ -1,0 +1,508 @@
+---
+title: Dashboard
+description: Create and manage dashboards programmatically through the Metabase API
+---
+
+The Dashboard API manages dashboards in Metabase. Dashboards are collections of cards (questions) arranged with optional parameters for filtering. This API includes 20 endpoints.
+
+## List dashboards
+
+Get all dashboards you have access to.
+
+```bash
+GET /api/dashboard
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/dashboard \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+
+```javascript JavaScript
+const dashboards = await fetch('https://your-metabase.com/api/dashboard', {
+  headers: { 'X-Metabase-Session': sessionToken }
+}).then(r => r.json());
+```
+
+```python Python
+response = requests.get(
+    'https://your-metabase.com/api/dashboard',
+    headers={'X-Metabase-Session': session_token}
+)
+dashboards = response.json()
+```
+</CodeGroup>
+
+### Response
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Sales Overview",
+    "description": "Key sales metrics",
+    "collection_id": 5,
+    "created_at": "2024-01-15T10:00:00Z",
+    "updated_at": "2024-03-01T14:30:00Z"
+  }
+]
+```
+
+## Get dashboard
+
+Get details about a specific dashboard.
+
+```bash
+GET /api/dashboard/{id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/dashboard/1 \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="id" type="integer" required>
+  Dashboard ID
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="integer">
+  Dashboard ID
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Dashboard name
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Dashboard description
+</ResponseField>
+
+<ResponseField name="dashcards" type="array">
+  Array of cards on the dashboard with their positions and sizes
+</ResponseField>
+
+<ResponseField name="parameters" type="array">
+  Dashboard-level parameters for filtering
+</ResponseField>
+
+<ResponseField name="tabs" type="array">
+  Dashboard tabs if using tabbed layout
+</ResponseField>
+
+<ResponseField name="collection_id" type="integer">
+  Collection containing this dashboard
+</ResponseField>
+
+## Create dashboard
+
+Create a new dashboard.
+
+```bash
+POST /api/dashboard
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/dashboard \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "name": "New Dashboard",
+    "description": "Dashboard description",
+    "collection_id": 5
+  }'
+```
+
+```javascript JavaScript
+const dashboard = await fetch('https://your-metabase.com/api/dashboard', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Metabase-Session': sessionToken
+  },
+  body: JSON.stringify({
+    name: 'New Dashboard',
+    description: 'Dashboard description',
+    collection_id: 5
+  })
+}).then(r => r.json());
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="name" type="string" required>
+  Dashboard name
+</ParamField>
+
+<ParamField body="description" type="string">
+  Dashboard description
+</ParamField>
+
+<ParamField body="collection_id" type="integer">
+  Collection to save the dashboard in
+</ParamField>
+
+<ParamField body="parameters" type="array">
+  Dashboard parameters for filtering cards
+</ParamField>
+
+## Update dashboard
+
+Update an existing dashboard.
+
+```bash
+PUT /api/dashboard/{id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X PUT \
+  https://your-metabase.com/api/dashboard/1 \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "name": "Updated Dashboard Name",
+    "description": "Updated description"
+  }'
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="id" type="integer" required>
+  Dashboard ID
+</ParamField>
+
+### Request body
+
+All fields are optional.
+
+<ParamField body="name" type="string">
+  Updated dashboard name
+</ParamField>
+
+<ParamField body="description" type="string">
+  Updated description
+</ParamField>
+
+<ParamField body="parameters" type="array">
+  Updated dashboard parameters
+</ParamField>
+
+<ParamField body="dashcards" type="array">
+  Updated cards, positions, and sizes
+</ParamField>
+
+<ParamField body="archived" type="boolean">
+  Archive or unarchive the dashboard
+</ParamField>
+
+## Delete dashboard
+
+Permanently delete a dashboard.
+
+```bash
+DELETE /api/dashboard/{id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X DELETE \
+  https://your-metabase.com/api/dashboard/1 \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+<Warning>
+This permanently deletes the dashboard. To soft delete, use `PUT /api/dashboard/{id}` with `"archived": true`.
+</Warning>
+
+## Add card to dashboard
+
+Add a card to a dashboard.
+
+```bash
+POST /api/dashboard/{dashboard-id}/cards
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/dashboard/1/cards \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "cardId": 5,
+    "row": 0,
+    "col": 0,
+    "sizeX": 4,
+    "sizeY": 4
+  }'
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="cardId" type="integer" required>
+  ID of the card to add
+</ParamField>
+
+<ParamField body="row" type="integer" required>
+  Row position (0-based)
+</ParamField>
+
+<ParamField body="col" type="integer" required>
+  Column position (0-based, max 12)
+</ParamField>
+
+<ParamField body="sizeX" type="integer" required>
+  Width in grid units (1-12)
+</ParamField>
+
+<ParamField body="sizeY" type="integer" required>
+  Height in grid units
+</ParamField>
+
+<ParamField body="parameter_mappings" type="array">
+  How dashboard parameters map to card parameters
+</ParamField>
+
+<ParamField body="visualization_settings" type="object">
+  Card-specific visualization overrides
+</ParamField>
+
+## Update dashboard card
+
+Update position, size, or settings for a card on a dashboard.
+
+```bash
+PUT /api/dashboard/{dashboard-id}/cards
+```
+
+<CodeGroup>
+```bash curl
+curl -X PUT \
+  https://your-metabase.com/api/dashboard/1/cards \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "cards": [
+      {
+        "id": 10,
+        "row": 2,
+        "col": 0,
+        "sizeX": 6,
+        "sizeY": 4
+      }
+    ]
+  }'
+```
+</CodeGroup>
+
+## Remove card from dashboard
+
+Remove a card from a dashboard.
+
+```bash
+DELETE /api/dashboard/{dashboard-id}/cards
+```
+
+<CodeGroup>
+```bash curl
+curl -X DELETE \
+  https://your-metabase.com/api/dashboard/1/cards \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "dashcardId": 10
+  }'
+```
+</CodeGroup>
+
+## Execute dashboard card query
+
+Run the query for a specific card on a dashboard.
+
+```bash
+POST /api/dashboard/{dashboard-id}/dashcard/{dashcard-id}/card/{card-id}/query
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/dashboard/1/dashcard/10/card/5/query \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "parameters": []
+  }'
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="dashboard-id" type="integer" required>
+  Dashboard ID
+</ParamField>
+
+<ParamField path="dashcard-id" type="integer" required>
+  Dashboard card ID
+</ParamField>
+
+<ParamField path="card-id" type="integer" required>
+  Card ID
+</ParamField>
+
+### Request body
+
+<ParamField body="parameters" type="array">
+  Dashboard parameter values to apply
+</ParamField>
+
+<ParamField body="ignore_cache" type="boolean">
+  Skip cached results (default: false)
+</ParamField>
+
+## Download dashboard card results
+
+Execute a dashboard card query and download results.
+
+```bash
+POST /api/dashboard/{dashboard-id}/dashcard/{dashcard-id}/card/{card-id}/query/{export-format}
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/dashboard/1/dashcard/10/card/5/query/csv \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "parameters": [],
+    "format_rows": true
+  }' \
+  -o results.csv
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="export-format" type="string" required>
+  Export format: csv, xlsx, or json
+</ParamField>
+
+## Public sharing
+
+### Create public link
+
+Generate a public sharing link for a dashboard.
+
+```bash
+POST /api/dashboard/{dashboard-id}/public_link
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/dashboard/1/public_link \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+<Note>
+Requires public sharing to be enabled and admin permissions.
+</Note>
+
+### Response
+
+```json
+{
+  "uuid": "110c3d96-ff3a-4ec6-9a82-7c2d5e073fa2"
+}
+```
+
+The dashboard can be accessed at `/public/dashboard/{uuid}`.
+
+### Delete public link
+
+Remove the public sharing link.
+
+```bash
+DELETE /api/dashboard/{dashboard-id}/public_link
+```
+
+<CodeGroup>
+```bash curl
+curl -X DELETE \
+  https://your-metabase.com/api/dashboard/1/public_link \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+## Dashboard subscriptions
+
+### Create subscription
+
+Create an email or Slack subscription for a dashboard.
+
+```bash
+POST /api/dashboard/{dashboard-id}/subscriptions
+```
+
+### List subscriptions
+
+Get all subscriptions for a dashboard.
+
+```bash
+GET /api/dashboard/{dashboard-id}/subscriptions
+```
+
+## Save dashboard
+
+Create a new dashboard from an existing one.
+
+```bash
+POST /api/dashboard/save
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/dashboard/save \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "name": "Saved Dashboard",
+    "description": "Description",
+    "dashcards": [],
+    "parameters": []
+  }'
+```
+</CodeGroup>
+
+## List embeddable dashboards
+
+Get all dashboards that can be embedded.
+
+```bash
+GET /api/dashboard/embeddable
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/dashboard/embeddable \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>

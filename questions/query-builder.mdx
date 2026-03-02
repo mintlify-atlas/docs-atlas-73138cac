@@ -1,0 +1,411 @@
+---
+title: Query builder
+description: Use Metabase's graphical query builder to create interactive charts and analyze data without writing SQL.
+---
+
+The query builder is Metabase's graphical interface for creating questions. It lets you build sophisticated queries by clicking and selecting options - no SQL required.
+
+## What you can do with the query builder
+
+The query builder provides a visual way to:
+
+<CardGroup cols={2}>
+  <Card title="Pick and join data" icon="database">
+    Select tables and combine data from multiple sources
+  </Card>
+  
+  <Card title="Filter records" icon="filter">
+    Narrow down data based on conditions and criteria
+  </Card>
+  
+  <Card title="Summarize and group" icon="chart-column">
+    Calculate metrics and break them down by dimensions
+  </Card>
+  
+  <Card title="Create custom columns" icon="table-columns">
+    Add calculated fields using expressions
+  </Card>
+</CardGroup>
+
+## The query builder interface
+
+When you create a question with the query builder, you'll see the editor interface:
+
+![Query builder editor](https://metabase.com/images/docs/query-builder-editor.png)
+
+The editor uses a step-by-step approach with three default steps:
+
+1. **Picking data**: Select your data source
+2. **Filtering**: Narrow down the records
+3. **Summarizing**: Calculate metrics and group by dimensions
+
+You can add additional steps for joining tables, creating custom columns, sorting results, and limiting rows.
+
+<Tip>
+Click the **Preview** button (play icon) next to any step to see the first 10 rows of your results up to that point. This helps you validate your query as you build it.
+</Tip>
+
+## Picking your data
+
+<Steps>
+  <Step title="Select your data source">
+    Choose from:
+    - **Models**: Curated datasets prepared by your team
+    - **Tables**: Raw database tables
+    - **Saved questions**: Build on existing question results
+    - **Metrics**: Pre-defined calculations
+    
+    You can search by typing or browse through databases and collections.
+  </Step>
+  
+  <Step title="Choose columns to include">
+    Click the arrow next to your data source to expand the column list. Uncheck any columns you don't need in your results.
+    
+    <Note>Unchecked columns are still available for filters and groupings - they just won't appear in the final results.</Note>
+  </Step>
+  
+  <Step title="Open in new tab (optional)">
+    Cmd/Ctrl + Click on the data source name to view it in a new browser tab.
+  </Step>
+</Steps>
+
+<Warning>
+Hiding columns in visualization settings does NOT secure data. Anyone with view access can unhide columns. To exclude columns from query results entirely, uncheck them in the data picker.
+</Warning>
+
+## Joining data from multiple tables
+
+Combine data from multiple tables to enrich your analysis:
+
+<Steps>
+  <Step title="Add a join step">
+    Click **+ Join data** in the query builder to add a join step between your data and filtering steps.
+  </Step>
+  
+  <Step title="Select the table to join">
+    Choose which table you want to join with your current data source.
+  </Step>
+  
+  <Step title="Configure the join">
+    - **Join type**: Choose from inner join, left outer join, right outer join, or full outer join
+    - **Join condition**: Specify which columns to match between the tables
+    - **Columns**: Select which columns to include from the joined table
+  </Step>
+</Steps>
+
+<Info>
+You can add multiple joins to combine data from several tables. Joins are executed in the order you add them.
+</Info>
+
+## Filtering your data
+
+Filters narrow down your data based on conditions:
+
+### Adding filters
+
+1. Click the **Filter** step
+2. Select the column you want to filter
+3. Choose your filter condition
+4. Enter the value(s) to filter by
+
+### Filter types by data type
+
+<Tabs>
+  <Tab title="Numbers">
+    - Equal to
+    - Not equal to
+    - Greater than / less than
+    - Between
+    - Greater than or equal to / less than or equal to
+    - Is empty / is not empty
+  </Tab>
+  
+  <Tab title="Text">
+    - Is / is not
+    - Contains / does not contain
+    - Starts with / ends with
+    - Is empty / is not empty
+  </Tab>
+  
+  <Tab title="Dates">
+    - **Specific dates**: Fixed dates like "November 1, 2024"
+    - **Relative dates**: Dynamic ranges like "Previous 30 days"
+    - **Date ranges**: Between two dates
+    - **Single date**: Exact date match
+    
+    <Tip>Use relative dates for questions that should stay current automatically. "Previous 7 days" will always show the last week, no matter when you view the question.</Tip>
+  </Tab>
+  
+  <Tab title="Locations">
+    - Is / is not
+    - Contains / does not contain
+    - Starts with / ends with
+    
+    Special handling for city, state, ZIP code, and country fields.
+  </Tab>
+</Tabs>
+
+### Custom filter expressions
+
+For complex conditions, use custom expressions:
+
+```
+[Subtotal] > 100 OR [Quantity] < 10
+```
+
+Custom expressions support:
+- Comparison operators: `>`, `<`, `>=`, `<=`, `=`, `!=`
+- Boolean operators: `AND`, `OR`, `NOT`
+- Parentheses for grouping
+- Spreadsheet-like functions
+
+### Filtering by segments
+
+If your administrators have created segments (pre-defined filter combinations), they'll appear at the top of the filter menu with a star icon. Segments are shortcuts for commonly used filter combinations like "Active Users" or "High-Value Customers."
+
+<Note>
+You can add multiple filters to a question. All filters are combined with AND logic - records must match all filter conditions to be included.
+</Note>
+
+## Summarizing and grouping data
+
+Summarizing lets you calculate metrics and group them by dimensions:
+
+### Choosing metrics
+
+Select one or more aggregations to calculate:
+
+<Tabs>
+  <Tab title="Basic aggregations">
+    - **Count of rows**: Total number of records
+    - **Sum**: Add up values in a column
+    - **Average**: Calculate the mean
+    - **Distinct values**: Count unique values
+    - **Minimum / Maximum**: Find lowest or highest values
+  </Tab>
+  
+  <Tab title="Advanced aggregations">
+    - **Median**: Middle value in distribution
+    - **Standard deviation**: Measure of variation
+    - **Cumulative sum**: Running total over time
+    - **Cumulative count**: Running count over time
+  </Tab>
+  
+  <Tab title="Custom metrics">
+    Your team may have defined custom metrics like "Revenue" or "Active Users." These appear under **Common Metrics** and use your organization's standardized calculations.
+  </Tab>
+</Tabs>
+
+### Grouping your metrics
+
+Break down metrics by dimensions:
+
+<Steps>
+  <Step title="Select a grouping column">
+    Click to choose the dimension you want to group by (time, category, location, etc.).
+  </Step>
+  
+  <Step title="Configure grouping options">
+    - **Date/time columns**: Choose granularity (day, week, month, quarter, year)
+    - **Numeric columns**: Set binning ranges to create histograms
+    - **Text columns**: Group by unique values
+  </Step>
+  
+  <Step title="Add multiple groupings">
+    Click the **+** icon to add additional grouping dimensions for cross-tabulation.
+  </Step>
+</Steps>
+
+<Info>
+When you group by date, Metabase automatically creates a time series chart. Grouping by categories creates bar charts. You can always change the visualization type afterward.
+</Info>
+
+### Multiple summarization steps
+
+You can add multiple summarize steps to perform multi-stage aggregations:
+
+1. First summarization: Count of orders per month
+2. Filter: Where count > 100
+3. Second summarization: Average of count
+
+This is similar to SQL's `HAVING` clause for filtering aggregated results.
+
+## Creating custom columns
+
+Custom columns add calculated fields to your question:
+
+<Steps>
+  <Step title="Add a custom column step">
+    Click **+ Custom column** in the query builder.
+  </Step>
+  
+  <Step title="Write your expression">
+    Create formulas using:
+    - Math operators: `+`, `-`, `*`, `/`
+    - Column references: `[Column Name]`
+    - Functions: `sqrt`, `power`, `abs`, `round`, etc.
+    - String functions: `concat`, `lower`, `upper`, `trim`
+    - Date functions: `year`, `month`, `day`, `now`
+  </Step>
+  
+  <Step title="Name your column">
+    Give your calculated column a descriptive name.
+  </Step>
+</Steps>
+
+### Example custom columns
+
+<CodeGroup>
+
+```sql Profit margin
+([Revenue] - [Cost]) / [Revenue] * 100
+```
+
+```sql Full name
+concat([First Name], " ", [Last Name])
+```
+
+```sql Days since order
+now - [Order Date]
+```
+
+```sql Discount percentage
+case([Discount Type], "Percentage", [Discount], [Discount] / [Subtotal] * 100)
+```
+
+</CodeGroup>
+
+<Tip>
+Custom columns are only added to the question results - they don't modify your database tables.
+</Tip>
+
+## Sorting results
+
+Control the order of your results:
+
+1. Add a **Sort** step
+2. Select the column to sort by
+3. Choose ascending (↑) or descending (↓)
+4. Add additional sort columns for multi-level sorting
+
+<Note>
+Sorting combined with row limits lets you create top-N lists, like "Top 10 customers by revenue."
+</Note>
+
+## Setting row limits
+
+Limit the number of results returned:
+
+1. Add a **Row limit** step (always the last step)
+2. Enter the maximum number of rows to return
+
+<Info>
+Row limits are applied after all other query operations. To further analyze limited results, save the question and use it as a data source for a new question.
+</Info>
+
+## Interactive drill-through
+
+When viewing results, click on data points to explore further:
+
+<Tabs>
+  <Tab title="Click on charts">
+    - See underlying records
+    - Filter dashboard by value
+    - Break out by related dimensions
+    - Zoom in on time ranges
+  </Tab>
+  
+  <Tab title="Click on table cells">
+    - View record details
+    - Filter by value
+    - See distribution
+    - Related objects
+  </Tab>
+  
+  <Tab title="Click on column headings">
+    - Filter column values
+    - Summarize data
+    - Sort ascending/descending
+    - Distribution of values
+  </Tab>
+</Tabs>
+
+Drill-through options vary based on your data type and context. Query builder questions have richer drill-through capabilities than SQL questions.
+
+## Viewing the generated SQL
+
+See the SQL that powers your question:
+
+1. Click **View SQL** in the top right
+2. Metabase shows the native query in a sidebar
+
+<Note>
+To view SQL, you need both query builder and native query permissions for the database.
+</Note>
+
+### Converting to SQL
+
+You can convert a query builder question to SQL:
+
+1. Click the **Console** icon in the upper right
+2. Select **Convert this question to SQL**
+
+<Warning>
+Converting to SQL is one-way. You cannot convert a SQL question back to the query builder.
+</Warning>
+
+## Best practices
+
+<CardGroup cols={2}>
+  <Card title="Preview frequently" icon="eye">
+    Use the preview button after each step to validate your results before running the full query.
+  </Card>
+  
+  <Card title="Start simple, build up" icon="layer-group">
+    Begin with basic queries and add complexity incrementally. Easier to debug when issues arise.
+  </Card>
+  
+  <Card title="Name custom columns clearly" icon="tag">
+    Use descriptive names for calculated fields so others understand what they represent.
+  </Card>
+  
+  <Card title="Use relative dates" icon="calendar">
+    Choose relative date filters ("Previous 30 days") over fixed dates to keep questions current automatically.
+  </Card>
+</CardGroup>
+
+## Query builder limits
+
+<AccordionGroup>
+  <Accordion title="Row limits for aggregated queries">
+    By default, Metabase limits aggregated queries to 10,000 rows. Administrators can adjust this with the `MB_AGGREGATED_QUERY_ROW_LIMIT` environment variable.
+  </Accordion>
+  
+  <Accordion title="Questions that can't be used as sources">
+    Some saved questions can't be used as data sources:
+    - Druid questions
+    - MongoDB questions  
+    - Questions with cumulative sum or count
+    - Questions with duplicate or similar column names
+  </Accordion>
+  
+  <Accordion title="Time grouping parameters">
+    Time grouping parameters can only connect to fields in the last stage of a query. If your query's final stage is a filter or sort, time grouping won't work on earlier date fields.
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="SQL editor" icon="code" href="/questions/sql-editor">
+    Learn when and how to use SQL for more complex queries
+  </Card>
+  
+  <Card title="Native queries" icon="database" href="/questions/native-queries">
+    Understand native query capabilities for different databases
+  </Card>
+  
+  <Card title="Creating dashboards" icon="table-columns" href="/dashboards/creating-dashboards">
+    Combine multiple questions into interactive dashboards
+  </Card>
+</CardGroup>

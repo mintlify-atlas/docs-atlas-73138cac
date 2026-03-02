@@ -1,0 +1,392 @@
+---
+title: Users and groups
+description: Manage user accounts, create groups, and organize people for permissions management in Metabase.
+---
+
+Users and groups are the foundation of permissions management in Metabase. Every person needs an account, and accounts can be members of multiple groups to control access to data and features.
+
+<Info>
+These are accounts for logging into **your Metabase instance**. They're distinct from [Metabase store accounts](https://store.metabase.com) used for managing paid plans.
+</Info>
+
+## Accessing user management
+
+Access user and group management through either method:
+
+<Steps>
+  <Step title="Using command palette">
+    Press `Cmd/Ctrl + K` and search for "People", then select **People** settings
+  </Step>
+  <Step title="Using navigation">
+    Click **grid icon** > **Admin** > **People**
+  </Step>
+</Steps>
+
+## Managing user accounts
+
+### Creating accounts
+
+<Note>
+On Pro and Enterprise plans, all active accounts count toward your user total. Each person's account counts separately even if one person has multiple accounts.
+</Note>
+
+<Steps>
+  <Step title="Navigate to People">
+    Go to **Admin** > **People** tab
+  </Step>
+  <Step title="Invite someone">
+    Click **Invite someone** in the upper right corner
+  </Step>
+  <Step title="Enter details">
+    Provide their email address (required) and optionally first/last name
+  </Step>
+  <Step title="Create account">
+    Click **Create** to activate the account immediately
+  </Step>
+</Steps>
+
+<Info>
+If email is configured, Metabase sends an invitation automatically. Without email setup, you'll receive a temporary password to share manually.
+</Info>
+
+**Important considerations:**
+- Accounts become active immediately upon creation, even if the user never signs in
+- Active accounts count toward billing on paid plans
+- For SSO account creation, see [authentication options](/administration/authentication)
+
+### Editing accounts
+
+Modify user information by clicking the three dots icon next to their name and selecting **Edit user**.
+
+<Warning>
+Changing an account's email address changes their login credentials. The user must use the new email to sign in.
+</Warning>
+
+### Adding user attributes
+
+<Note>
+User attributes are available on Pro and Enterprise plans.
+</Note>
+
+User attributes enable [row and column security](/administration/permissions#row-and-column-security) by storing metadata about each user.
+
+<Steps>
+  <Step title="Open user editor">
+    Go to **Admin** > **People**, find the user, click **...** menu, select **Edit user**
+  </Step>
+  <Step title="Add attribute">
+    Click **+ Add an attribute**
+  </Step>
+  <Step title="Set key-value pair">
+    Enter the attribute name (e.g., "Department") and value (e.g., "Engineering")
+  </Step>
+  <Step title="Organize with groups">
+    Optionally create a group to organize users with similar attributes
+  </Step>
+</Steps>
+
+<Accordion title="Common uses for user attributes">
+  - **Row-level security**: Filter data based on department, region, or customer ID
+  - **Database impersonation**: Specify which database role Metabase should use per user
+  - **Multi-tenant analytics**: Show each customer only their own data
+  - **SSO synchronization**: Automatically sync attributes from identity providers
+</Accordion>
+
+### Deactivating accounts
+
+Deactivating an account prevents login while preserving the user's created content.
+
+<Steps>
+  <Step title="Select user">
+    Find the user in **Admin** > **People**
+  </Step>
+  <Step title="Deactivate">
+    Click the three dots icon and select **Deactivate**
+  </Step>
+  <Step title="Confirm action">
+    The account is marked inactive and the user cannot log in
+  </Step>
+</Steps>
+
+<Info>
+Deactivated accounts retain all questions, dashboards, and other content. The account can be reactivated later.
+</Info>
+
+**SSO considerations:**
+- Deactivation in Metabase does not sync to your IdP
+- Deactivate accounts in both systems to fully block access
+
+#### Reactivating accounts
+
+<Steps>
+  <Step title="View deactivated users">
+    Click the **Deactivated** filter at the top of the People list
+  </Step>
+  <Step title="Reactivate">
+    Click the icon on the far right of the user's row
+  </Step>
+</Steps>
+
+### Deleting accounts
+
+Metabase doesn't support true account deletion. Instead:
+
+<Steps>
+  <Step title="Change account info">
+    Update the name and email to placeholder values
+  </Step>
+  <Step title="Deactivate">
+    Deactivate the account to prevent login
+  </Step>
+  <Step title="Create new account">
+    If needed, create a new account with correct information
+  </Step>
+</Steps>
+
+<Note>
+This approach preserves all content created by the account while freeing up the email address for a new account.
+</Note>
+
+## Password management
+
+### Resetting user passwords
+
+Admin password resets depend on email configuration:
+
+**With email configured:**
+- User receives a password reset email
+- They can also use "forgot password" on the login screen
+
+**Without email configured:**
+- Admin receives a temporary password
+- Admin must manually share the password with the user
+
+<Steps>
+  <Step title="Locate user">
+    Find the user in **Admin** > **People**
+  </Step>
+  <Step title="Reset password">
+    Click three dots icon and choose **Reset Password**
+  </Step>
+  <Step title="Share credentials">
+    If email isn't configured, manually share the temporary password
+  </Step>
+</Steps>
+
+### Resetting admin password
+
+For **Metabase Cloud**, contact [support](https://www.metabase.com/help-premium).
+
+For **self-hosted** instances with server access:
+
+<Steps>
+  <Step title="Stop Metabase">
+    Shut down the running Metabase application
+  </Step>
+  <Step title="Generate reset token">
+    Run: `java --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar reset-password admin@example.com`
+  </Step>
+  <Step title="Restart Metabase">
+    Start Metabase normally without the reset-password option
+  </Step>
+  <Step title="Use reset URL">
+    Navigate to: `https://your-metabase.com/auth/reset_password/TOKEN`
+  </Step>
+  <Step title="Set new password">
+    Enter your new password on the reset page
+  </Step>
+</Steps>
+
+## Groups
+
+Groups are the primary way to manage permissions in Metabase. Assign permissions to groups, then add users to those groups.
+
+### Special default groups
+
+#### Administrators
+
+The Administrators group has complete access to:
+- All data in your Metabase
+- All admin panel settings
+- User and permission management
+
+<Warning>
+Be very careful who you add to the Administrators group. They have unrestricted access to everything.
+</Warning>
+
+#### All users
+
+Every user automatically belongs to the All Users group.
+
+<Note>
+**Best practice**: Use All Users to set default access levels for new users. This group should never have greater access than restricted groups, or the permissive setting will take precedence.
+</Note>
+
+#### Data analysts
+
+<Info>
+The Data Analysts group is available on Pro and Enterprise plans.
+</Info>
+
+The Data Analysts group grants access to:
+- [Data Studio](https://docs.metabase.com/data-studio/overview.html)
+- [Curate permissions](https://docs.metabase.com/permissions/collections.html#curate-access) for the Library collection
+- [Manage table metadata permissions](https://docs.metabase.com/permissions/data.html#manage-table-metadata-permissions) for all tables
+
+You can assign additional permissions to this group as needed.
+
+### Creating groups
+
+Organize users into groups that reflect your organizational structure.
+
+<Steps>
+  <Step title="Navigate to groups">
+    Go to **Admin** > **People** > **Groups**
+  </Step>
+  <Step title="Add group">
+    Click **Add a group**
+  </Step>
+  <Step title="Name the group">
+    Choose a name that reflects its purpose (e.g., "Finance Team", "Regional Managers")
+  </Step>
+  <Step title="Set permissions">
+    Configure data, collection, and application permissions for the group
+  </Step>
+</Steps>
+
+<Note>
+Newly created groups have no access by default. You must explicitly grant permissions.
+</Note>
+
+**Recommended group structures:**
+- Department-based: Engineering, Sales, Marketing, Finance
+- Role-based: Analysts, Managers, Executives
+- Location-based: EMEA, Americas, APAC
+- Project-based: Product Launch, Q4 Initiative
+
+### Managing group membership
+
+<Steps>
+  <Step title="Select group">
+    Click into a group from **Admin** > **People** > **Groups**
+  </Step>
+  <Step title="Add members">
+    Click **Add members** and select users
+  </Step>
+  <Step title="Remove members">
+    Click the **X** next to a member to remove them
+  </Step>
+</Steps>
+
+<Accordion title="Alternative method: From People list">
+  You can also add or remove users from groups using the **Groups** column dropdown in the main People list.
+</Accordion>
+
+### Group managers
+
+<Info>
+Group managers are available on Pro and Enterprise plans.
+</Info>
+
+Group managers have limited administrative capabilities for their group:
+
+**Can do:**
+- Add or remove existing users from their group
+- View all users in the People tab
+- Promote others to group manager or demote them to member
+- Rename their group
+
+**Cannot do:**
+- Create new groups
+- Invite new people to Metabase
+- Access other admin settings
+
+<Steps>
+  <Step title="Navigate to group">
+    Go to **Admin** > **People** > **Groups** and select the group
+  </Step>
+  <Step title="Find member">
+    Locate the person you want to promote
+  </Step>
+  <Step title="Promote">
+    Hover over their member type and click the up arrow to promote to manager
+  </Step>
+</Steps>
+
+## Additional account features
+
+### Checking authentication method
+
+Identify how a user logs in by looking for icons next to their name:
+- **Google icon**: Logs in with Google credentials
+- **No icon**: Uses email and password stored in Metabase
+
+<Note>
+The authentication type is set when the account is first created. If a user created their account in Metabase but later logs in via SSO, the icon will not appear.
+</Note>
+
+### Unsubscribe from all notifications
+
+Remove a user from all subscriptions and alerts:
+1. Find the user in **Admin** > **People**
+2. Click the three dots menu
+3. Select **Unsubscribe from all subscriptions and alerts**
+
+This action:
+- Deletes dashboard subscriptions and alerts they created
+- Removes them as recipients from others' subscriptions and alerts
+- Does not affect external email distribution lists
+
+## Default system accounts
+
+Metabase includes special system accounts for internal operations:
+
+<Accordion title="Anonymous user account (ID: 0)">
+  **Purpose**: Tracks anonymous views of public questions and dashboards
+  
+  - Name: External User
+  - Email: null
+  - Not billable
+  - Cannot be logged into
+  - Appears in usage analytics
+</Accordion>
+
+<Accordion title="Metabase internal account (ID: 13371338)">
+  **Purpose**: Loads internal content like Usage Analytics collection
+  
+  - Email: internal@metabase.com
+  - Not billable
+  - Cannot be logged into
+  - May appear in logs
+</Accordion>
+
+<Info>
+These accounts are legitimate system accounts. You're not charged for them, and they're excluded from the People admin tab.
+</Info>
+
+## Best practices
+
+<Steps>
+  <Step title="Block All Users group first">
+    Before setting specific permissions, block the All Users group from all databases to ensure no unintended access
+  </Step>
+  <Step title="Use groups for permissions">
+    Always assign permissions to groups, not individual users, for easier management
+  </Step>
+  <Step title="Document group purposes">
+    Maintain documentation of what each group is for and what access it has
+  </Step>
+  <Step title="Regular access reviews">
+    Periodically audit group memberships to ensure users have appropriate access
+  </Step>
+  <Step title="Deactivate departing users">
+    Promptly deactivate accounts when people leave your organization
+  </Step>
+</Steps>
+
+## Related documentation
+
+- [Permissions overview](/administration/permissions)
+- [Authentication setup](/administration/authentication)
+- [User provisioning with SCIM](https://docs.metabase.com/people-and-groups/user-provisioning.html)
+- [Permissions strategies](https://www.metabase.com/learn/metabase-basics/administration/permissions/strategy)

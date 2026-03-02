@@ -1,0 +1,463 @@
+---
+title: Permissions
+description: Manage user groups and permissions programmatically
+---
+
+The Permissions API manages user groups and their access permissions to databases, schemas, tables, and collections. This API includes 9 endpoints.
+
+## Permissions overview
+
+Metabase uses a group-based permissions system:
+
+- **Groups** contain users and have permissions
+- **Permissions graphs** define what each group can access
+- **Database permissions** control access to databases and their data
+- **Collection permissions** control access to dashboards and questions
+
+## Get permissions graph
+
+Get the complete permissions graph showing all group permissions.
+
+```bash
+GET /api/permissions/graph
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/permissions/graph \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+<Note>
+Requires admin permissions.
+</Note>
+
+### Response
+
+<ResponseField name="groups" type="object">
+  Map of group IDs to their permissions
+</ResponseField>
+
+<ResponseField name="revision" type="integer">
+  Current revision number (for optimistic locking)
+</ResponseField>
+
+```json
+{
+  "revision": 5,
+  "groups": {
+    "1": {
+      "1": {
+        "data": {
+          "schemas": "all",
+          "native": "write"
+        }
+      }
+    }
+  }
+}
+```
+
+## Update permissions graph
+
+Update permissions for groups.
+
+```bash
+PUT /api/permissions/graph
+```
+
+<CodeGroup>
+```bash curl
+curl -X PUT \
+  https://your-metabase.com/api/permissions/graph \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "revision": 5,
+    "groups": {
+      "1": {
+        "1": {
+          "data": {
+            "schemas": "all",
+            "native": "write"
+          }
+        }
+      }
+    }
+  }'
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="groups" type="object" required>
+  Updated permissions graph
+  
+  Permission levels:
+  - `"all"` - Full access
+  - `"none"` - No access
+  - `"write"` - Read and write
+  - `"read"` - Read only
+  - Schemas can be individually specified
+</ParamField>
+
+<ParamField body="revision" type="integer">
+  Current revision number (for preventing conflicts)
+</ParamField>
+
+<Warning>
+Updating permissions can affect many users. Changes take effect immediately.
+</Warning>
+
+## Get database permissions
+
+Get permissions for a specific database.
+
+```bash
+GET /api/permissions/graph/db/{db-id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/permissions/graph/db/1 \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="db-id" type="integer" required>
+  Database ID
+</ParamField>
+
+## Get group permissions
+
+Get all permissions for a specific group.
+
+```bash
+GET /api/permissions/graph/group/{group-id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/permissions/graph/group/1 \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="group-id" type="integer" required>
+  Group ID
+</ParamField>
+
+## List groups
+
+Get all permission groups.
+
+```bash
+GET /api/permissions/group
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/permissions/group \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Response
+
+```json
+[
+  {
+    "id": 1,
+    "name": "All Users",
+    "member_count": 25
+  },
+  {
+    "id": 2,
+    "name": "Administrators",
+    "member_count": 3
+  }
+]
+```
+
+## Create group
+
+Create a new permission group.
+
+```bash
+POST /api/permissions/group
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/permissions/group \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "name": "Analytics Team"
+  }'
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="name" type="string" required>
+  Group name (minimum 1 character)
+</ParamField>
+
+## Get group
+
+Get details about a specific group.
+
+```bash
+GET /api/permissions/group/{id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/permissions/group/1 \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="id" type="integer" required>
+  Group ID
+</ParamField>
+
+## Update group
+
+Update a group's name or properties.
+
+```bash
+PUT /api/permissions/group/{group-id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X PUT \
+  https://your-metabase.com/api/permissions/group/1 \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "name": "Updated Group Name"
+  }'
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="name" type="string" required>
+  Updated group name
+</ParamField>
+
+## Delete group
+
+Delete a permission group.
+
+```bash
+DELETE /api/permissions/group/{group-id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X DELETE \
+  https://your-metabase.com/api/permissions/group/1 \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+<Warning>
+Cannot delete the "All Users" or "Administrators" default groups.
+</Warning>
+
+## Group membership
+
+### List memberships
+
+Get all group memberships.
+
+```bash
+GET /api/permissions/membership
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/permissions/membership \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Add member to group
+
+Add a user to a permission group.
+
+```bash
+POST /api/permissions/membership
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/permissions/membership \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "group_id": 1,
+    "user_id": 5
+  }'
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="group_id" type="integer" required>
+  Group ID
+</ParamField>
+
+<ParamField body="user_id" type="integer" required>
+  User ID to add to the group
+</ParamField>
+
+### Remove member from group
+
+Remove a user from a group.
+
+```bash
+DELETE /api/permissions/membership/{id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X DELETE \
+  https://your-metabase.com/api/permissions/membership/123 \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="id" type="integer" required>
+  Membership ID
+</ParamField>
+
+### Update membership
+
+Update a group membership.
+
+```bash
+PUT /api/permissions/membership/{id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X PUT \
+  https://your-metabase.com/api/permissions/membership/123 \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "is_group_manager": true
+  }'
+```
+</CodeGroup>
+
+### Clear group membership
+
+Remove all members from a group.
+
+```bash
+PUT /api/permissions/membership/{group-id}/clear
+```
+
+<CodeGroup>
+```bash curl
+curl -X PUT \
+  https://your-metabase.com/api/permissions/membership/1/clear \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+<Warning>
+This removes all users from the group. Use with caution.
+</Warning>
+
+## Permission levels
+
+### Database permissions
+
+<ResponseField name="none" type="permission">
+  No access to the database
+</ResponseField>
+
+<ResponseField name="all" type="permission">
+  Full access to all schemas and tables
+</ResponseField>
+
+<ResponseField name="schemas" type="permission">
+  Granular schema-level permissions
+</ResponseField>
+
+### Native query permissions
+
+<ResponseField name="none" type="permission">
+  Cannot write native queries
+</ResponseField>
+
+<ResponseField name="write" type="permission">
+  Can write and execute native queries
+</ResponseField>
+
+### Collection permissions
+
+<ResponseField name="none" type="permission">
+  No access to the collection
+</ResponseField>
+
+<ResponseField name="read" type="permission">
+  Can view items in the collection
+</ResponseField>
+
+<ResponseField name="write" type="permission">
+  Can create, edit, and delete items
+</ResponseField>
+
+## Best practices
+
+<Tip>
+**Permission management tips:**
+- Use groups to organize users by role or department
+- Grant the minimum permissions needed
+- Regularly audit group memberships
+- Use the "All Users" group for instance-wide permissions
+- Test permissions changes with a non-admin account
+</Tip>
+
+## Error codes
+
+<ResponseField name="400 Bad Request" type="error">
+  Invalid permission configuration
+</ResponseField>
+
+<ResponseField name="403 Forbidden" type="error">
+  Must be an admin to manage permissions
+</ResponseField>
+
+<ResponseField name="404 Not Found" type="error">
+  Group or user not found
+</ResponseField>
+
+<ResponseField name="409 Conflict" type="error">
+  Permission graph revision conflict
+</ResponseField>

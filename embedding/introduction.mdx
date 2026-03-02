@@ -1,0 +1,180 @@
+---
+title: Embedding introduction
+description: Different ways you can embed charts and dashboards, or all of Metabase, in your app
+---
+
+You can embed Metabase tables, charts, and dashboards—even Metabase's query builder—in your website or application. Metabase offers multiple embedding approaches to fit different use cases, from simple public sharing to sophisticated multi-tenant analytics.
+
+## Embedding approaches
+
+Metabase provides three main approaches for embedding analytics:
+
+<CardGroup cols={3}>
+  <Card title="Modular embedding" icon="puzzle-piece" href="/embedding/modular-embedding">
+    Embed individual components like charts, dashboards, and query builder with SSO or guest authentication
+  </Card>
+  <Card title="Full app embedding" icon="window" href="/embedding/interactive-embedding">
+    Embed the entire Metabase application in an iframe with SSO integration
+  </Card>
+  <Card title="Public sharing" icon="link" href="/embedding/public-sharing">
+    Share charts and dashboards publicly via links or simple embeds
+  </Card>
+</CardGroup>
+
+## Modular embedding
+
+With modular embedding, you can embed individual Metabase components in your web app. This approach gives you the most flexibility and control over the embedded experience.
+
+### Two ways to implement modular embedding
+
+<Tabs>
+  <Tab title="React SDK">
+    The **Modular embedding SDK** is a React library that provides pre-built components for embedding Metabase into React applications. It offers advanced theming, custom layouts, and plugins for customization.
+
+    **Best for:** React applications that need maximum customization and control
+
+    [Learn more about the SDK](/embedding/sdk-introduction)
+  </Tab>
+  <Tab title="JavaScript embeds">
+    **Modular embedding** uses web components that work with any JavaScript framework or vanilla HTML. You can authenticate using SSO for full functionality or guest embeds for basic use cases.
+
+    **Best for:** Non-React applications or simple embedding scenarios
+
+    [Learn more about modular embedding](/embedding/modular-embedding)
+  </Tab>
+</Tabs>
+
+### Authentication options
+
+You can use two different authentication methods with modular embedding:
+
+#### SSO embeds
+
+With SSO, Metabase can know who's viewing what, which unlocks powerful features:
+
+- Automatic [data permissions](https://www.metabase.com/docs/latest/permissions/embedding) enforcement
+- Drill-through on charts and dashboards
+- Query builder access for ad-hoc exploration
+- AI chat for natural language queries
+- Collection browser
+- Multi-tenant, self-service analytics
+
+<Note>
+  SSO embeds require a Pro or Enterprise plan.
+</Note>
+
+**When to use SSO:** You want to offer multi-tenant, self-service analytics, or you want to include the query builder, AI chat, drill-through, or a collection browser.
+
+#### Guest embedding
+
+Guest embeds are a secure way to embed charts and dashboards without requiring individual user accounts. Guest embedding works on all Metabase plans, including open source and Starter.
+
+- Simple, secure embedding for charts and dashboards
+- No individual user accounts required
+- Filter data with locked parameters
+- Works on all Metabase plans
+
+**When to use guest embeds:** Simple embedding use cases where you don't want to offer ad-hoc querying or chart drill-through. To filter data relevant to the viewer, you can use guest embeds with locked parameters.
+
+## Full app embedding
+
+Full app embedding allows you to embed the entire Metabase app in an iframe, integrating Metabase SSO with your app's authentication. This gives users access to all of Metabase's functionality within your application.
+
+<Warning>
+  If you're just starting out with Metabase embedding, consider using modular embedding instead—it's more customizable and offers better control over individual components.
+</Warning>
+
+**When to use full app embedding:**
+- You want to embed all of Metabase's functionality
+- You need a complete analytics workspace within your app
+- You're okay with less control over specific UI components
+
+[Learn more about full app embedding](/embedding/interactive-embedding)
+
+## Public links and embeds
+
+If you'd like to share your data publicly, admins can create public links or embed a question or dashboard directly in your website.
+
+- No authentication required
+- Share with anyone on the internet
+- Simple iframe embeds
+- Export options for CSV, XLSX, and JSON
+
+**When to use public links and embeds:** One-off charts and dashboards that you want to make available to everyone, without any authentication or data restrictions.
+
+[Learn more about public sharing](/embedding/public-sharing)
+
+## Comparison of embedding types
+
+<Note>
+  The SDK refers to the React Embedding SDK, which is the most feature-rich embedding option.
+</Note>
+
+| Feature | SDK | Modular SSO | Modular Guest | Full app | Public |
+|---------|-----|-------------|---------------|----------|--------|
+| Charts and dashboards | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Filter widgets | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Export results | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Locked filters | ❌ | ❌ | ✅ | ❌ | ❌ |
+| Data segregation | ✅ | ✅ | ❌ | ✅ | ❌ |
+| Drill-through menu | ✅ | ✅ | ❌ | ✅ | ❌ |
+| Query builder | ✅ | ✅ | ❌ | ✅ | ❌ |
+| Basic appearance customization | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Advanced theming | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Usage analytics | ✅ | ✅ | ❌ | ✅ | ❌ |
+| Embed individual components | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Manage access per component | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Custom layouts | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Customize behavior with plugins | ✅ | ❌ | ❌ | ❌ | ❌ |
+| AI chat | ✅ | ✅ | ❌ | ✅ | ❌ |
+
+<Note>
+  - Each embedding type allows data downloads by default, but only Pro and Enterprise plans can disable data downloads.
+  - Basic appearance customization requires a Pro or Enterprise plan for any embedding type.
+</Note>
+
+## Which embedding approach should you choose?
+
+<Steps>
+  <Step title="Determine your use case">
+    - **Public data?** Use [public sharing](/embedding/public-sharing)
+    - **Simple charts without interactivity?** Use [guest embedding](https://www.metabase.com/docs/latest/embedding/guest-embedding)
+    - **Need full Metabase experience?** Use [full app embedding](/embedding/interactive-embedding)
+    - **Custom layouts and maximum control?** Use the [React SDK](/embedding/sdk-introduction)
+  </Step>
+  <Step title="Consider your authentication requirements">
+    - **No authentication needed?** Use public sharing or guest embedding
+    - **Multi-tenant with per-user permissions?** Use SSO with modular or full app embedding
+    - **React application?** Use the React SDK for best developer experience
+  </Step>
+  <Step title="Evaluate customization needs">
+    - **Need custom layouts?** Use the React SDK
+    - **Want to customize click behaviors?** Use the SDK with plugins
+    - **Basic theming is enough?** Use modular embedding or full app embedding
+  </Step>
+</Steps>
+
+## Getting started
+
+<CardGroup cols={2}>
+  <Card title="React Embedding SDK" icon="react" href="/embedding/sdk-introduction">
+    Start with the SDK for React applications
+  </Card>
+  <Card title="Modular embedding" icon="code" href="/embedding/modular-embedding">
+    Use web components for any framework
+  </Card>
+  <Card title="Full app embedding" icon="window" href="/embedding/interactive-embedding">
+    Embed the complete Metabase experience
+  </Card>
+  <Card title="Public sharing" icon="share-nodes" href="/embedding/public-sharing">
+    Create public links and embeds
+  </Card>
+</CardGroup>
+
+## Further reading
+
+- [Strategies for delivering customer-facing analytics](https://www.metabase.com/learn/metabase-basics/embedding/overview)
+- [Publishing data visualizations to the web](https://www.metabase.com/learn/metabase-basics/embedding/charts-and-dashboards)
+- [Multi-tenant self-service analytics](https://www.metabase.com/learn/metabase-basics/embedding/multi-tenant-self-service-analytics)
+- [Customizing Metabase's appearance](https://www.metabase.com/docs/latest/configuring-metabase/appearance)
+- [Securing embedded Metabase](https://www.metabase.com/docs/latest/embedding/securing-embeds)

@@ -1,0 +1,138 @@
+---
+title: Quickstart
+description: Get started with the Metabase Embedding SDK in minutes
+---
+
+This guide will help you embed your first Metabase component using the SDK.
+
+## Prerequisites
+
+Make sure you have:
+
+- [Installed the SDK](/sdk/installation)
+- A running Metabase instance
+- A question or dashboard to embed
+
+## Step 1: Set up authentication
+
+First, create an authentication configuration. The SDK supports multiple authentication methods:
+
+<Tabs>
+  <Tab title="JWT authentication">
+    ```typescript
+import { defineMetabaseAuthConfig } from '@metabase/embedding-sdk-react';
+
+const authConfig = defineMetabaseAuthConfig({
+  metabaseInstanceUrl: 'https://metabase.example.com',
+  jwtProviderUri: 'https://your-api.example.com/sso/metabase',
+});
+    ```
+  </Tab>
+  <Tab title="API key (development only)">
+    ```typescript
+import { defineMetabaseAuthConfig } from '@metabase/embedding-sdk-react';
+
+const authConfig = defineMetabaseAuthConfig({
+  metabaseInstanceUrl: 'http://localhost:3000',
+  apiKey: 'your-api-key', // For development only
+});
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+For production, use JWT or SAML authentication. API keys should only be used during development.
+</Note>
+
+## Step 2: Wrap your app with MetabaseProvider
+
+Wrap your application with the `MetabaseProvider` component:
+
+```tsx
+import { MetabaseProvider } from '@metabase/embedding-sdk-react';
+
+function App() {
+  return (
+    <MetabaseProvider authConfig={authConfig}>
+      {/* Your app components */}
+    </MetabaseProvider>
+  );
+}
+```
+
+## Step 3: Embed a question
+
+Now you can embed any Metabase component. Here's how to embed a question:
+
+```tsx
+import { StaticQuestion } from '@metabase/embedding-sdk-react';
+
+function Dashboard() {
+  return (
+    <div>
+      <h1>Sales Analytics</h1>
+      <StaticQuestion questionId={1} />
+    </div>
+  );
+}
+```
+
+## Step 4: Embed a dashboard
+
+Embedding a dashboard is just as simple:
+
+```tsx
+import { InteractiveDashboard } from '@metabase/embedding-sdk-react';
+
+function Analytics() {
+  return (
+    <div>
+      <h1>Company Dashboard</h1>
+      <InteractiveDashboard dashboardId={1} />
+    </div>
+  );
+}
+```
+
+## Complete example
+
+Here's a complete example putting it all together:
+
+```tsx
+import { MetabaseProvider, StaticQuestion } from '@metabase/embedding-sdk-react';
+
+const authConfig = {
+  metabaseInstanceUrl: 'https://metabase.example.com',
+  jwtProviderUri: 'https://your-api.example.com/sso/metabase',
+};
+
+function App() {
+  return (
+    <MetabaseProvider authConfig={authConfig}>
+      <div style={{ padding: '20px' }}>
+        <h1>My Analytics Dashboard</h1>
+        <StaticQuestion questionId={1} height={400} />
+      </div>
+    </MetabaseProvider>
+  );
+}
+
+export default App;
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="gear" href="/sdk/configuration">
+    Configure authentication, theming, and plugins
+  </Card>
+  <Card title="Interactive questions" icon="chart-line" href="/sdk/interactive-question">
+    Let users explore data with interactive questions
+  </Card>
+  <Card title="Dashboards" icon="chart-pie" href="/sdk/interactive-dashboard">
+    Embed interactive dashboards with filters and drill-downs
+  </Card>
+  <Card title="Theming" icon="palette" href="/sdk/theming">
+    Customize the appearance to match your brand
+  </Card>
+</CardGroup>

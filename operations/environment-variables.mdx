@@ -1,0 +1,668 @@
+---
+title: Environment variables
+description: Complete reference for configuring Metabase using environment variables for database connections, server settings, and application configuration.
+---
+
+Many settings in Metabase can be configured via environment variables. Environment variables take precedence over settings configured in the Admin Panel and are not written to the application database.
+
+<Note>
+Environment variables are ideal for production deployments as they keep sensitive configuration outside your codebase and allow different settings per environment.
+</Note>
+
+## How to set environment variables
+
+The method for setting environment variables depends on how you're running Metabase.
+
+<Tabs>
+  <Tab title="JAR file (Unix/Mac)">
+    Export variables before running the JAR:
+
+    ```bash
+    export MB_DB_TYPE=postgres
+    export MB_DB_DBNAME=metabase
+    export MB_SITE_NAME="My Company Analytics"
+    java --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar
+    ```
+  </Tab>
+  
+  <Tab title="JAR file (Windows PowerShell)">
+    ```powershell
+    $env:MB_DB_TYPE="postgres"
+    $env:MB_DB_DBNAME="metabase"
+    $env:MB_SITE_NAME="My Company Analytics"
+    java --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar
+    ```
+  </Tab>
+  
+  <Tab title="JAR file (Windows CMD)">
+    ```cmd
+    set MB_DB_TYPE=postgres
+    set MB_DB_DBNAME=metabase
+    set MB_SITE_NAME=My Company Analytics
+    java --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar
+    ```
+  </Tab>
+  
+  <Tab title="Java properties">
+    Set as Java system properties (works on all platforms):
+
+    ```bash
+    java -DMB_DB_TYPE=postgres -DMB_DB_DBNAME=metabase -jar metabase.jar
+    ```
+  </Tab>
+  
+  <Tab title="Docker">
+    Use the `-e` flag for each variable:
+
+    ```bash
+    docker run -d -p 3000:3000 \
+      -e MB_DB_TYPE=postgres \
+      -e MB_DB_DBNAME=metabase \
+      -e MB_SITE_NAME="My Company Analytics" \
+      --name metabase metabase/metabase
+    ```
+  </Tab>
+  
+  <Tab title="Docker Compose">
+    Define in your `docker-compose.yml`:
+
+    ```yaml
+    services:
+      metabase:
+        image: metabase/metabase:latest
+        environment:
+          MB_DB_TYPE: postgres
+          MB_DB_DBNAME: metabase
+          MB_DB_HOST: postgres
+          MB_DB_PORT: 5432
+          MB_DB_USER: metabase
+          MB_DB_PASS: secretpassword
+    ```
+  </Tab>
+  
+  <Tab title="Systemd service">
+    Add to your service file:
+
+    ```ini
+    [Service]
+    Environment="MB_DB_TYPE=postgres"
+    Environment="MB_DB_DBNAME=metabase"
+    Environment="MB_SITE_NAME=My Company Analytics"
+    ExecStart=/usr/bin/java -jar /opt/metabase/metabase.jar
+    ```
+  </Tab>
+</Tabs>
+
+## Core configuration variables
+
+### Application database
+
+These variables configure where Metabase stores its application data.
+
+<ResponseField name="MB_DB_TYPE" type="string" required>
+  Database type for Metabase application data
+  
+  **Options:** `postgres`, `mysql`, `h2`
+  
+  **Example:** `postgres`
+</ResponseField>
+
+<ResponseField name="MB_DB_DBNAME" type="string">
+  Name of the application database
+  
+  **Example:** `metabase`
+</ResponseField>
+
+<ResponseField name="MB_DB_HOST" type="string">
+  Database server hostname or IP address
+  
+  **Example:** `localhost` or `db.example.com`
+</ResponseField>
+
+<ResponseField name="MB_DB_PORT" type="integer">
+  Database server port
+  
+  **Default:** `5432` (PostgreSQL), `3306` (MySQL)
+</ResponseField>
+
+<ResponseField name="MB_DB_USER" type="string">
+  Database username
+  
+  **Example:** `metabase_user`
+</ResponseField>
+
+<ResponseField name="MB_DB_PASS" type="string">
+  Database password
+  
+  <Warning>Keep this secure. Consider using Docker secrets or environment files with restricted permissions.</Warning>
+</ResponseField>
+
+<ResponseField name="MB_DB_CONNECTION_URI" type="string">
+  Full JDBC connection string (overrides individual parameters)
+  
+  **Example:** `jdbc:postgresql://localhost:5432/metabase?user=username&password=password`
+</ResponseField>
+
+<ResponseField name="MB_DB_FILE" type="string">
+  Path to H2 database file (H2 only)
+  
+  **Example:** `/data/metabase.db`
+  
+  <Note>H2 automatically appends `.mv.db` or `.h2.db` - don't include these extensions.</Note>
+</ResponseField>
+
+### Server configuration
+
+<ResponseField name="MB_JETTY_HOST" type="string">
+  Hostname or IP address for the Jetty web server to bind to
+  
+  **Default:** `localhost`
+  
+  **Example:** `0.0.0.0` (listen on all interfaces)
+</ResponseField>
+
+<ResponseField name="MB_JETTY_PORT" type="integer">
+  Port for the Jetty web server
+  
+  **Default:** `3000`
+</ResponseField>
+
+<ResponseField name="MB_JETTY_SSL" type="boolean">
+  Enable SSL/HTTPS
+  
+  **Default:** `false`
+</ResponseField>
+
+<ResponseField name="MB_JETTY_SSL_PORT" type="integer">
+  Port for HTTPS when SSL is enabled
+  
+  **Default:** `8443`
+</ResponseField>
+
+<ResponseField name="MB_JETTY_SSL_KEYSTORE" type="string">
+  Path to Java keystore file for SSL
+</ResponseField>
+
+<ResponseField name="MB_JETTY_SSL_KEYSTORE_PASSWORD" type="string">
+  Password for the SSL keystore
+</ResponseField>
+
+### Site settings
+
+<ResponseField name="MB_SITE_NAME" type="string">
+  The name of your Metabase site
+  
+  **Default:** `Metabase`
+  
+  **Example:** `Analytics Portal`
+</ResponseField>
+
+<ResponseField name="MB_SITE_URL" type="string">
+  The base URL where users access Metabase
+  
+  **Example:** `https://analytics.company.com`
+  
+  <Note>Important for email links and embedding.</Note>
+</ResponseField>
+
+<ResponseField name="MB_SITE_LOCALE" type="string">
+  Default language for your Metabase instance
+  
+  **Default:** `en`
+  
+  **Options:** `en`, `es`, `fr`, `de`, `pt`, `zh`, `ja`, and more
+</ResponseField>
+
+### Email configuration
+
+<ResponseField name="MB_EMAIL_SMTP_HOST" type="string">
+  SMTP server hostname
+  
+  **Example:** `smtp.gmail.com`
+</ResponseField>
+
+<ResponseField name="MB_EMAIL_SMTP_PORT" type="integer">
+  SMTP server port
+  
+  **Common values:** `587` (TLS), `465` (SSL), `25` (plain)
+</ResponseField>
+
+<ResponseField name="MB_EMAIL_SMTP_USERNAME" type="string">
+  SMTP authentication username
+</ResponseField>
+
+<ResponseField name="MB_EMAIL_SMTP_PASSWORD" type="string">
+  SMTP authentication password
+</ResponseField>
+
+<ResponseField name="MB_EMAIL_SMTP_SECURITY" type="string">
+  SMTP security protocol
+  
+  **Options:** `none`, `tls`, `ssl`, `starttls`
+  
+  **Default:** `none`
+</ResponseField>
+
+<ResponseField name="MB_EMAIL_FROM_ADDRESS" type="string">
+  Email address to use as sender
+  
+  **Default:** `notifications@metabase.com`
+  
+  **Example:** `analytics@company.com`
+</ResponseField>
+
+<ResponseField name="MB_EMAIL_FROM_NAME" type="string">
+  Display name for email sender
+  
+  **Example:** `Company Analytics`
+</ResponseField>
+
+## Performance and limits
+
+<ResponseField name="MB_UNAGGREGATED_QUERY_ROW_LIMIT" type="integer">
+  Maximum rows returned for unaggregated queries
+  
+  **Default:** `2000`
+</ResponseField>
+
+<ResponseField name="MB_AGGREGATED_QUERY_ROW_LIMIT" type="integer">
+  Maximum rows returned for aggregated queries
+  
+  **Default:** `10000`
+  
+  **Max:** `1048575`
+</ResponseField>
+
+<ResponseField name="MB_DOWNLOAD_ROW_LIMIT" type="integer">
+  Row limit for file downloads (excluding header)
+  
+  <Note>XLSX files are limited to 1,048,575 rows regardless of this setting.</Note>
+</ResponseField>
+
+<ResponseField name="MB_QUERY_CACHING_MAX_KB" type="integer">
+  Maximum cache size per saved question (in kilobytes)
+  
+  **Default:** `2000`
+</ResponseField>
+
+<ResponseField name="MB_QUERY_CACHING_MAX_TTL" type="number">
+  Maximum time to cache query results (in seconds)
+  
+  **Default:** `3024000` (35 days)
+</ResponseField>
+
+<ResponseField name="MB_DB_CONNECTION_TIMEOUT_MS" type="integer">
+  Database connection timeout in milliseconds
+  
+  **Default:** `10000` (10 seconds)
+  
+  <Note>Increase for SSH tunnels or slow networks.</Note>
+</ResponseField>
+
+<ResponseField name="MB_DB_QUERY_TIMEOUT_MINUTES" type="integer">
+  Query execution timeout in minutes
+  
+  **Default:** `20`
+  
+  <Warning>Frontend and reverse proxy timeouts may still apply.</Warning>
+</ResponseField>
+
+<ResponseField name="MB_JDBC_DATA_WAREHOUSE_MAX_CONNECTION_POOL_SIZE" type="integer">
+  Maximum connection pool size for data warehouses
+  
+  **Default:** `15`
+</ResponseField>
+
+## Security settings
+
+<ResponseField name="MB_EMBEDDING_SECRET_KEY" type="string">
+  Secret key for signing embedded analytics tokens
+  
+  <Warning>Keep this secret secure. Changing it will invalidate all existing embedded URLs.</Warning>
+</ResponseField>
+
+<ResponseField name="MB_ENABLE_EMBEDDING_STATIC" type="boolean">
+  Enable static embedding
+  
+  **Default:** `false`
+</ResponseField>
+
+<ResponseField name="MB_ENABLE_EMBEDDING_INTERACTIVE" type="boolean">
+  Enable interactive embedding
+  
+  **Default:** `false`
+  
+  <Note>Pro/Enterprise only</Note>
+</ResponseField>
+
+<ResponseField name="MB_ENABLE_PUBLIC_SHARING" type="boolean">
+  Allow creating public links for questions and dashboards
+  
+  **Default:** `true`
+</ResponseField>
+
+<ResponseField name="MB_REDIRECT_ALL_REQUESTS_TO_HTTPS" type="boolean">
+  Force HTTPS redirect when site URL uses HTTPS
+  
+  **Default:** `false`
+</ResponseField>
+
+<ResponseField name="MB_SESSION_COOKIES" type="boolean">
+  Use session cookies instead of persistent cookies
+  
+  **Default:** `false`
+</ResponseField>
+
+<ResponseField name="MB_PASSWORD_COMPLEXITY" type="string">
+  Password complexity requirements
+  
+  **Options:** `weak`, `normal`, `strong`
+  
+  **Default:** `normal`
+</ResponseField>
+
+## Authentication
+
+### LDAP
+
+<ResponseField name="MB_LDAP_ENABLED" type="boolean">
+  Enable LDAP authentication
+  
+  **Default:** `false`
+</ResponseField>
+
+<ResponseField name="MB_LDAP_HOST" type="string">
+  LDAP server hostname
+</ResponseField>
+
+<ResponseField name="MB_LDAP_PORT" type="integer">
+  LDAP server port
+  
+  **Default:** `389` (plain), `636` (SSL)
+</ResponseField>
+
+<ResponseField name="MB_LDAP_SECURITY" type="string">
+  LDAP security protocol
+  
+  **Options:** `none`, `ssl`, `starttls`
+</ResponseField>
+
+<ResponseField name="MB_LDAP_BIND_DN" type="string">
+  Distinguished Name for LDAP bind user
+  
+  **Example:** `cn=admin,dc=company,dc=com`
+</ResponseField>
+
+<ResponseField name="MB_LDAP_PASSWORD" type="string">
+  Password for LDAP bind user
+</ResponseField>
+
+<ResponseField name="MB_LDAP_USER_BASE" type="string">
+  Base DN for user searches
+  
+  **Example:** `ou=users,dc=company,dc=com`
+</ResponseField>
+
+### SAML (Pro/Enterprise)
+
+<ResponseField name="MB_SAML_ENABLED" type="boolean">
+  Enable SAML authentication
+  
+  **Default:** `false`
+  
+  <Note>Pro/Enterprise only</Note>
+</ResponseField>
+
+<ResponseField name="MB_SAML_IDENTITY_PROVIDER_URI" type="string">
+  SAML identity provider URL
+</ResponseField>
+
+<ResponseField name="MB_SAML_IDENTITY_PROVIDER_CERTIFICATE" type="string">
+  Identity provider certificate (base64 encoded)
+</ResponseField>
+
+### JWT (Pro/Enterprise)
+
+<ResponseField name="MB_JWT_ENABLED" type="boolean">
+  Enable JWT authentication
+  
+  **Default:** `false`
+  
+  <Note>Pro/Enterprise only</Note>
+</ResponseField>
+
+<ResponseField name="MB_JWT_SHARED_SECRET" type="string">
+  Secret for JWT token validation
+  
+  <Warning>Use a strong 256-bit key (64 hex characters)</Warning>
+</ResponseField>
+
+<ResponseField name="MB_JWT_IDENTITY_PROVIDER_URI" type="string">
+  URL for JWT-based login page
+</ResponseField>
+
+## Docker-specific variables
+
+<ResponseField name="JAVA_TIMEZONE" type="string">
+  Java timezone for the Metabase application
+  
+  **Example:** `US/Pacific`, `Europe/London`, `Asia/Tokyo`
+  
+  **Default:** System timezone
+</ResponseField>
+
+<ResponseField name="MUID" type="integer">
+  User ID for the Metabase process in Docker
+  
+  **Example:** `1000`
+</ResponseField>
+
+<ResponseField name="MGID" type="integer">
+  Group ID for the Metabase process in Docker
+  
+  **Example:** `1000`
+</ResponseField>
+
+## Logging and monitoring
+
+<ResponseField name="MB_AUDIT_MAX_RETENTION_DAYS" type="integer">
+  Days to retain audit log data
+  
+  **Default:** `null` (keep forever)
+  
+  **Minimum:** `30` days
+  
+  **Note:** Set to `0` to keep all data
+</ResponseField>
+
+<ResponseField name="MB_HEALTH_CHECK_LOGGING_ENABLED" type="boolean">
+  Log health check requests
+  
+  **Default:** `true`
+</ResponseField>
+
+<ResponseField name="MB_HIDE_STACKTRACES" type="boolean">
+  Hide stack traces in error responses
+  
+  **Default:** `false`
+  
+  <Note>Enable in production to avoid exposing internal details.</Note>
+</ResponseField>
+
+## Feature flags
+
+<ResponseField name="MB_CHECK_FOR_UPDATES" type="boolean">
+  Check for new Metabase versions
+  
+  **Default:** `true`
+</ResponseField>
+
+<ResponseField name="MB_ENABLE_XRAYS" type="boolean">
+  Enable X-ray auto-exploration features
+  
+  **Default:** `true`
+</ResponseField>
+
+<ResponseField name="MB_ANON_TRACKING_ENABLED" type="boolean">
+  Send anonymous usage statistics
+  
+  **Default:** `true`
+</ResponseField>
+
+<ResponseField name="MB_PERSISTED_MODELS_ENABLED" type="boolean">
+  Allow persisting models to source databases
+  
+  **Default:** `false`
+</ResponseField>
+
+<ResponseField name="MB_ENABLE_PIVOTED_EXPORTS" type="boolean">
+  Enable pivoted exports and subscriptions
+  
+  **Default:** `true`
+</ResponseField>
+
+## Licensing (Pro/Enterprise)
+
+<ResponseField name="MB_PREMIUM_EMBEDDING_TOKEN" type="string">
+  License token for Pro or Enterprise features
+  
+  <Note>Get your token from the [MetaStore](https://store.metabase.com/)</Note>
+</ResponseField>
+
+## Advanced configuration
+
+<ResponseField name="MB_APPLICATION_DB_MAX_CONNECTION_POOL_SIZE" type="integer">
+  Maximum connection pool size for application database
+  
+  **Default:** Calculated based on available connections
+</ResponseField>
+
+<ResponseField name="MB_NOTIFICATION_THREAD_POOL_SIZE" type="integer">
+  Thread pool size for sending notifications
+  
+  **Default:** `3`
+  
+  <Note>Increase if alerts are slow to send.</Note>
+</ResponseField>
+
+<ResponseField name="MB_NOTIFICATION_LINK_BASE_URL" type="string">
+  Override base URL for notification links (Pro/Enterprise)
+  
+  **Use case:** Different URL for embedded vs. direct access
+</ResponseField>
+
+## Using Docker secrets
+
+For sensitive configuration, use Docker secrets instead of environment variables:
+
+```yaml docker-compose.yml
+services:
+  metabase:
+    image: metabase/metabase:latest
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: metabase
+      MB_DB_PORT: 5432
+      MB_DB_USER_FILE: /run/secrets/db_user
+      MB_DB_PASS_FILE: /run/secrets/db_password
+      MB_DB_HOST: postgres
+    secrets:
+      - db_user
+      - db_password
+
+secrets:
+  db_user:
+    file: ./db_user.txt
+  db_password:
+    file: ./db_password.txt
+```
+
+Supported secret variables (append `_FILE`):
+
+- `MB_DB_USER_FILE`
+- `MB_DB_PASS_FILE`
+- `MB_DB_CONNECTION_URI_FILE`
+- `MB_EMAIL_SMTP_PASSWORD_FILE`
+- `MB_EMAIL_SMTP_USERNAME_FILE`
+- `MB_LDAP_PASSWORD_FILE`
+- `MB_LDAP_BIND_DN_FILE`
+
+## Environment file example
+
+Create a `.env` file for easy configuration:
+
+```bash .env
+# Database
+MB_DB_TYPE=postgres
+MB_DB_DBNAME=metabase
+MB_DB_HOST=localhost
+MB_DB_PORT=5432
+MB_DB_USER=metabase_user
+MB_DB_PASS=secure_password
+
+# Server
+MB_JETTY_HOST=0.0.0.0
+MB_JETTY_PORT=3000
+
+# Site
+MB_SITE_NAME=Company Analytics
+MB_SITE_URL=https://analytics.company.com
+MB_SITE_LOCALE=en
+
+# Email
+MB_EMAIL_SMTP_HOST=smtp.gmail.com
+MB_EMAIL_SMTP_PORT=587
+MB_EMAIL_SMTP_USERNAME=analytics@company.com
+MB_EMAIL_SMTP_PASSWORD=app_password
+MB_EMAIL_SMTP_SECURITY=tls
+MB_EMAIL_FROM_ADDRESS=analytics@company.com
+
+# Performance
+MB_QUERY_CACHING_MAX_KB=5000
+MB_AGGREGATED_QUERY_ROW_LIMIT=20000
+
+# Security
+MB_REDIRECT_ALL_REQUESTS_TO_HTTPS=true
+MB_PASSWORD_COMPLEXITY=strong
+
+# Features
+MB_CHECK_FOR_UPDATES=true
+MB_ENABLE_XRAYS=true
+```
+
+<Warning>
+Never commit `.env` files with passwords to version control. Add to `.gitignore`.
+</Warning>
+
+## Configuration precedence
+
+When Metabase looks for configuration, the order of precedence is:
+
+1. **Environment variables** (highest priority)
+2. **Java system properties** (`-D` flags)
+3. **Admin panel settings** (stored in database)
+4. **Default values** (lowest priority)
+
+## Metabase Cloud
+
+For Metabase Cloud instances, [contact support](https://www.metabase.com/help-premium) to configure environment variables.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Configure database" icon="database" href="/operations/configuring-database">
+    Set up your application database
+  </Card>
+  
+  <Card title="Running on Docker" icon="docker" href="/operations/running-docker">
+    Deploy with Docker and environment variables
+  </Card>
+  
+  <Card title="Customizing Jetty" icon="server" href="https://www.metabase.com/docs/latest/configuring-metabase/customizing-jetty-webserver">
+    Advanced web server configuration
+  </Card>
+  
+  <Card title="Email setup" icon="envelope" href="https://www.metabase.com/docs/latest/configuring-metabase/email">
+    Configure email notifications
+  </Card>
+</CardGroup>

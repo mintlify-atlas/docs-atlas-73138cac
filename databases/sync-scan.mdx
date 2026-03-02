@@ -1,0 +1,567 @@
+---
+title: Syncing and scanning databases
+description: Learn how Metabase stays in sync with your database through periodic syncs, scans, and fingerprinting
+---
+
+# Syncing and scanning databases
+
+Metabase periodically runs different types of queries against your database to stay up to date with your schema and data. These automated processes help Metabase provide better suggestions, populate filter dropdowns, and automatically choose appropriate visualizations.
+
+## Overview of sync processes
+
+Metabase performs three types of operations to understand your data:
+
+<CardGroup cols={3}>
+  <Card title="Sync" icon="refresh">
+    Updates database schema, table structures, and field information
+  </Card>
+  
+  <Card title="Scan" icon="magnifying-glass">
+    Samples column values for filter dropdowns and data type detection
+  </Card>
+  
+  <Card title="Fingerprint" icon="fingerprint">
+    Computes statistics to improve visualizations and suggestions
+  </Card>
+</CardGroup>
+
+<Note>
+  Metabase doesn't store complete tables from your database—only metadata, sample values, and statistics to improve the user experience.
+</Note>
+
+## Initial sync, scan, and fingerprinting
+
+When you first connect a database to Metabase, it performs an initial sync to:
+
+1. Discover all tables and views in your database
+2. Identify columns and their data types
+3. Detect relationships (foreign keys)
+4. Automatically assign [semantic types](../data-modeling/semantic-types)
+5. Sample field values for filters
+6. Compute statistics for better visualizations
+
+### Monitoring sync progress
+
+You can track the progress of these operations:
+
+1. Click the **grid icon** in the top right
+2. Go to **Admin** > **Tools** > **Tasks**
+3. Filter by sync-related tasks
+
+<Accordion title="What data is collected during initial sync?">
+  **Sync collects:**
+  - Table and view names
+  - Column names and data types
+  - Primary and foreign key relationships
+  
+  **Scan samples:**
+  - First 1,000 distinct values per column (for filters)
+  - Up to 100 KB of text per column
+  
+  **Fingerprinting analyzes:**
+  - First 10,000 rows of each table
+  - Computes min/max, averages, null ratios
+  - Detects special types (URLs, emails, geographic data)
+</Accordion>
+
+### Viewing and editing synced metadata
+
+Once the initial sync completes, you can view and customize the metadata:
+
+1. Go to **Admin** > **Table Metadata**
+2. Select your database and table
+3. Edit field types, visibility, and other settings
+
+For more information, see [Editing metadata](../data-modeling/metadata-editing).
+
+## How database syncs work
+
+A **sync** is a lightweight query that updates Metabase's understanding of your database schema.
+
+<Tabs>
+  <Tab title="What it does">
+    ### Data collected during sync
+    
+    | What collected | Why it's needed |
+    |----------------|------------------|
+    | Table names | Display tables in query builder |
+    | Field names | Show available columns |
+    | Field data types | Proper querying and type handling |
+    | Primary keys | Enable detailed views and table display |
+    | Foreign keys | Auto-join tables and visualize relationships |
+  </Tab>
+  
+  <Tab title="SQL query">
+    ### The sync query
+    
+    Metabase runs a query like this against each table:
+    
+    ```sql
+    SELECT TRUE
+    FROM "your_schema"."your_table_or_view"
+    WHERE 1 <> 1
+    LIMIT 0
+    ```
+    
+    This query returns no data—only metadata about the table structure.
+  </Tab>
+  
+  <Tab title="Performance">
+    ### Sync performance
+    
+    - **Speed**: Very fast for most relational databases
+    - **Frequency**: Hourly by default
+    - **Impact**: Minimal load on your database
+    - **Slower on**: MongoDB and some community drivers
+    
+    <Note>
+      Syncing cannot be completely disabled, as Metabase needs this information to function.
+    </Note>
+  </Tab>
+</Tabs>
+
+## How database scans work
+
+A **scan** is a more intensive query that samples column values to populate filter dropdowns and improve the user experience.
+
+<Tabs>
+  <Tab title="What it does">
+    ### Data collected during scan
+    
+    | What collected | Why it's needed |
+    |----------------|------------------|
+    | Distinct category values | Populate filter dropdown menus |
+    | Active field values | Improve filter UI performance |
+    | Advanced field values | Support row and column security |
+    
+    <Note>
+      Scans only include "active fields"—fields used within the past 14 days. Inactive fields become active again when someone uses them.
+    </Note>
+  </Tab>
+  
+  <Tab title="SQL query">
+    ### The scan query
+    
+    Metabase runs queries like this for each column:
+    
+    ```sql
+    SELECT "your_table_or_view"."column" AS "column"
+    FROM "your_schema"."your_table_or_view"
+    GROUP BY "your_table_or_view"."column"
+    ORDER BY "your_table_or_view"."column" ASC
+    LIMIT 1000
+    ```
+    
+    This retrieves the first 1,000 distinct values in ascending order.
+  </Tab>
+  
+  <Tab title="Limits & caching">
+    ### Scan limits
+    
+    - **Values cached**: First 1,000 distinct values per column
+    - **Text limit**: First 100 KB of text per column
+    - **Cache duration**: 14 days
+    - **Active fields only**: Fields used in the last 14 days
+    
+    ### When cached values are used
+    
+    When someone types in a filter search box for values beyond the first 1,000 or 100 KB, Metabase runs a live query against your database to find those values.
+  </Tab>
+</Tabs>
+
+## How database fingerprinting works
+
+Metabase **fingerprints** your data by sampling rows and computing statistics to provide better suggestions and visualizations.
+
+<Tabs>
+  <Tab title="What it does">
+    ### Data collected during fingerprinting
+    
+    | What collected | Why it's needed |
+    |----------------|------------------|
+    | Distinct value count | Determine field caching strategy |
+    | Min/max numeric values | Enable binning and range filters |
+    | Date ranges | Set date filter defaults |
+    | Special type detection | Identify URLs, emails, geographic data |
+    | Null value ratio | Assess data quality |
+    | Average/median values | Set visualization defaults |
+    | Text length metrics | Hide overly long text fields |
+  </Tab>
+  
+  <Tab title="SQL query">
+    ### The fingerprinting query
+    
+    Metabase runs queries like this:
+    
+    ```sql
+    SELECT *
+    FROM "your_schema"."your_table_or_view"
+    LIMIT 10000
+    ```
+    
+    This samples the first 10,000 rows to compute statistics.
+  </Tab>
+  
+  <Tab title="When it runs">
+    ### Fingerprinting schedule
+    
+    By default, fingerprinting only runs **once** during the initial database setup to avoid putting strain on your database.
+    
+    <Warning>
+      Periodic refingerprinting will increase the load on your database.
+    </Warning>
+    
+    You can enable periodic refingerprinting to keep statistics up to date as your data changes. See [Periodically refingerprint tables](#periodically-refingerprint-tables).
+  </Tab>
+</Tabs>
+
+## Choose when syncs and scans happen
+
+By default, Metabase performs:
+- **Hourly syncs**: Lightweight schema updates
+- **Daily scans**: Intensive field value sampling
+
+For large databases, you may want to control when these operations occur.
+
+### Configuring sync and scan schedules
+
+1. Click the **grid icon** in the top right
+2. Go to **Admin** > **Databases**
+3. Select your database
+4. Click **Edit connection details** in the "Connection and sync" section
+5. Expand **Show advanced options**
+6. Toggle **Choose when syncs and scans happen**
+
+<Tabs>
+  <Tab title="Database syncing">
+    ### Sync schedule options
+    
+    Configure when schema syncs occur:
+    
+    - **Frequency**: Hourly (default) or daily
+    - **Time**: Specific time to run (in server timezone)
+    
+    <Note>
+      The time is based on the timezone where your Metabase server is running.
+    </Note>
+  </Tab>
+  
+  <Tab title="Scanning for filter values">
+    ### Scan schedule options
+    
+    Choose how field value scanning works:
+    
+    **Regularly, on a schedule**
+    - Run scans at a fixed frequency
+    - Best for: Small databases or frequently updated data
+    - Set the time in your server's timezone
+    
+    **Only when adding a new filter widget**
+    - Scan on demand when filters are created
+    - Best for: Large databases with stable values
+    - Reduces unnecessary scanning
+    
+    **Never, I'll do this manually if I need to**
+    - No automatic scanning
+    - Best for: Very large databases or rarely changing data
+    - Use manual scans to update values
+    
+    <Accordion title="How filter dropdowns work with different scan options">
+      Regardless of your scan setting, when someone uses a filter widget with a dropdown list, Metabase will:
+      
+      1. First check for cached values (valid for 14 days)
+      2. If no cached values exist, scan that field for current values
+      3. Update the cache with the new values
+      
+      This ensures filter dropdowns always have values when needed.
+    </Accordion>
+  </Tab>
+</Tabs>
+
+## Manual sync and scan operations
+
+### Manually syncing tables and columns
+
+To immediately update your database schema:
+
+1. Go to **Admin** > **Databases**
+2. Select your database
+3. Click **Sync database schema now**
+
+<Note>
+  This is useful after making schema changes to your database, like adding new tables or columns.
+</Note>
+
+### Manually scanning column values
+
+<Tabs>
+  <Tab title="Scan entire table">
+    To scan all columns in a table:
+    
+    1. Go to **Admin** > **Table Metadata**
+    2. Select your database and table
+    3. Click the **gear icon** at the top of the page
+    4. Click **Re-scan this table**
+  </Tab>
+  
+  <Tab title="Scan specific column">
+    To scan a single column:
+    
+    1. Go to **Admin** > **Table Metadata**
+    2. Select your database and table
+    3. Find the column you want to update
+    4. Click the **gear icon** for that column
+    5. Click **Re-scan this field**
+  </Tab>
+</Tabs>
+
+### Clearing cached values
+
+<Tabs>
+  <Tab title="Clear table cache">
+    To clear all cached field values for a table:
+    
+    1. Go to **Admin** > **Table Metadata**
+    2. Select your database and table
+    3. Click the **gear icon** in the upper right
+    4. Click **Discard cached field values**
+  </Tab>
+  
+  <Tab title="Clear field cache">
+    To clear cached values for a specific field:
+    
+    1. Go to **Admin** > **Table Metadata**
+    2. Select your database and table
+    3. Find the field
+    4. Click the **gear icon** for that field
+    5. Click **Discard cached field values**
+  </Tab>
+</Tabs>
+
+## Periodically refingerprint tables
+
+<Warning>
+  Enabling periodic refingerprinting will increase the load on your database, as Metabase will sample 10,000 rows from each table during every sync.
+</Warning>
+
+By default, Metabase only fingerprints your data once during initial setup. If your data patterns change significantly over time, you may want to enable periodic refingerprinting:
+
+1. Go to **Admin** > **Databases**
+2. Select your database
+3. Click **Edit connection details**
+4. Expand **Show advanced options**
+5. Turn on **Periodically refingerprint tables**
+
+This will run fingerprinting queries during each sync to keep statistics current.
+
+## Disabling syncing and scanning for specific tables
+
+To prevent Metabase from syncing and scanning a specific table, hide it:
+
+1. Go to **Admin** > **Table Metadata**
+2. Select your database
+3. Hover over the table name in the sidebar
+4. Click the **eye icon** to hide the table
+
+<Warning>
+  Hidden tables won't appear in the query builder or data reference. However, users can still query hidden tables using the SQL editor.
+</Warning>
+
+## Syncing and scanning using the API
+
+You can trigger syncs and scans programmatically using the [Metabase API](../api).
+
+<Tabs>
+  <Tab title="Authenticated endpoints">
+    ### Sync or scan with user authentication
+    
+    These endpoints require authentication with a user ID and session token:
+    
+    ```bash
+    # Sync database schema
+    POST /api/database/{id}/sync_schema
+    
+    # Re-scan field values
+    POST /api/database/{id}/rescan_values
+    ```
+  </Tab>
+  
+  <Tab title="Notify endpoints">
+    ### Notify endpoints for ETL workflows
+    
+    Use these endpoints with an API key for automated syncing after ETL operations:
+    
+    ```bash
+    # Sync entire database or specific table
+    POST /api/notify/db/{id}
+    
+    # Sync only a new table
+    POST /api/notify/db/{id}/new-table
+    # Requires: schema_name and table_name parameters
+    ```
+    
+    <Note>
+      These endpoints require the `MB_API_KEY` environment variable (distinct from Metabase's user API keys).
+    </Note>
+  </Tab>
+</Tabs>
+
+### Example: Sync after ETL job
+
+You can call the sync API at the end of your ETL pipeline to ensure Metabase has the latest schema:
+
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -H "X-API-KEY: ${MB_API_KEY}" \
+  https://your-metabase.com/api/notify/db/1
+```
+
+For complete API documentation, see [API reference](../api).
+
+## Understanding sync, scan, and fingerprint impact
+
+<Tabs>
+  <Tab title="Database load">
+    ### Impact on your database
+    
+    | Operation | Frequency | Load | Duration |
+    |-----------|-----------|------|----------|
+    | Sync | Hourly (default) | Minimal | Seconds |
+    | Scan | Daily (default) | Moderate | Minutes |
+    | Fingerprint | Once (default) | Higher | Minutes to hours |
+    
+    <Note>
+      Actual impact depends on your database size, number of tables, and database performance.
+    </Note>
+  </Tab>
+  
+  <Tab title="Best practices">
+    ### Optimization tips
+    
+    **For large databases:**
+    - Run syncs and scans during off-peak hours
+    - Hide tables that don't need to be queried
+    - Use "Only when adding a new filter widget" scan option
+    - Disable periodic refingerprinting unless necessary
+    
+    **For small to medium databases:**
+    - Default settings usually work well
+    - Consider hourly syncs if schema changes frequently
+    - Enable scheduled scans for fresh filter values
+    
+    **For rapidly changing data:**
+    - Increase sync frequency
+    - Use API to trigger syncs after data updates
+    - Consider scheduled scans matching data update frequency
+  </Tab>
+  
+  <Tab title="Monitoring">
+    ### Monitor sync performance
+    
+    Track sync operations in Metabase:
+    
+    1. Go to **Admin** > **Tools** > **Tasks**
+    2. Filter by:
+       - "sync-database"
+       - "scan-database"
+       - "fingerprint-database"
+    3. Review duration and completion status
+    
+    <Accordion title="What to do if syncs are taking too long">
+      If syncs are taking excessively long:
+      
+      1. Check database performance and resource availability
+      2. Hide unused tables to reduce sync scope
+      3. Adjust sync schedule to off-peak hours
+      4. Consider splitting large databases into multiple connections
+      5. Review and optimize database indexes
+      6. Contact support if issues persist (Pro/Enterprise)
+    </Accordion>
+  </Tab>
+</Tabs>
+
+## Troubleshooting sync and scan issues
+
+<AccordionGroup>
+  <Accordion title="Tables or columns are missing">
+    **Possible causes:**
+    - Initial sync hasn't completed
+    - Tables are hidden
+    - Database user lacks permissions
+    - Schema not included in sync settings
+    
+    **Solutions:**
+    1. Wait for initial sync to complete
+    2. Check table visibility in Table Metadata
+    3. Verify database user has SELECT privileges
+    4. Check schema inclusion in database settings
+    5. Manually trigger a sync
+    
+    See: [Can't see tables](../troubleshooting-guide/cant-see-tables)
+  </Accordion>
+  
+  <Accordion title="Filter dropdowns are empty or outdated">
+    **Possible causes:**
+    - Field hasn't been scanned yet
+    - Cache is outdated
+    - Field hasn't been used in 14+ days (inactive)
+    - Scan is disabled
+    
+    **Solutions:**
+    1. Manually re-scan the field
+    2. Clear and refresh the field cache
+    3. Use the field in a question to make it active
+    4. Enable scheduled scans
+  </Accordion>
+  
+  <Accordion title="Data doesn't match database">
+    **Possible causes:**
+    - Cached values are stale
+    - Sync hasn't run since schema changes
+    - Query results are cached
+    
+    **Solutions:**
+    1. Manually sync the database
+    2. Clear cached field values
+    3. Refresh the question (not just cached results)
+    4. Check sync schedule and adjust if needed
+    
+    See: [Data doesn't match database](../troubleshooting-guide/sync-fingerprint-scan)
+  </Accordion>
+  
+  <Accordion title="Sync or scan is failing">
+    **Possible causes:**
+    - Database connection issues
+    - Insufficient database permissions
+    - Database server timeout
+    - Large tables causing timeouts
+    
+    **Solutions:**
+    1. Check database connection status
+    2. Verify database user permissions
+    3. Review database server logs
+    4. Hide very large tables that aren't needed
+    5. Increase database timeout settings if needed
+  </Accordion>
+</AccordionGroup>
+
+## Further reading
+
+<CardGroup cols={2}>
+  <Card title="Can't see tables" icon="eye-slash" href="../troubleshooting-guide/cant-see-tables">
+    Troubleshoot missing tables and columns
+  </Card>
+  
+  <Card title="Sync troubleshooting" icon="wrench" href="../troubleshooting-guide/sync-fingerprint-scan">
+    Fix sync and fingerprinting issues
+  </Card>
+  
+  <Card title="Metadata editing" icon="pen" href="../data-modeling/metadata-editing">
+    Customize table and field metadata
+  </Card>
+  
+  <Card title="Semantic types" icon="tag" href="../data-modeling/semantic-types">
+    Understand how Metabase categorizes fields
+  </Card>
+</CardGroup>

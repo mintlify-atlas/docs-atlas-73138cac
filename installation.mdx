@@ -1,0 +1,525 @@
+---
+title: Installation
+description: Install Metabase using Docker, JAR file, or Metabase Cloud.
+keywords: ['installation', 'docker', 'jar', 'cloud', 'deployment', 'setup']
+---
+
+# Installation
+
+Metabase can run anywhere Java runs. Choose the installation method that best fits your needs.
+
+<CardGroup cols={3}>
+  <Card title="Metabase Cloud" icon="cloud" href="#metabase-cloud">
+    Managed hosting with automatic upgrades
+  </Card>
+  <Card title="Docker" icon="docker" href="#docker-installation">
+    Recommended for self-hosting
+  </Card>
+  <Card title="JAR file" icon="java" href="#jar-file-installation">
+    Direct Java deployment
+  </Card>
+</CardGroup>
+
+## Metabase Cloud
+
+<Note>
+**Recommended** - The easiest way to run Metabase with none of the operational overhead.
+</Note>
+
+Metabase Cloud is the fastest way to get started:
+
+- **Up and running in minutes** - No installation or setup required
+- **Automatic upgrades** - Always on the latest version
+- **Managed infrastructure** - High availability, backups, and monitoring included
+- **Built-in SMTP server** - Email and Slack notifications work out of the box
+- **SSL certificate** - Secure HTTPS by default
+- **SOC 2 Type 2 certified** - Enterprise-grade security
+- **Expert support** - Email support with SLA
+
+<Steps>
+  <Step title="Sign up">
+    [Start a free trial](https://store.metabase.com/checkout) - No credit card required.
+  </Step>
+  <Step title="Connect your database">
+    Add your database connection details.
+  </Step>
+  <Step title="Start exploring">
+    Begin asking questions and building dashboards immediately.
+  </Step>
+</Steps>
+
+<Tip>
+Your money goes toward improving Metabase rather than paying cloud infrastructure providers. Plus, you can always migrate to self-hosting if your needs change.
+</Tip>
+
+## Docker installation
+
+<Note>
+**Recommended for self-hosting** - Docker provides consistent deployments across all platforms.
+</Note>
+
+Docker is the easiest way to self-host Metabase.
+
+### Requirements
+
+- Docker installed and running
+- 2GB of RAM minimum (4GB+ recommended)
+- Java 21 (included in Docker image)
+
+### Quick start (local development)
+
+For testing and local development:
+
+<CodeGroup>
+
+```bash Open Source edition
+# Pull the latest image
+docker pull metabase/metabase:latest
+
+# Start Metabase
+docker run -d -p 3000:3000 --name metabase metabase/metabase
+```
+
+```bash Pro/Enterprise edition  
+# Pull the latest Enterprise image
+docker pull metabase/metabase-enterprise:latest
+
+# Start Metabase
+docker run -d -p 3000:3000 --name metabase metabase/metabase-enterprise
+```
+
+</CodeGroup>
+
+Access Metabase at `http://localhost:3000`.
+
+<Info>
+To view logs: `docker logs -f metabase`
+</Info>
+
+### Production installation
+
+<Warning>
+The quick start setup uses an embedded H2 database that stores data inside the container. If you delete the container, you'll lose all your questions, dashboards, and settings.
+
+For production, use a dedicated application database.
+</Warning>
+
+#### Step 1: Set up an application database
+
+Metabase needs a database to store its application data (questions, dashboards, users, etc.).
+
+Supported databases:
+- **PostgreSQL** (recommended)
+- **MySQL** / MariaDB
+
+Create an empty database:
+
+```sql PostgreSQL
+CREATE DATABASE metabaseappdb;
+```
+
+<Note>
+Metabase will create all necessary tables automatically. You just need to provide an empty database.
+</Note>
+
+#### Step 2: Run with environment variables
+
+Tell Metabase how to connect to your application database:
+
+```bash
+docker run -d -p 3000:3000 \
+  -e "MB_DB_TYPE=postgres" \
+  -e "MB_DB_DBNAME=metabaseappdb" \
+  -e "MB_DB_PORT=5432" \
+  -e "MB_DB_USER=metabase" \
+  -e "MB_DB_PASS=your_secure_password" \
+  -e "MB_DB_HOST=your-database-host" \
+  --name metabase metabase/metabase
+```
+
+<Info>
+Replace `your-database-host` with:
+- Your database's hostname or IP address
+- `host.docker.internal` if the database runs on the same machine (Mac/Windows)
+- The service name if using Docker Compose
+</Info>
+
+#### Step 3: Use Docker Compose (recommended)
+
+Create a `docker-compose.yml` file:
+
+```yaml docker-compose.yml
+services:
+  metabase:
+    image: metabase/metabase:latest
+    container_name: metabase
+    hostname: metabase
+    ports:
+      - 3000:3000
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: metabaseappdb
+      MB_DB_PORT: 5432
+      MB_DB_USER: metabase
+      MB_DB_PASS: mysecretpassword
+      MB_DB_HOST: postgres
+    networks:
+      - metanet
+    depends_on:
+      - postgres
+    healthcheck:
+      test: curl --fail -I http://localhost:3000/api/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    hostname: postgres
+    environment:
+      POSTGRES_USER: metabase
+      POSTGRES_DB: metabaseappdb
+      POSTGRES_PASSWORD: mysecretpassword
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data
+    networks:
+      - metanet
+      
+networks:
+  metanet:
+    driver: bridge
+```
+
+Start everything:
+
+```bash
+docker compose up -d
+```
+
+<Tip>
+This configuration keeps your data in `./pg_data` on your host machine, making it easy to backup and persist across container restarts.
+</Tip>
+
+### Advanced Docker configuration
+
+<AccordionGroup>
+  <Accordion title="Using Docker Secrets">
+    For sensitive credentials, use Docker secrets instead of environment variables:
+
+    ```yaml
+    services:
+      metabase:
+        image: metabase/metabase:latest
+        environment:
+          MB_DB_TYPE: postgres
+          MB_DB_DBNAME: metabase
+          MB_DB_PORT: 5432
+          MB_DB_USER_FILE: /run/secrets/db_user
+          MB_DB_PASS_FILE: /run/secrets/db_password
+          MB_DB_HOST: postgres
+        secrets:
+          - db_password
+          - db_user
+          
+    secrets:
+      db_password:
+        file: db_password.txt
+      db_user:
+        file: db_user.txt
+    ```
+
+    Create `db_user.txt` and `db_password.txt` with your credentials.
+  </Accordion>
+  <Accordion title="Setting timezone">
+    Set the Java timezone to match your reporting timezone:
+
+    ```bash
+    docker run -d -p 3000:3000 \
+      -e "JAVA_TIMEZONE=US/Pacific" \
+      --name metabase metabase/metabase
+    ```
+  </Accordion>
+  <Accordion title="Adding plugins and drivers">
+    Mount a plugins directory for JDBC drivers or custom plugins:
+
+    ```bash
+    docker run -d -p 3000:3000 \
+      --mount type=bind,source=/path/to/plugins,destination=/plugins \
+      --name metabase metabase/metabase
+    ```
+
+    <Note>
+    The plugins directory must be readable and writable by Docker. Metabase uses it to extract bundled drivers.
+    </Note>
+  </Accordion>
+  <Accordion title="Persisting data with volumes">
+    Mount a volume for the H2 database (development only):
+
+    ```bash
+    docker run -d -p 3000:3000 \
+      -v ~/metabase-data:/metabase-data \
+      -e "MB_DB_FILE=/metabase-data/metabase.db" \
+      --name metabase metabase/metabase
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## JAR file installation
+
+<Warning>
+We recommend Docker for self-hosting. The JAR file is easier to get started but more challenging to run in production.
+</Warning>
+
+The JAR file runs anywhere Java runs.
+
+### Requirements
+
+- Java 21 or later (we recommend [Eclipse Temurin](https://adoptium.net/))
+- 2GB of RAM minimum (4GB+ recommended)
+
+### Quick start (local development)
+
+<Steps>
+  <Step title="Install Java">
+    Check if Java is installed:
+
+    ```bash
+    java -version
+    ```
+
+    If not installed, download Java 21 from [Eclipse Temurin](https://adoptium.net/).
+  </Step>
+  <Step title="Download Metabase">
+    Download the JAR file:
+    - [Metabase OSS](https://www.metabase.com/start/oss/jar)
+    - [Metabase Enterprise/Pro](https://downloads.metabase.com/enterprise/latest/metabase.jar)
+  </Step>
+  <Step title="Create a directory">
+    Move the JAR to a new directory:
+
+    ```bash
+    mkdir ~/metabase
+    mv ~/Downloads/metabase.jar ~/metabase/
+    cd ~/metabase
+    ```
+  </Step>
+  <Step title="Run Metabase">
+    Start Metabase:
+
+    ```bash
+    java --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar
+    ```
+
+    Wait for "Metabase Initialization COMPLETE" in the logs.
+  </Step>
+  <Step title="Open Metabase">
+    Access Metabase at `http://localhost:3000`.
+  </Step>
+</Steps>
+
+### Production installation
+
+For production, you need:
+
+1. **A production application database**
+2. **To run Metabase as a service**
+
+#### Step 1: Set up an application database
+
+Create an empty PostgreSQL or MySQL database:
+
+```sql
+CREATE DATABASE metabaseappdb;
+```
+
+#### Step 2: Configure environment variables
+
+Set environment variables before running the JAR:
+
+```bash
+export MB_DB_TYPE=postgres
+export MB_DB_DBNAME=metabaseappdb
+export MB_DB_PORT=5432
+export MB_DB_USER=metabase
+export MB_DB_PASS=your_secure_password
+export MB_DB_HOST=localhost
+
+java --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar
+```
+
+#### Step 3: Run as a service
+
+For production, run Metabase as a system service:
+
+- **Ensures Metabase stays running** and restarts automatically
+- **Runs with an unprivileged user** for better security
+- **Manages environment variables** in a configuration file
+
+Example systemd service file:
+
+```ini /etc/systemd/system/metabase.service
+[Unit]
+Description=Metabase
+After=network.target
+
+[Service]
+User=metabase
+Group=metabase
+WorkingDirectory=/opt/metabase
+Environment="MB_DB_TYPE=postgres"
+Environment="MB_DB_DBNAME=metabaseappdb"
+Environment="MB_DB_PORT=5432"
+Environment="MB_DB_USER=metabase"
+Environment="MB_DB_PASS=your_secure_password"
+Environment="MB_DB_HOST=localhost"
+ExecStart=/usr/bin/java --add-opens java.base/java.nio=ALL-UNNAMED -jar /opt/metabase/metabase.jar
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable and start the service:
+
+```bash
+sudo systemctl enable metabase
+sudo systemctl start metabase
+sudo systemctl status metabase
+```
+
+<Info>
+For detailed instructions, see [Running Metabase as a systemd service](https://www.metabase.com/docs/latest/installation-and-operation/running-metabase-as-service).
+</Info>
+
+## Other installation options
+
+<CardGroup cols={2}>
+  <Card title="Podman" icon="box" href="https://www.metabase.com/docs/latest/installation-and-operation/running-metabase-on-podman">
+    Run Metabase using Podman instead of Docker
+  </Card>
+  <Card title="Azure Web Apps" icon="microsoft" href="https://www.metabase.com/docs/latest/installation-and-operation/running-metabase-on-azure">
+    Deploy to Azure App Service
+  </Card>
+  <Card title="Build from source" icon="code" href="https://www.metabase.com/docs/latest/developers-guide/start">
+    Compile Metabase yourself
+  </Card>
+  <Card title="Air-gapped environments" icon="shield" href="https://www.metabase.com/product/air-gapping">
+    Run Metabase without internet access
+  </Card>
+</CardGroup>
+
+<Warning>
+Metabase doesn't have official distributions on:
+- AWS Marketplace or Azure Marketplace
+- Helm charts (community charts exist but aren't officially supported)
+</Warning>
+
+## Migrating from H2 to production
+
+If you started with the default H2 database and now want to move to production:
+
+<Steps>
+  <Step title="Create a production database">
+    Set up PostgreSQL or MySQL and create an empty database.
+  </Step>
+  <Step title="Migrate your data">
+    Use the migration tool to move your application data:
+
+    ```bash
+    export MB_DB_TYPE=postgres
+    export MB_DB_DBNAME=metabaseappdb
+    export MB_DB_PORT=5432
+    export MB_DB_USER=metabase
+    export MB_DB_PASS=password
+    export MB_DB_HOST=localhost
+    
+    java -jar metabase.jar load-from-h2 /path/to/metabase.db
+    ```
+  </Step>
+  <Step title="Verify the migration">
+    Start Metabase with the new database and verify all your content is present.
+  </Step>
+</Steps>
+
+<Info>
+For detailed migration instructions, see [Migrating from H2](https://www.metabase.com/docs/latest/installation-and-operation/migrating-from-h2).
+</Info>
+
+## Next steps
+
+After installation:
+
+<Steps>
+  <Step title="Set up Metabase">
+    Complete the initial setup wizard to create your admin account and connect your first database.
+    
+    [Setup guide →](https://www.metabase.com/docs/latest/configuring-metabase/setting-up-metabase)
+  </Step>
+  <Step title="Activate your license (if applicable)">
+    If you're using Pro or Enterprise edition, activate your license.
+    
+    [License activation →](https://www.metabase.com/docs/latest/installation-and-operation/activating-the-enterprise-edition)
+  </Step>
+  <Step title="Configure email">
+    Set up SMTP so Metabase can send alerts and subscriptions.
+    
+    [Email setup →](https://www.metabase.com/docs/latest/configuring-metabase/email)
+  </Step>
+  <Step title="Invite your team">
+    Add users and set up permissions.
+    
+    [User management →](https://www.metabase.com/docs/latest/people-and-groups/managing)
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Metabase won't start">
+    Check the logs for error messages:
+
+    **Docker:**
+    ```bash
+    docker logs metabase
+    ```
+
+    **JAR:**
+    Check the terminal output or log file.
+
+    Common issues:
+    - **Port already in use** - Change the port with `MB_JETTY_PORT`
+    - **Out of memory** - Increase JVM heap size
+    - **Database connection failed** - Verify database credentials
+  </Accordion>
+  <Accordion title="Database connection issues">
+    Verify:
+    - Database server is running and accessible
+    - Credentials are correct
+    - Firewall allows the connection
+    - Network connectivity (use `telnet` or `nc` to test)
+
+    For Docker:
+    - Use `host.docker.internal` for databases on the host machine
+    - Use service names in Docker Compose networks
+  </Accordion>
+  <Accordion title="Performance issues">
+    - Increase memory allocation (4GB+ recommended)
+    - Use a production application database (not H2)
+    - Enable caching in Admin → Settings
+    - Add indexes to your data warehouse
+  </Accordion>
+</AccordionGroup>
+
+<Info>
+For more help, see the [troubleshooting guide](https://www.metabase.com/docs/latest/troubleshooting-guide/running) or visit the [community forum](https://discourse.metabase.com/).
+</Info>
+
+## Getting help
+
+Need assistance with installation?
+
+- [Community forum](https://discourse.metabase.com/) - Free community support
+- [Metabase Experts](https://www.metabase.com/partners/) - Professional services
+- [Enterprise support](https://www.metabase.com/help-premium) - Dedicated support for Pro and Enterprise customers

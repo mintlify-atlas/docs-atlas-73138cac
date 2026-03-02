@@ -1,0 +1,455 @@
+---
+title: Full app embedding
+description: Embed the entire Metabase application in an iframe with SSO integration
+---
+
+<Note>
+  Full app embedding requires a **Pro or Enterprise plan**.
+</Note>
+
+Full app embedding lets you embed the entire Metabase app in an iframe. It integrates your [permissions](https://www.metabase.com/docs/latest/permissions/introduction) and [SSO](https://www.metabase.com/docs/latest/people-and-groups/start#authentication) to give people the right level of access to query and drill down into your data.
+
+<Warning>
+  If you're just starting with Metabase embedding, consider using [Modular embedding](/embedding/modular-embedding) instead—it's more customizable and offers better control over individual components.
+</Warning>
+
+## When to use full app embedding
+
+Full app embedding is ideal when you want to:
+
+- Embed all of Metabase's functionality
+- Provide a complete analytics workspace
+- Give users access to the full Metabase experience
+- Minimize setup time (less granular control needed)
+
+**Consider modular embedding if you need:**
+- Custom layouts for specific components
+- Fine-grained control over UI elements
+- Modern React-based integration
+- Advanced theming and plugins
+
+## Full app embedding demo
+
+Check out our [Full app embedding demo](https://www.metabase.com/embedding-demo) to see it in action.
+
+To see the query builder in action, click on **Reports** > **+ New** > **Question**.
+
+## Prerequisites
+
+<Steps>
+  <Step title="License token">
+    Get a [license token](https://www.metabase.com/docs/latest/installation-and-operation/activating-the-enterprise-edition) for a [Pro or Enterprise plan](https://store.metabase.com/checkout/login-details).
+  </Step>
+  <Step title="Organize users into groups">
+    Create [groups](https://www.metabase.com/docs/latest/people-and-groups/start) in Metabase for different user types or customers.
+  </Step>
+  <Step title="Set up permissions">
+    Configure [permissions](https://www.metabase.com/docs/latest/permissions/introduction) for each group to control data access.
+  </Step>
+  <Step title="Configure SSO">
+    Set up [SSO](https://www.metabase.com/docs/latest/people-and-groups/start#authentication) to automatically apply permissions. **We recommend [JWT SSO](https://www.metabase.com/docs/latest/people-and-groups/authenticating-with-jwt)**.
+  </Step>
+</Steps>
+
+<Note>
+  For multi-tenant applications, see our [guide on configuring permissions for different customer schemas](https://www.metabase.com/docs/latest/permissions/embedding).
+</Note>
+
+## Quick start
+
+Check out the [Full app embedding quick start guide](https://www.metabase.com/docs/latest/embedding/full-app-embedding-quick-start-guide) for a hands-on tutorial.
+
+## Enable full app embedding in Metabase
+
+<Steps>
+  <Step title="Navigate to embedding settings">
+    Go to **Admin** > **Embedding**
+  </Step>
+  <Step title="Enable full app embedding">
+    Click **Enable Full app embedding**
+  </Step>
+  <Step title="Add authorized origins">
+    Under **Authorized origins**, add the URL of the website or web app where you want to embed Metabase (such as `https://*.example.com`)
+  </Step>
+</Steps>
+
+## Set up embedding on your website
+
+### Basic iframe setup
+
+Create an iframe pointing to your Metabase URL:
+
+<Tabs>
+  <Tab title="Direct URL">
+    Point directly to the Metabase page you want to embed:
+
+    ```html
+    <iframe
+      src="https://metabase.yourcompany.com/dashboard/entity/Dc_7X8N7zf4iDK9Ps1M3b"
+      frameborder="0"
+      width="100%"
+      height="800"
+    ></iframe>
+    ```
+  </Tab>
+  <Tab title="Authentication endpoint">
+    Point to an auth endpoint that redirects to Metabase after login:
+
+    ```html
+    <iframe
+      src="https://metabase.example.com/auth/sso?jwt=<token>&return_to=%2Fdashboard%2F1"
+      frameborder="0"
+      width="100%"
+      height="800"
+    ></iframe>
+    ```
+  </Tab>
+</Tabs>
+
+### Pointing to a Metabase URL
+
+To embed a specific page, use the Entity ID URL format:
+
+<Steps>
+  <Step title="Get the Entity ID">
+    1. Visit the dashboard, question, or collection in Metabase
+    2. Click the **info** button (ⓘ)
+    3. In the **Overview** tab, copy the **Entity ID**
+  </Step>
+  <Step title="Build the URL">
+    Use the format: `/[item-type]/entity/[Entity-ID]`
+
+    **Examples:**
+    - Dashboard: `https://metabase.yourcompany.com/dashboard/entity/Dc_7X8N7zf4iDK9Ps1M3b`
+    - Question: `https://metabase.yourcompany.com/question/entity/q1A2b3C4d5E6f7G8h9`
+    - Collection: `https://metabase.yourcompany.com/collection/entity/c1A2b3C4d5E6`
+    - Model: `https://metabase.yourcompany.com/model/entity/m1A2b3C4d5E6`
+  </Step>
+</Steps>
+
+<Note>
+  **Use Entity IDs instead of sequential IDs.** Entity IDs are stable across different environments (staging, production), making them ideal for [serialization](https://www.metabase.com/docs/latest/installation-and-operation/serialization).
+</Note>
+
+#### Linking to a specific dashboard tab
+
+If your dashboard has multiple tabs, add the tab ID to the URL:
+
+```
+https://metabase.yourcompany.com/dashboard/entity/Dc_7X8N7zf4iDK9Ps1M3b?tab=YLNdEYtzuSMA0lqO7u3FD
+```
+
+Get the tab ID from the URL when you select the tab in Metabase.
+
+### Pointing to an authentication endpoint
+
+To send users directly to your SSO login screen (skipping the Metabase login page):
+
+<CodeGroup>
+```html SAML example
+https://metabase.example.com/auth/sso?return_to=http%3A%2F%2Fmetabase.yourcompany.com%2Fdashboard%2F1
+```
+
+```html JWT example
+https://metabase.example.com/auth/sso?jwt=<token>&return_to=%2Fdashboard%2F1
+```
+</CodeGroup>
+
+<Warning>
+  URL encode all parameters in your redirect link, including filters (e.g., `filter=value`) and UI settings (e.g., `top_nav=true`).
+</Warning>
+
+**Example with filters:**
+
+```
+https://metabase.example.com/auth/sso?jwt=<token>&redirect=%2Fdashboard%2F1%3Ffilter1%3Dvalue%26filter2%3Dvalue
+```
+
+## Cross-browser compatibility
+
+<Warning>
+  To ensure full app embeds work in all browsers (especially Safari and iOS), put Metabase and the embedding app in the same top-level domain (TLD).
+</Warning>
+
+The TLD is the last part of a web address (`.com`, `.org`, etc.). 
+
+**Example:**
+- ✅ Good: `metabase.example.com` embedded on `app.example.com`
+- ❌ Problematic: `metabase.example.com` embedded on `example.io`
+
+<Note>
+  Your full app embed must be compatible with Safari to run on any browser in iOS (including Chrome on iOS, which uses Safari's engine).
+</Note>
+
+## Embedding in a different domain
+
+If you must embed Metabase in a different domain, configure the session cookie's SameSite value:
+
+<Steps>
+  <Step title="Configure SameSite setting">
+    Go to **Admin** > **Embedding** > **Security** > **SameSite cookie setting**
+  </Step>
+  <Step title="Choose appropriate value">
+    <Tabs>
+      <Tab title="Lax (default)">
+        For same-domain embedding in production.
+      </Tab>
+      <Tab title="None">
+        For cross-domain embedding. **Requires HTTPS.** Incompatible with Safari and iOS browsers.
+      </Tab>
+      <Tab title="Strict">
+        Disables session sharing. Use only if you don't want embedding.
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
+
+Alternatively, set the [`MB_SESSION_COOKIE_SAMESITE` environment variable](https://www.metabase.com/docs/latest/configuring-metabase/environment-variables#mb_session_cookie_samesite).
+
+<Warning>
+  **Safari users:** You'll need to [allow cross-site tracking](https://support.apple.com/en-tj/guide/safari/sfri40732/mac). Private/incognito tabs may also have issues.
+</Warning>
+
+Learn more about [SameSite cookies](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite).
+
+## Security best practices
+
+Metabase uses HTTP cookies to authenticate people and keep them signed in.
+
+<AccordionGroup>
+  <Accordion title="Limit session duration">
+    Set [`MAX_SESSION_AGE`](https://www.metabase.com/docs/latest/configuring-metabase/environment-variables#max_session_age) in minutes (default: 20,160 = two weeks).
+
+    **Example: 24-hour sessions**
+    ```bash
+    MAX_SESSION_AGE=1440
+    ```
+  </Accordion>
+  
+  <Accordion title="Clear cookies on browser close">
+    Automatically clear login cookies when users end their browser session:
+
+    ```bash
+    MB_SESSION_COOKIES=true
+    ```
+  </Accordion>
+  
+  <Accordion title="Manual logout">
+    Load this URL to log someone out (e.g., in a hidden iframe on your logout page):
+
+    ```
+    https://metabase.yourcompany.com/auth/logout
+    ```
+  </Accordion>
+  
+  <Accordion title="JWT expiration">
+    If using [JWT SSO](https://www.metabase.com/docs/latest/people-and-groups/authenticating-with-jwt), set the `exp` property to a short duration (e.g., 1 minute).
+  </Accordion>
+</AccordionGroup>
+
+For detailed auth flows, see [Full app embedding with SSO](https://www.metabase.com/docs/latest/embedding/securing-embeds).
+
+## Communication with embedded Metabase
+
+Use `postMessage` to communicate between your app and the embedded Metabase:
+
+### Messages from embedded Metabase
+
+<Tabs>
+  <Tab title="Location changes">
+    Listen for URL changes (e.g., when filters are applied):
+
+    ```javascript
+    window.addEventListener("message", (event) => {
+      if (event.data.metabase?.type === "location") {
+        console.log("URL changed:", event.data.metabase.location);
+      }
+    });
+    ```
+
+    **Message format:**
+    ```json
+    {
+      "metabase": {
+        "type": "location",
+        "location": LOCATION_OBJECT_OR_URL
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Frame size (normal mode)">
+    Set iframe to fill entire space:
+
+    ```json
+    {
+      "metabase": {
+        "type": "frame",
+        "frame": {
+          "mode": "normal"
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Frame size (fit mode)">
+    Set iframe to match content size:
+
+    ```json
+    {
+      "metabase": {
+        "type": "frame",
+        "frame": {
+          "mode": "fit",
+          "height": HEIGHT_IN_PIXELS
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Messages to embedded Metabase
+
+Change the embedded URL programmatically:
+
+```javascript
+const iframe = document.querySelector("iframe");
+iframe.contentWindow.postMessage(
+  {
+    metabase: {
+      type: "location",
+      location: "/dashboard/2"
+    }
+  },
+  "https://metabase.yourcompany.com"
+);
+```
+
+## Showing or hiding UI components
+
+Control which Metabase UI components are visible using URL parameters. See [full app UI components](https://www.metabase.com/docs/latest/embedding/full-app-ui-components) for details.
+
+<Note>
+  For more granular control over embedded components, use [Modular embedding](/embedding/modular-embedding) instead.
+</Note>
+
+## Group strategies for permissions
+
+For multi-tenant applications where multiple users from a single customer need to collaborate:
+
+<Steps>
+  <Step title="Customer-specific groups">
+    Create one [group](https://www.metabase.com/docs/latest/people-and-groups/managing#groups) per customer account. Users in this group can collaborate on questions and dashboards.
+  </Step>
+  <Step title="Security group">
+    Create a separate group for [row and column security](https://www.metabase.com/docs/latest/permissions/row-and-column-security). Apply data permissions via attributes that span all customers.
+  </Step>
+  <Step title="Assign users to both">
+    Each user belongs to:
+    - Their customer's collaboration group
+    - The security group with appropriate data permissions
+  </Step>
+</Steps>
+
+This approach allows collaboration within customer accounts while maintaining proper data segregation.
+
+## Reference apps
+
+Build a sample full app embed with these reference implementations:
+
+<CardGroup cols={2}>
+  <Card title="Node.js + Express" icon="node-js" href="https://github.com/metabase/metabase-nodejs-express-interactive-embedding-sample">
+    With [quick start guide](https://www.metabase.com/docs/latest/embedding/full-app-embedding-quick-start-guide)
+  </Card>
+  <Card title="Node.js + React" icon="react" href="https://github.com/metabase/sso-examples/tree/master/app-embed-example">
+    Complete React implementation
+  </Card>
+</CardGroup>
+
+## Common use cases
+
+<AccordionGroup>
+  <Accordion title="Embed the home page">
+    ```html
+    <iframe src="https://metabase.yourcompany.com/" />
+    ```
+  </Accordion>
+  
+  <Accordion title="Embed a specific dashboard">
+    ```html
+    <iframe src="https://metabase.yourcompany.com/dashboard/entity/Dc_7X8N7zf4iDK9Ps1M3b" />
+    ```
+  </Accordion>
+  
+  <Accordion title="Embed with dashboard filters pre-applied">
+    ```html
+    <iframe src="https://metabase.yourcompany.com/dashboard/1?status=active&date=2024-01-01" />
+    ```
+  </Accordion>
+  
+  <Accordion title="Embed a collection">
+    ```html
+    <iframe src="https://metabase.yourcompany.com/collection/entity/c1A2b3C4d5E6" />
+    ```
+  </Accordion>
+  
+  <Accordion title="Embed with SSO redirect">
+    ```html
+    <iframe src="https://metabase.example.com/auth/sso?jwt=<token>&return_to=%2Fdashboard%2F1" />
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Cookies not working in Safari">
+    - Ensure Metabase and your app are on the same top-level domain
+    - Or set SameSite to "None" (requires HTTPS, still may not work in Safari)
+    - Users may need to enable cross-site tracking in Safari settings
+  </Accordion>
+  
+  <Accordion title="Authentication issues">
+    - Verify JWT configuration in Admin > Settings > Authentication
+    - Check that JWT tokens have valid `exp` (expiration) values
+    - Ensure SSO endpoint returns tokens correctly
+    - Test with API key first for debugging
+  </Accordion>
+  
+  <Accordion title="CORS errors">
+    - Add your domain to Authorized origins in Admin > Embedding
+    - Make sure to include the protocol (https://)
+    - Wildcards are supported: `https://*.example.com`
+  </Accordion>
+  
+  <Accordion title="Iframe not displaying">
+    - Check browser console for errors
+    - Verify the Metabase URL is accessible
+    - Ensure your license token is valid
+    - Check that Full app embedding is enabled in Admin settings
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quick start guide" icon="rocket" href="https://www.metabase.com/docs/latest/embedding/full-app-embedding-quick-start-guide">
+    Follow the step-by-step tutorial
+  </Card>
+  <Card title="Authentication" icon="key" href="https://www.metabase.com/docs/latest/people-and-groups/authenticating-with-jwt">
+    Set up JWT SSO
+  </Card>
+  <Card title="Permissions" icon="shield" href="https://www.metabase.com/docs/latest/permissions/introduction">
+    Configure data access
+  </Card>
+  <Card title="UI components" icon="layout" href="https://www.metabase.com/docs/latest/embedding/full-app-ui-components">
+    Control visible UI elements
+  </Card>
+</CardGroup>
+
+## Further reading
+
+- [Strategies for delivering customer-facing analytics](https://www.metabase.com/learn/metabase-basics/embedding/overview)
+- [Permissions strategies](https://www.metabase.com/learn/metabase-basics/administration/permissions/strategy)
+- [Customizing Metabase's appearance](https://www.metabase.com/docs/latest/configuring-metabase/appearance)
+- [Securing embedded Metabase](https://www.metabase.com/docs/latest/embedding/securing-embeds)

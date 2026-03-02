@@ -1,0 +1,246 @@
+---
+title: Segments
+description: Create reusable filters for consistent data subsets
+---
+
+Segments are named, reusable filters that help your team consistently reference specific subsets of data. They ensure everyone uses the same criteria when analyzing groups like "Active Users" or "Premium Customers."
+
+<Info>
+Segments provide official definitions for important data subsets, making them easily accessible in the query builder.
+</Info>
+
+## What are segments
+
+A segment is a special named filter or set of filters that defines a specific subset of your data. Segments help standardize how your team identifies and analyzes important groups.
+
+### Example use cases
+
+<CardGroup cols={2}>
+  <Card title="User segments" icon="users">
+    Define "Active Users" with all necessary criteria (last login within 30 days, completed onboarding, etc.)
+  </Card>
+  <Card title="Product categories" icon="boxes-stacked">
+    Create segments for product lines, price tiers, or inventory status
+  </Card>
+  <Card title="Customer types" icon="building">
+    Segment customers by attributes like subscription tier, region, or lifetime value
+  </Card>
+  <Card title="Time-based groups" icon="clock">
+    Define cohorts like "Q1 2025 Signups" or "Holiday Season Orders"
+  </Card>
+</CardGroup>
+
+## Accessing segment settings
+
+Segments are managed through the admin panel's table metadata interface.
+
+<Steps>
+  <Step title="Open admin settings">
+    Click the **grid** icon in the upper right
+  </Step>
+  <Step title="Select Admin">
+    Choose **Admin** from the menu
+  </Step>
+  <Step title="Navigate to Table Metadata">
+    Go to the **Table Metadata** tab
+  </Step>
+  <Step title="Open segments">
+    Click **Segments** at the bottom left
+  </Step>
+</Steps>
+
+## Creating a segment
+
+Segments define the filters that select specific records from a table.
+
+<Steps>
+  <Step title="Start creating">
+    In the **Segments** tab, click the **New segment** button on the right side
+  </Step>
+  <Step title="Select the table">
+    Choose which table this segment will filter
+  </Step>
+  <Step title="Add filters">
+    Use the segment builder to add one or more filters. This works like the query builder but only includes filtering options
+  </Step>
+  <Step title="Name and describe">
+    Give your segment a clear name and description. These appear in the query builder filter dropdown
+  </Step>
+  <Step title="Preview (optional)">
+    Click **Preview** to test your segment in the query builder before saving
+  </Step>
+  <Step title="Save">
+    Click **Save changes** to make the segment available
+  </Step>
+</Steps>
+
+<Note>
+The segment builder is a simplified version of the query builder focused exclusively on filters. You cannot add aggregations or groupings to segments.
+</Note>
+
+## Using segments in questions
+
+Once created, segments appear at the top of the filter list when building questions on their associated table.
+
+**To apply a segment:**
+
+1. Start a new question or edit an existing one
+2. Click the filter button
+3. Select your segment from the top of the filter list
+4. The segment's filters are applied to your question
+
+<Tip>
+Segments are not automatically applied to tables—users must actively select them when building questions.
+</Tip>
+
+## Segment visibility
+
+When you save a segment, it becomes visible to all users who can access the table. The segment appears:
+
+- In the filter dropdown when querying the table
+- At the top of the filter list for easy access
+- With its name and description to help users understand what it filters
+
+## Editing segments
+
+Changes to segments affect all questions and dashboards that use them.
+
+<Steps>
+  <Step title="Find the segment">
+    Navigate to Admin > Table Metadata, select the table, and find your segment
+  </Step>
+  <Step title="Open edit menu">
+    Click the ellipsis (**...**) icon to the right of the segment name
+  </Step>
+  <Step title="Select Edit">
+    Choose **Edit** from the menu
+  </Step>
+  <Step title="Make changes">
+    Modify the filters, name, or description
+  </Step>
+  <Step title="Add a revision note">
+    Explain why you're changing the segment. This context helps users understand the impact
+  </Step>
+  <Step title="Save changes">
+    Save your updates
+  </Step>
+</Steps>
+
+<Warning>
+When you edit a segment, Metabase notifies users who created questions or dashboards using that segment. They receive an email with your revision note explaining the changes.
+</Warning>
+
+## Revision history
+
+Metabase tracks changes to segments over time.
+
+**To view revision history:**
+
+1. Go to Admin > Table Metadata
+2. Select the table containing your segment
+3. Click the ellipsis (**...**) icon next to the segment
+4. Choose **View revision history**
+
+The revision history shows:
+- Who made each change
+- When the change occurred
+- What was modified
+- The revision note explaining why
+
+## Retiring segments
+
+When a segment is no longer needed, you can retire it instead of deleting it.
+
+<Steps>
+  <Step title="Access segment actions">
+    Navigate to Admin > Table Metadata, find the segment, and click the ellipsis (**...**) icon
+  </Step>
+  <Step title="Select Retire">
+    Choose **Retire** from the menu
+  </Step>
+  <Step title="Confirm">
+    Confirm that you want to retire the segment
+  </Step>
+</Steps>
+
+### What happens when you retire a segment
+
+<AccordionGroup>
+  <Accordion title="Removed from filter list">
+    The segment no longer appears in the query builder filter dropdown, preventing new uses
+  </Accordion>
+  <Accordion title="Existing questions still work">
+    Questions and dashboards that already use the retired segment continue to function normally
+  </Accordion>
+  <Accordion title="Can be restored">
+    Retired segments can be unretired if you need to make them available again
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+Retiring a segment does not break existing saved questions that depend on it. This makes retiring safer than deleting.
+</Note>
+
+## Best practices
+
+<AccordionGroup>
+  <Accordion title="Use descriptive names">
+    Choose names that clearly indicate what the segment filters, like "Active Users" or "High-Value Customers"
+  </Accordion>
+  <Accordion title="Write clear descriptions">
+    Explain the criteria in plain language: "Users who logged in within the last 30 days and completed their profile"
+  </Accordion>
+  <Accordion title="Keep filters simple">
+    Avoid overly complex segments that might be confusing or too specific. Create multiple simple segments instead
+  </Accordion>
+  <Accordion title="Document changes thoroughly">
+    When editing segments, write detailed revision notes explaining what changed and why
+  </Accordion>
+  <Accordion title="Review and retire unused segments">
+    Periodically review segments and retire ones that are no longer relevant to keep the filter list clean
+  </Accordion>
+  <Accordion title="Test before saving">
+    Use the Preview function to verify your filters work as expected before making the segment available
+  </Accordion>
+</AccordionGroup>
+
+## Segments vs. filters vs. metrics
+
+Understanding when to use each feature helps keep your Metabase organized:
+
+| Feature | Purpose | Example |
+|---------|---------|----------|
+| **Segments** | Reusable filters for data subsets | "Premium Customers" |
+| **Filters** | Ad-hoc filtering in questions | "Created At is after 2024-01-01" |
+| **Metrics** | Pre-defined calculations | "Total Revenue" |
+
+<Tip>
+Use segments when multiple people need to filter data the same way repeatedly. Use regular filters for one-off analyses.
+</Tip>
+
+## Permissions and access
+
+Segment creation and editing requires admin access to the table metadata settings. Regular users can:
+
+- View available segments in the filter list
+- Apply segments to their questions
+- See segment names and descriptions
+
+For information about granting metadata editing permissions, see [Table metadata permissions](../permissions/data#manage-table-metadata-permissions).
+
+## Further reading
+
+<CardGroup cols={2}>
+  <Card title="Models" icon="diagram-project" href="./models">
+    Create curated datasets as starting points for analysis
+  </Card>
+  <Card title="Metrics" icon="chart-line" href="./metrics">
+    Define official calculations for important business numbers
+  </Card>
+  <Card title="Table metadata" icon="table" href="./metadata">
+    Learn about customizing table and column metadata
+  </Card>
+  <Card title="Filters in dashboards" icon="filter" href="../dashboards/filters">
+    Create interactive filters for dashboard users
+  </Card>
+</CardGroup>

@@ -1,0 +1,160 @@
+---
+title: Contributing to Metabase
+description: Learn how to contribute to the Metabase open source project
+---
+
+Metabase is an open-source project, and we welcome contributions from the community. Whether you're fixing bugs, adding features, improving documentation, or building drivers, your contributions help make Metabase better for everyone.
+
+## Ways to contribute
+
+There are many ways to contribute to Metabase:
+
+- **Report bugs** - If you find a bug, please report it on our [GitHub issues](https://github.com/metabase/metabase/issues)
+- **Fix bugs** - Pick an issue and submit a pull request
+- **Add features** - Implement new functionality that benefits the community
+- **Improve documentation** - Help make our docs clearer and more comprehensive
+- **Build drivers** - Create drivers for databases not yet supported
+- **Answer questions** - Help other users in our [Discourse community](https://discourse.metabase.com/)
+
+## Before you start
+
+Before diving into code, it's helpful to:
+
+1. **Check existing issues** - Someone may already be working on what you have in mind
+2. **Discuss major changes** - For significant features, open an issue first to discuss your approach
+3. **Read the code review guidelines** - Understand our review process and expectations
+
+<Note>
+For security vulnerabilities, please see our [Security Policy](https://github.com/metabase/metabase/blob/master/SECURITY.md) for responsible disclosure guidelines.
+</Note>
+
+## Getting started
+
+<Steps>
+  <Step title="Set up your development environment">
+    Follow our [development environment guide](/developers/development-environment) to get Metabase running locally.
+  </Step>
+  
+  <Step title="Find an issue to work on">
+    Browse the [issues on GitHub](https://github.com/metabase/metabase/issues) and look for issues labeled `good first issue` or `help wanted`.
+  </Step>
+  
+  <Step title="Fork and clone the repository">
+    Fork the [Metabase repository](https://github.com/metabase/metabase) and clone it to your local machine.
+    
+    ```bash
+    git clone https://github.com/YOUR_USERNAME/metabase.git
+    cd metabase
+    ```
+  </Step>
+  
+  <Step title="Create a branch for your work">
+    Create a descriptive branch name for your changes:
+    
+    ```bash
+    git checkout -b fix-query-builder-bug
+    ```
+  </Step>
+  
+  <Step title="Make your changes">
+    Write your code, following our coding conventions and style guides. Make sure to:
+    - Write tests for your changes
+    - Update documentation if needed
+    - Follow the existing code style
+  </Step>
+  
+  <Step title="Test your changes">
+    Run tests locally to ensure everything works:
+    
+    ```bash
+    # Frontend tests
+    bun run test-unit
+    
+    # Backend tests
+    clojure -X:dev:test
+    ```
+  </Step>
+  
+  <Step title="Submit a pull request">
+    Push your changes and create a pull request on GitHub. Include:
+    - A clear description of the changes
+    - Reference to any related issues
+    - Screenshots or videos if applicable
+  </Step>
+</Steps>
+
+## Code review process
+
+All pull requests go through a code review process:
+
+### Goals of code review
+
+- **Catch bugs** - Identify potential issues before they reach production
+- **Ensure quality** - Maintain high code quality standards
+- **Share knowledge** - Learn from each other's approaches
+- **Consider implications** - Think about how changes affect the broader codebase
+
+### Review requirements
+
+<Note>
+Every PR of significant complexity needs at least one approval from another engineer on the team before merging.
+</Note>
+
+### Review feedback
+
+Reviewers use these symbols to indicate their feedback:
+
+- **👍 (+1)** - Approved, ready to merge
+- **👎 (-1)** - Strong veto, must be resolved before merging
+- **🤷 (±0)** - Minor concerns, but won't block if others approve
+
+<Warning>
+A PR with a 👎 (-1) cannot be merged until the issues are resolved. Use this sparingly and only for critical issues like missing tests, security concerns, or breaking changes.
+</Warning>
+
+### Timing expectations
+
+- **High priority PRs** - Should be reviewed as soon as possible
+- **Milestone PRs** - Can wait a few days
+- **Unreviewed PRs** - It's the PR author's responsibility to follow up and request reviews
+
+## Best practices for contributors
+
+### Writing good commit messages
+
+- Use present tense ("Add feature" not "Added feature")
+- Keep the first line under 72 characters
+- Be descriptive about what changed and why
+- Reference issue numbers when applicable
+
+### Making reviewers' lives easier
+
+- **Keep PRs focused** - One feature or fix per PR
+- **Add context** - Explain your approach in the PR description
+- **Comment on complex code** - Guide reviewers through tricky sections
+- **Use clear naming** - Make your code self-documenting
+
+### Getting better reviews
+
+<Accordion title="Tips for getting thorough reviews">
+  - Tag specific reviewers who have expertise in the area
+  - Use GitHub's [Notes and Warnings](https://github.com/github-community/community/discussions/16925) to highlight important information
+  - Test your changes locally and share evidence in the PR
+  - Be responsive to feedback and questions
+</Accordion>
+
+## Community
+
+Join our community channels:
+
+- [Discourse](https://discourse.metabase.com/) - Ask questions and discuss features
+- [GitHub Discussions](https://github.com/metabase/metabase/discussions) - Long-form discussions
+- [Twitter](https://x.com/metabase) - Follow for updates
+
+## License
+
+By contributing to Metabase, you agree that your contributions will be licensed under the same license as the project. Metabase contains both AGPL (open source) and commercially licensed code. See [LICENSE.txt](https://github.com/metabase/metabase/blob/master/LICENSE.txt) for details.
+
+## Questions?
+
+If you have questions about contributing, feel free to ask in our [Discourse community](https://discourse.metabase.com/) or open a discussion on GitHub.

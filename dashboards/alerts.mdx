@@ -1,0 +1,611 @@
+---
+title: 'Alerts'
+description: 'Get notified via email, Slack, or webhooks when questions return important results or reach specific goals.'
+---
+
+Alerts automatically notify you when questions return interesting results. Unlike subscriptions that send on a schedule, alerts only notify you when specific conditions are met.
+
+## Alerts vs subscriptions
+
+<Tabs>
+  <Tab title="Alerts">
+    **Condition-based notifications**
+    
+    - Send when specific conditions are met
+    - Only for individual questions (not dashboards)
+    - Examples:
+      - Revenue exceeds goal
+      - Error count is greater than zero
+      - Progress bar reaches 100%
+  </Tab>
+  
+  <Tab title="Subscriptions">
+    **Schedule-based delivery**
+    
+    - Send on a regular schedule
+    - For entire dashboards
+    - Always send (unless you enable "skip if empty")
+    
+    See [Dashboard subscriptions](/dashboards/subscriptions) for details.
+  </Tab>
+</Tabs>
+
+<Info>
+If you want scheduled reports for dashboards, use subscriptions. If you want notifications when specific metrics hit thresholds, use alerts.
+</Info>
+
+## Prerequisites
+
+Before creating alerts, an administrator must configure at least one notification channel:
+
+- **[Email](/configuration/email)**: SMTP server for email notifications
+- **[Slack](/configuration/slack)**: Slack workspace integration  
+- **[Webhooks](/configuration/webhooks)**: HTTP endpoints for custom integrations
+
+<Note>
+Webhooks are only available to administrators and users with settings access permissions.
+</Note>
+
+## Types of alerts
+
+Metabase offers three alert types based on your question's visualization:
+
+<CardGroup cols={3}>
+  <Card title="Results alerts" icon="table">
+    Notify when a question returns any results
+  </Card>
+  
+  <Card title="Goal line alerts" icon="chart-line">
+    Notify when a time series crosses a goal line
+  </Card>
+  
+  <Card title="Progress bar alerts" icon="bars-progress">
+    Notify when a single number reaches or falls below a goal
+  </Card>
+</CardGroup>
+
+## Results alerts
+
+Get notified whenever a question returns data:
+
+### Setting up a results alert
+
+<Steps>
+  <Step title="Create and save your question">
+    Build a question that returns results when something interesting happens.
+    
+    Example: Reviews with fewer than 3 stars in the last 24 hours
+  </Step>
+  
+  <Step title="Create the alert">
+    1. Click the three-dot menu (**...**)
+    2. Select **Create an alert**
+    3. Choose **When a question returns a result**
+  </Step>
+  
+  <Step title="Set the schedule">
+    Choose how often to check:
+    - Every minute
+    - Hourly  
+    - Daily
+    - Weekly
+    - Monthly
+    - Custom (using cron syntax)
+  </Step>
+  
+  <Step title="Choose destination">
+    Select where to send the alert:
+    - Email addresses
+    - Slack channel or user
+    - Webhook URL (admins only)
+  </Step>
+  
+  <Step title="Configure options">
+    - **Only send once**: Delete the alert after first trigger
+    - Additional settings based on alert type
+  </Step>
+  
+  <Step title="Save the alert">
+    Click **Done** to activate.
+  </Step>
+</Steps>
+
+### Results alert use cases
+
+<Tabs>
+  <Tab title="Exception monitoring">
+    Get notified when problems occur:
+    
+    - Failed transactions
+    - Error logs
+    - System outages
+    - Customer complaints
+    
+    ```sql
+    SELECT *
+    FROM error_logs
+    WHERE created_at >= now() - interval '1 hour'
+      AND severity = 'critical'
+    ```
+  </Tab>
+  
+  <Tab title="Opportunity detection">
+    Know when good things happen:
+    
+    - High-value orders
+    - New customer signups
+    - Positive reviews
+    - Engagement spikes
+    
+    ```sql
+    SELECT *
+    FROM orders  
+    WHERE created_at >= current_date
+      AND total > 10000
+    ```
+  </Tab>
+  
+  <Tab title="Data arrival">
+    Confirm expected data appears:
+    
+    - Daily uploads completed
+    - Integration data received
+    - Reports generated
+    - Batch jobs finished
+  </Tab>
+</Tabs>
+
+<Tip>
+Combine filters for recent time periods with your alert criteria. For example, "last 24 hours" ensures you're not re-alerted about old data.
+</Tip>
+
+## Goal line alerts
+
+Get notified when time series data crosses a threshold:
+
+### Setting up a goal line alert
+
+<Steps>
+  <Step title="Create a time series question">
+    Build a question that:
+    - Returns a number over time
+    - Can be visualized as a line, bar, or area chart
+    
+    Example: Daily active users over the last 30 days
+  </Step>
+  
+  <Step title="Add a goal line">
+    1. Click the **gear** icon (visualization settings)
+    2. Go to the **Display** tab
+    3. Toggle **Show goal** on
+    4. Enter your goal value and label
+    5. Click **Done**
+  </Step>
+  
+  <Step title="Save the question">
+    Save your question with the goal line configured.
+  </Step>
+  
+  <Step title="Create the alert">
+    1. Click the three-dot menu (**...**)
+    2. Select **Create an alert**  
+    3. Choose **When a time series crosses a goal line**
+  </Step>
+  
+  <Step title="Configure alert conditions">
+    Choose:
+    - **Above or below**: When to trigger (crosses above vs. below goal)
+    - **Every time or first time**: Alert on every crossing or just the first
+    - **Check frequency**: How often to evaluate (hourly, daily, etc.)
+  </Step>
+  
+  <Step title="Select destination and save">
+    Choose email, Slack, or webhook and click **Done**.
+  </Step>
+</Steps>
+
+### Goal line alert conditions
+
+<Tabs>
+  <Tab title="Crosses above">
+    Alert when the value goes above the goal line:
+    
+    Use for:
+    - Revenue targets met
+    - User growth milestones
+    - Performance thresholds exceeded
+    - Success metrics
+    
+    Example: Alert when daily signups exceed 100
+  </Tab>
+  
+  <Tab title="Goes below">
+    Alert when the value drops below the goal line:
+    
+    Use for:
+    - Performance degradation
+    - Inventory running low  
+    - Engagement dropping
+    - SLA violations
+    
+    Example: Alert when server response time exceeds 500ms
+  </Tab>
+  
+  <Tab title="Every time">
+    Alert each time the condition is met:
+    
+    Use for:
+    - Ongoing monitoring
+    - Fluctuating metrics
+    - Regular checks
+    
+    Can result in multiple alerts if metric oscillates around goal.
+  </Tab>
+  
+  <Tab title="First time only">
+    Alert only the first time the condition is met:
+    
+    Use for:
+    - One-time milestones
+    - Initial threshold breaches
+    - Permanent state changes
+    
+    Won't alert again even if metric continues to meet condition.
+  </Tab>
+</Tabs>
+
+## Progress bar alerts
+
+Get notified when a single number reaches a goal:
+
+### Setting up a progress bar alert
+
+<Steps>
+  <Step title="Create a single-number question">
+    Build a question that returns one number.
+    
+    Example: Total revenue this month
+  </Step>
+  
+  <Step title="Set up progress bar visualization">
+    1. Choose **Progress Bar** as the visualization type
+    2. Click the **gear** icon for settings
+    3. Enter your goal value
+    4. Customize appearance (optional)
+  </Step>
+  
+  <Step title="Save the question">
+    Save with the progress bar configured.
+  </Step>
+  
+  <Step title="Create the alert">
+    1. Click the three-dot menu (**...**)
+    2. Select **Create an alert**
+    3. Choose **When a progress bar reaches or goes below its goal**
+  </Step>
+  
+  <Step title="Configure conditions">
+    - **Reaches or below goal**: When to trigger
+    - **Every time or first time**: Frequency of alerts
+    - **Check frequency**: How often to evaluate
+  </Step>
+  
+  <Step title="Select destination and save">
+    Choose notification channel and click **Done**.
+  </Step>
+</Steps>
+
+### Progress bar alert use cases
+
+- **Reaching targets**: Monthly revenue goal, user signup target
+- **Below thresholds**: Account balance too low, inventory depleted
+- **Completion tracking**: Project milestones, task completion rates
+- **Capacity monitoring**: Storage usage, API limit consumption
+
+## One-time alerts
+
+Create disposable alerts that automatically delete after triggering:
+
+1. When setting up any alert type, toggle **Only send the alert once**
+2. The alert fires once when conditions are met
+3. Metabase automatically deletes the alert
+
+Use for:
+- One-time milestones
+- Single events
+- Testing alerts
+- Temporary monitoring
+
+<Info>
+One-time alerts can't be recovered after they self-delete. Create a new alert if you need to monitor the same condition again.
+</Info>
+
+## Alert scheduling
+
+Control how often Metabase checks your question:
+
+<Tabs>
+  <Tab title="Predefined schedules">
+    Standard intervals:
+    - **Every minute**: Real-time monitoring
+    - **Hourly**: Frequent checks
+    - **Daily**: Once per day at specified time
+    - **Weekly**: Specific day and time
+    - **Monthly**: Specific day of month and time
+  </Tab>
+  
+  <Tab title="Custom schedule">
+    Use cron syntax for custom schedules:
+    
+    ```
+    0 9 * * 1-5
+    ```
+    
+    This checks at 9 AM, Monday through Friday.
+    
+    See [Quartz cron syntax](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) for details.
+  </Tab>
+</Tabs>
+
+<Warning>
+More frequent checks mean more queries running against your database. Balance alerting speed with database load.
+</Warning>
+
+## Managing alerts
+
+### Viewing your alerts
+
+See all alerts for a question:
+
+1. Open the question
+2. Click the three-dot menu (**...**)
+3. Select **Edit alerts**
+
+See all alerts you receive:
+
+1. Click your profile icon
+2. Go to **Account settings**
+3. Select **Notifications**
+
+### Editing alerts
+
+**Your own alerts:**
+- Edit any alert you created
+- Modify schedule, recipients, or conditions
+
+**Others' alerts (admins only):**
+- View all alerts on any question
+- Edit or delete any alert
+- Add or remove recipients
+
+### Testing alerts
+
+<Steps>
+  <Step title="Open alert settings">
+    Edit the alert you want to test.
+  </Step>
+  
+  <Step title="Click Send now">
+    Triggers the alert immediately regardless of conditions.
+  </Step>
+  
+  <Step title="Check delivery">
+    Verify the alert arrives at the destination correctly.
+  </Step>
+</Steps>
+
+<Tip>
+Before relying on an alert, test it to ensure:
+- The notification arrives at the right place
+- The message contains expected information
+- Recipients can access linked content
+- Formatting looks correct
+</Tip>
+
+### Unsubscribing from alerts
+
+Remove yourself from alert notifications:
+
+**From an alert email:**
+- Click the unsubscribe link at the bottom
+
+**From Account settings:**
+1. Profile icon → **Account settings**
+2. Go to **Notifications**
+3. Find the alert
+4. Click **Unsubscribe**
+
+**From the question:**
+1. Open the question
+2. Three-dot menu → **Edit alerts**
+3. Remove your email from recipients
+
+### Deleting alerts
+
+<Steps>
+  <Step title="Open edit alerts">
+    Three-dot menu → **Edit alerts**
+  </Step>
+  
+  <Step title="Select the alert">
+    Click on the alert you want to delete.
+  </Step>
+  
+  <Step title="Delete">
+    Click **Delete this alert** at the bottom.
+  </Step>
+  
+  <Step title="Confirm">
+    Confirm deletion in the modal.
+  </Step>
+</Steps>
+
+<Warning>
+Deleting an alert is permanent. All scheduled checks and notifications stop immediately.
+</Warning>
+
+## Alert permissions
+
+<Info>
+See [Notification permissions](/permissions/notifications) for complete details.
+</Info>
+
+Key permission rules:
+
+**Creating alerts:**
+- Can create alerts on questions you have access to
+- Can add any email address as recipient (subject to admin restrictions)
+- Webhooks require admin or settings access permissions
+
+**Managing alerts:**
+- Can edit and delete your own alerts
+- Admins can manage all alerts
+- Can unsubscribe yourself from any alert
+
+**Receiving alerts:**
+- Don't need a Metabase account to receive email/Slack alerts
+- Clicking links in alerts may require Metabase access
+- See only data you have permission to view
+
+## Alert notifications
+
+Metabase sends notification emails when:
+
+- You create a new alert
+- You're added to an alert (by an admin)
+- You unsubscribe from an alert
+- You're removed from an alert
+- One of your alerts stops working (error in question)
+
+## Alerts in embedded questions
+
+Alerts from embedded questions work differently:
+
+- **No Metabase links**: Links to Metabase are omitted since recipients may not have access
+- **Same conditions**: Triggering logic works identically
+- **Same destinations**: Email, Slack, and webhooks all supported
+
+See [Embedded questions](/embedding/components) for more details.
+
+## Alert expiration and special cases
+
+<AccordionGroup>
+  <Accordion title="Question is deleted">
+    If someone deletes the question, all alerts for that question are automatically deleted.
+  </Accordion>
+  
+  <Accordion title="Goal line is removed">
+    Goal line alerts convert to results alerts if you remove the goal line from the question.
+  </Accordion>
+  
+  <Accordion title="Alert creator leaves">
+    Alerts continue working even if the creator's account is deactivated. 
+    
+    Exception: The deactivated user will stop receiving the alerts.
+  </Accordion>
+  
+  <Accordion title="Slack channel renamed">
+    If you rename a Slack channel, update the alert to point to the new name. Otherwise, it will fail to deliver.
+  </Accordion>
+</AccordionGroup>
+
+## Viewing all alerts (admins)
+
+<Info>Available on Pro and Enterprise plans with usage analytics.</Info>
+
+Admins can see all alerts across Metabase:
+
+1. Go to the **Usage analytics** collection
+2. Look for the **Alerts** model
+3. View details about:
+   - Who created each alert
+   - Which questions they're on
+   - Who receives them
+   - How often they run
+
+Useful for:
+- Auditing alert usage
+- Finding broken alerts
+- Cleaning up unused alerts
+- Understanding alert patterns
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Alert not firing">
+    Verify:
+    - Question actually returns results that meet the condition
+    - Alert schedule is correct
+    - Question doesn't have errors
+    - Check frequency is appropriate for data update rate
+    - Email/Slack is properly configured
+  </Accordion>
+  
+  <Accordion title="Too many alerts">
+    If you're getting too many notifications:
+    - Switch from "every time" to "first time only"
+    - Reduce check frequency
+    - Add more specific filters to your question
+    - Use "only send once" for one-time events
+  </Accordion>
+  
+  <Accordion title="Alert not arriving">
+    Check:
+    - Email isn't in spam folder
+    - Slack bot is in the channel (for private channels)
+    - Webhook endpoint is accessible
+    - Channel/username hasn't changed
+  </Accordion>
+  
+  <Accordion title="Can't create alert">
+    Possible reasons:
+    - Question isn't saved
+    - Don't have access to question
+    - Email/Slack/Webhooks not configured
+    - Question type doesn't support alerts
+  </Accordion>
+</AccordionGroup>
+
+## Best practices
+
+<CardGroup cols={2}>
+  <Card title="Use specific conditions" icon="filter">
+    Make questions precise so alerts trigger only when truly needed. Avoid alert fatigue.
+  </Card>
+  
+  <Card title="Choose appropriate frequency" icon="clock">
+    Match check frequency to data update rate and urgency needs. Don't check hourly if data updates daily.
+  </Card>
+  
+  <Card title="Test before deploying" icon="flask">
+    Use "Send now" to verify alerts work correctly before relying on them.
+  </Card>
+  
+  <Card title="Add context to questions" icon="file-lines">
+    Include descriptions explaining what the alert means and what actions to take.
+  </Card>
+  
+  <Card title="Start with first-time alerts" icon="flag">
+    Use "first time only" initially. Switch to "every time" only if you need repeated notifications.
+  </Card>
+  
+  <Card title="Monitor alert effectiveness" icon="chart-line">
+    Regularly review alerts. Delete ones that fire too often or never trigger.
+  </Card>
+</CardGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Dashboard subscriptions" icon="paper-plane" href="/dashboards/subscriptions">
+    Send entire dashboards on a schedule instead of condition-based alerts
+  </Card>
+  
+  <Card title="Creating questions" icon="circle-question" href="/questions/asking-questions">
+    Build better questions for more effective alerts
+  </Card>
+  
+  <Card title="Webhooks" icon="webhook" href="/configuration/webhooks">
+    Integrate alerts with external systems via webhooks
+  </Card>
+</CardGroup>

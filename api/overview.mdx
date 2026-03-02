@@ -1,0 +1,116 @@
+---
+title: API overview
+description: Learn about the Metabase REST API and how to get started with API authentication and requests
+---
+
+The Metabase API provides a comprehensive REST interface for programmatically interacting with your Metabase instance. You can use it to create dashboards, execute queries, manage users, and automate workflows.
+
+## Base URL
+
+All API endpoints are relative to your Metabase instance URL:
+
+```
+https://your-metabase-instance.com/api
+```
+
+## Authentication
+
+Most API endpoints require authentication. Metabase supports session-based authentication using API keys or email/password credentials. See the [authentication guide](/api/authentication) for detailed information.
+
+## API endpoints
+
+The Metabase API is organized into the following categories:
+
+### Core resources
+
+- [**Database**](/api/database) - Manage database connections and metadata (25 endpoints)
+- [**Card**](/api/card) - Create and manage questions/cards (16 endpoints)
+- [**Dashboard**](/api/dashboard) - Create and manage dashboards (20 endpoints)
+- [**Collection**](/api/collection) - Organize content in collections (12 endpoints)
+- [**Dataset**](/api/dataset) - Execute queries and retrieve data (8 endpoints)
+
+### User management
+
+- [**User**](/api/user) - Manage user accounts (7 endpoints)
+- [**Session**](/api/session) - Handle authentication sessions (7 endpoints)
+- [**Permissions**](/api/permissions) - Configure user permissions (9 endpoints)
+
+### Sharing and automation
+
+- [**Public**](/api/public) - Access publicly shared content (23 endpoints)
+- [**Embedding**](/api/embedding) - Embed Metabase content in applications
+- [**Actions**](/api/actions) - Execute database actions (7 endpoints)
+
+### Configuration
+
+- [**Settings**](/api/settings) - Manage instance settings
+
+## Response format
+
+API responses are returned in JSON format. Successful responses include a `2XX` status code, while errors return `4XX` or `5XX` status codes.
+
+### Success response
+
+```json
+{
+  "id": 123,
+  "name": "Sample Dashboard",
+  "created_at": "2024-03-15T10:30:00Z"
+}
+```
+
+### Error response
+
+```json
+{
+  "message": "Invalid credentials",
+  "error": true
+}
+```
+
+## Common status codes
+
+<ResponseField name="200 OK" type="success">
+  Request succeeded
+</ResponseField>
+
+<ResponseField name="201 Created" type="success">
+  Resource successfully created
+</ResponseField>
+
+<ResponseField name="204 No Content" type="success">
+  Request succeeded with no response body
+</ResponseField>
+
+<ResponseField name="400 Bad Request" type="error">
+  Invalid request parameters
+</ResponseField>
+
+<ResponseField name="401 Unauthorized" type="error">
+  Authentication required or invalid credentials
+</ResponseField>
+
+<ResponseField name="403 Forbidden" type="error">
+  Insufficient permissions
+</ResponseField>
+
+<ResponseField name="404 Not Found" type="error">
+  Resource not found
+</ResponseField>
+
+<ResponseField name="500 Internal Server Error" type="error">
+  Server error occurred
+</ResponseField>
+
+## Rate limits
+
+See the [rate limits documentation](/api/rate-limits) for information about API rate limiting and best practices.
+
+## Getting help
+
+If you encounter issues or have questions:
+
+- Check the specific endpoint documentation for detailed parameter information
+- Review error messages carefully - they often include helpful debugging information
+- Visit the [Metabase discussion forum](https://discourse.metabase.com/) for community support
+- Report bugs on [GitHub](https://github.com/metabase/metabase/issues)

@@ -1,0 +1,367 @@
+---
+title: InteractiveQuestion
+description: Embed interactive questions with full editing capabilities and drill-through actions
+---
+
+The `InteractiveQuestion` component renders an interactive question that allows users to explore data, modify visualizations, apply filters, and drill into details.
+
+## Basic usage
+
+```tsx
+import { InteractiveQuestion } from '@metabase/embedding-sdk-react';
+
+function Dashboard() {
+  return <InteractiveQuestion questionId={1} />;
+}
+```
+
+## With custom height
+
+```tsx
+<InteractiveQuestion questionId={1} height={600} />
+```
+
+## Using entity ID
+
+You can reference questions by their entity ID instead of numeric ID:
+
+```tsx
+<InteractiveQuestion questionId="abc123-entity-id" />
+```
+
+## Composing with sub-components
+
+The `InteractiveQuestion` component provides sub-components for building custom layouts:
+
+```tsx
+import { InteractiveQuestion } from '@metabase/embedding-sdk-react';
+
+function CustomQuestionView() {
+  return (
+    <InteractiveQuestion questionId={1}>
+      <div className="header">
+        <InteractiveQuestion.Title />
+        <div className="actions">
+          <InteractiveQuestion.SaveButton />
+          <InteractiveQuestion.DownloadWidget />
+        </div>
+      </div>
+      
+      <div className="filters">
+        <InteractiveQuestion.Filter />
+        <InteractiveQuestion.ResetButton />
+      </div>
+      
+      <InteractiveQuestion.QuestionVisualization />
+    </InteractiveQuestion>
+  );
+}
+```
+
+## Creating new questions
+
+### New query builder question
+
+```tsx
+<InteractiveQuestion 
+  questionId="new" 
+  isSaveEnabled={true}
+  onSave={(question) => {
+    console.log('Question saved:', question);
+  }}
+/>
+```
+
+### New SQL question
+
+```tsx
+<InteractiveQuestion 
+  questionId="new-native" 
+  isSaveEnabled={true}
+  onSave={(question) => {
+    console.log('SQL question saved:', question);
+  }}
+/>
+```
+
+## With event handlers
+
+```tsx
+<InteractiveQuestion
+  questionId={1}
+  onRun={(question) => {
+    console.log('Question ran:', question);
+  }}
+  onSave={(question) => {
+    console.log('Question saved:', question);
+  }}
+  onBeforeSave={(question) => {
+    console.log('About to save:', question);
+  }}
+/>
+```
+
+## With SQL parameters
+
+```tsx
+<InteractiveQuestion
+  questionId={5}
+  initialSqlParameters={{
+    user_id: '123',
+    date_from: '2024-01-01',
+  }}
+/>
+```
+
+## Hiding specific parameters
+
+```tsx
+<InteractiveQuestion
+  questionId={1}
+  hiddenParameters={['category', 'region']}
+/>
+```
+
+## With plugins
+
+```tsx
+const plugins = {
+  mapQuestionClickActions: (clickActions, clickedDataPoint) => {
+    return [
+      ...clickActions,
+      {
+        name: 'custom-action',
+        onClick: () => {
+          console.log('Custom action clicked', clickedDataPoint);
+        },
+      },
+    ];
+  },
+};
+
+<InteractiveQuestion questionId={1} plugins={plugins} />
+```
+
+## Available sub-components
+
+All sub-components can be used within an `InteractiveQuestion` parent:
+
+<CodeGroup>
+
+```tsx Navigation
+<InteractiveQuestion questionId={1}>
+  <InteractiveQuestion.NavigationBackButton />
+  {/* Other components */}
+</InteractiveQuestion>
+```
+
+```tsx Filters
+<InteractiveQuestion questionId={1}>
+  <InteractiveQuestion.Filter />
+  <InteractiveQuestion.FilterDropdown />
+  <InteractiveQuestion.ResetButton />
+</InteractiveQuestion>
+```
+
+```tsx Visualization
+<InteractiveQuestion questionId={1}>
+  <InteractiveQuestion.Title />
+  <InteractiveQuestion.QuestionVisualization />
+  <InteractiveQuestion.ChartTypeSelector />
+  <InteractiveQuestion.ChartTypeDropdown />
+</InteractiveQuestion>
+```
+
+```tsx Editor
+<InteractiveQuestion questionId={1}>
+  <InteractiveQuestion.EditorButton />
+  <InteractiveQuestion.Editor />
+  <InteractiveQuestion.SaveButton />
+  <InteractiveQuestion.SaveQuestionForm />
+</InteractiveQuestion>
+```
+
+```tsx Actions
+<InteractiveQuestion questionId={1}>
+  <InteractiveQuestion.DownloadWidget />
+  <InteractiveQuestion.AlertsButton />
+  <InteractiveQuestion.QuestionSettings />
+</InteractiveQuestion>
+```
+
+</CodeGroup>
+
+## Props
+
+<ParamField path="questionId" type="SdkQuestionId" required>
+  The ID of the question. Can be:
+  - Numerical ID (e.g., `1`)
+  - Entity ID string (e.g., `"abc123"`)
+  - `"new"` for a new query builder question
+  - `"new-native"` for a new SQL question
+</ParamField>
+
+<ParamField path="height" type="number | string">
+  Height of the component (e.g., `400` or `"100%"`).
+</ParamField>
+
+<ParamField path="width" type="number | string">
+  Width of the component.
+</ParamField>
+
+<ParamField path="style" type="React.CSSProperties">
+  Custom CSS styles.
+</ParamField>
+
+<ParamField path="className" type="string">
+  Custom CSS class name.
+</ParamField>
+
+<ParamField path="withChartTypeSelector" type="boolean" default="true">
+  Whether to show the chart type selector.
+</ParamField>
+
+<ParamField path="withDownloads" type="boolean" default="true">
+  Whether to enable download functionality.
+</ParamField>
+
+<ParamField path="withAlerts" type="boolean" default="true">
+  Whether to enable alerts functionality.
+</ParamField>
+
+<ParamField path="isSaveEnabled" type="boolean" default="false">
+  Whether to enable saving. Required for `questionId="new"` or `questionId="new-native"`.
+</ParamField>
+
+<ParamField path="initialSqlParameters" type="SqlParameterValues">
+  Initial values for SQL template tags.
+</ParamField>
+
+<ParamField path="hiddenParameters" type="string[]">
+  List of parameter names to hide from the UI.
+</ParamField>
+
+<ParamField path="title" type="string">
+  Custom title to display instead of the question's title.
+</ParamField>
+
+<ParamField path="plugins" type="MetabasePluginsConfig">
+  Plugin configuration for this specific question.
+</ParamField>
+
+<ParamField path="onRun" type="(question: MetabaseQuestion) => void">
+  Callback when the question is run.
+</ParamField>
+
+<ParamField path="onSave" type="(question: MetabaseQuestion) => void">
+  Callback when the question is saved.
+</ParamField>
+
+<ParamField path="onBeforeSave" type="(question: MetabaseQuestion) => void">
+  Callback before the question is saved.
+</ParamField>
+
+<ParamField path="onNavigateBack" type="() => void">
+  Callback when the back button is clicked.
+</ParamField>
+
+<ParamField path="onVisualizationChange" type="(question: MetabaseQuestion) => void">
+  Callback when the visualization type changes.
+</ParamField>
+
+<ParamField path="targetCollection" type="SdkCollectionId">
+  Collection ID where new questions should be saved.
+</ParamField>
+
+<ParamField path="targetDashboardId" type="SdkDashboardId">
+  Dashboard ID to add the question to after saving.
+</ParamField>
+
+## Sub-components reference
+
+### InteractiveQuestion.NavigationBackButton
+Back button to navigate back after drills and internal navigation. Renders `null` if there's nothing to go back to.
+
+### InteractiveQuestion.Filter
+Filter controls for the question.
+
+### InteractiveQuestion.FilterDropdown
+Dropdown menu for filter controls.
+
+### InteractiveQuestion.ResetButton
+Button to reset filters and modifications.
+
+### InteractiveQuestion.Title
+Question title display.
+
+### InteractiveQuestion.Summarize
+Summarization controls.
+
+### InteractiveQuestion.SummarizeDropdown
+Dropdown menu for summarization.
+
+### InteractiveQuestion.Editor
+Query editor (notebook mode).
+
+### InteractiveQuestion.EditorButton
+Button to toggle the query editor.
+
+### InteractiveQuestion.QuestionVisualization
+The main visualization display.
+
+### InteractiveQuestion.VisualizationButton
+Button to toggle visualization settings.
+
+### InteractiveQuestion.SaveQuestionForm
+Form for saving the question.
+
+### InteractiveQuestion.SaveButton
+Button to save the question.
+
+### InteractiveQuestion.ChartTypeSelector
+Selector for changing the chart type.
+
+### InteractiveQuestion.ChartTypeDropdown
+Dropdown menu for chart types.
+
+### InteractiveQuestion.QuestionSettings
+Question settings controls.
+
+### InteractiveQuestion.QuestionSettingsDropdown
+Dropdown menu for question settings.
+
+### InteractiveQuestion.Breakout
+Breakout/group by controls.
+
+### InteractiveQuestion.BreakoutDropdown
+Dropdown menu for breakout options.
+
+### InteractiveQuestion.DownloadWidget
+Download controls.
+
+### InteractiveQuestion.DownloadWidgetDropdown
+Dropdown menu for download options.
+
+### InteractiveQuestion.AlertsButton
+Button to manage question alerts.
+
+### InteractiveQuestion.SqlParametersList
+List of SQL template tag parameters.
+
+## TypeScript types
+
+```typescript
+import type {
+  InteractiveQuestionProps,
+  InteractiveQuestionComponents,
+  MetabaseQuestion,
+  SdkQuestionId,
+  SqlParameterValues,
+} from '@metabase/embedding-sdk-react';
+```
+
+## Related
+
+- [StaticQuestion](/sdk/static-question) - Read-only question component
+- [Event handlers](/sdk/event-handlers) - Working with question events
+- [Custom styling](/sdk/custom-styling) - Styling questions

@@ -1,0 +1,315 @@
+---
+title: CollectionBrowser
+description: Browse and navigate through Metabase collections and their contents
+---
+
+The `CollectionBrowser` component allows users to browse collections and view their questions, dashboards, and models.
+
+## Basic usage
+
+```tsx
+import { CollectionBrowser } from '@metabase/embedding-sdk-react';
+
+function Collections() {
+  return <CollectionBrowser />;
+}
+```
+
+## Browse a specific collection
+
+```tsx
+<CollectionBrowser collectionId={5} />
+```
+
+## Special collection IDs
+
+### Personal collection
+
+```tsx
+<CollectionBrowser collectionId="personal" />
+```
+
+### Root collection
+
+```tsx
+<CollectionBrowser collectionId="root" />
+```
+
+### Tenant collection
+
+```tsx
+<CollectionBrowser collectionId="tenant" />
+```
+
+## With click handler
+
+Handle clicks on collection items:
+
+```tsx
+import { CollectionBrowser } from '@metabase/embedding-sdk-react';
+import { useNavigate } from 'react-router-dom';
+
+function Collections() {
+  const navigate = useNavigate();
+
+  return (
+    <CollectionBrowser
+      collectionId="root"
+      onClick={(item) => {
+        if (item.model === 'dashboard') {
+          navigate(`/dashboard/${item.id}`);
+        } else if (item.model === 'card') {
+          navigate(`/question/${item.id}`);
+        } else if (item.model === 'collection') {
+          // Navigation handled automatically by the component
+          console.log('Navigating to collection:', item.name);
+        }
+      }}
+    />
+  );
+}
+```
+
+## Filter visible entity types
+
+Show only specific types of entities:
+
+```tsx
+<CollectionBrowser
+  collectionId="root"
+  visibleEntityTypes={['dashboard', 'question']}
+/>
+```
+
+## Customize visible columns
+
+```tsx
+<CollectionBrowser
+  collectionId="root"
+  visibleColumns={['type', 'name', 'lastEditedBy', 'lastEditedAt']}
+/>
+```
+
+## Custom page size
+
+```tsx
+<CollectionBrowser
+  collectionId="root"
+  pageSize={50}
+/>
+```
+
+## Custom empty state
+
+```tsx
+const EmptyCollection = () => (
+  <div style={{ textAlign: 'center', padding: '40px' }}>
+    <h3>This collection is empty</h3>
+    <p>Add some questions or dashboards to get started.</p>
+  </div>
+);
+
+<CollectionBrowser
+  collectionId="root"
+  EmptyContentComponent={EmptyCollection}
+/>
+```
+
+## Complete example
+
+```tsx
+import { CollectionBrowser, MetabaseCollectionItem } from '@metabase/embedding-sdk-react';
+import { useState } from 'react';
+
+function CollectionExplorer() {
+  const [selectedItem, setSelectedItem] = useState<MetabaseCollectionItem | null>(null);
+
+  const handleItemClick = (item: MetabaseCollectionItem) => {
+    setSelectedItem(item);
+    console.log('Selected:', item);
+
+    // Navigate based on item type
+    switch (item.model) {
+      case 'dashboard':
+        window.open(`/dashboard/${item.id}`, '_blank');
+        break;
+      case 'card':
+      case 'dataset':
+        window.open(`/question/${item.id}`, '_blank');
+        break;
+      case 'collection':
+        // Navigation within CollectionBrowser is automatic
+        break;
+    }
+  };
+
+  return (
+    <div className="collection-explorer">
+      <div className="explorer-header">
+        <h1>Browse Collections</h1>
+        {selectedItem && (
+          <div className="selected-info">
+            Selected: {selectedItem.name} ({selectedItem.model})
+          </div>
+        )}
+      </div>
+
+      <CollectionBrowser
+        collectionId="root"
+        onClick={handleItemClick}
+        pageSize={25}
+        visibleEntityTypes={['collection', 'dashboard', 'question', 'model']}
+        visibleColumns={[
+          'type',
+          'name',
+          'description',
+          'lastEditedBy',
+          'lastEditedAt',
+        ]}
+        style={{
+          border: '1px solid #e5e7eb',
+          borderRadius: '8px',
+          padding: '16px',
+          minHeight: '600px',
+        }}
+      />
+    </div>
+  );
+}
+```
+
+## Props
+
+<ParamField path="collectionId" type="SdkCollectionId" default="personal">
+  The ID of the collection to browse. Can be:
+  - Numerical ID (e.g., `5`)
+  - `"personal"` for the user's personal collection
+  - `"tenant"` for the user's tenant collection
+  - `"root"` for the root collection
+</ParamField>
+
+<ParamField path="onClick" type="(item: MetabaseCollectionItem) => void">
+  Callback when an item is clicked.
+</ParamField>
+
+<ParamField path="pageSize" type="number" default="25">
+  Number of items to display per page.
+</ParamField>
+
+<ParamField path="visibleEntityTypes" type="('collection' | 'dashboard' | 'question' | 'model')[]">
+  Types of entities to display. If not provided, all types are shown.
+</ParamField>
+
+<ParamField path="visibleColumns" type="CollectionBrowserListColumns[]">
+  Columns to display in the items table.
+  
+  Available columns:
+  - `"type"` - Entity type icon
+  - `"name"` - Item name
+  - `"description"` - Item description
+  - `"lastEditedBy"` - Last editor
+  - `"lastEditedAt"` - Last edit time
+  - `"archive"` - Archive action
+</ParamField>
+
+<ParamField path="EmptyContentComponent" type="React.ComponentType | null">
+  Custom component to display when the collection is empty.
+</ParamField>
+
+<ParamField path="style" type="React.CSSProperties">
+  Custom CSS styles.
+</ParamField>
+
+<ParamField path="className" type="string">
+  Custom CSS class name.
+</ParamField>
+
+## MetabaseCollectionItem type
+
+The `onClick` callback receives a `MetabaseCollectionItem` object:
+
+```typescript
+interface MetabaseCollectionItem {
+  id: number;
+  name: string;
+  description?: string | null;
+  model: 'collection' | 'dashboard' | 'card' | 'dataset';
+  entity_id?: string;
+  // ... other properties
+}
+```
+
+## Navigation behavior
+
+When clicking on a collection item:
+- **Collections**: Navigated automatically within the `CollectionBrowser` component
+- **Dashboards, Questions, Models**: Handled via the `onClick` callback
+
+## Breadcrumb navigation
+
+The `CollectionBrowser` includes breadcrumb navigation to help users track their location and navigate back to parent collections.
+
+## TypeScript types
+
+```typescript
+import type {
+  CollectionBrowserProps,
+  CollectionBrowserListColumns,
+  MetabaseCollectionItem,
+  SdkCollectionId,
+} from '@metabase/embedding-sdk-react';
+```
+
+## Use cases
+
+### Content discovery
+
+Allow users to explore and discover available analytics content:
+
+```tsx
+<CollectionBrowser
+  collectionId="root"
+  visibleEntityTypes={['dashboard', 'question']}
+  onClick={(item) => {
+    // Navigate to the selected item
+  }}
+/>
+```
+
+### Collection management
+
+Provide a view for users to browse and organize content:
+
+```tsx
+<CollectionBrowser
+  collectionId="personal"
+  visibleColumns={['type', 'name', 'lastEditedAt', 'archive']}
+/>
+```
+
+### Model selection
+
+Let users browse and select models for analysis:
+
+```tsx
+<CollectionBrowser
+  collectionId="root"
+  visibleEntityTypes={['model']}
+  onClick={(model) => {
+    setSelectedModel(model);
+  }}
+/>
+```
+
+## Permissions
+
+The `CollectionBrowser` respects Metabase permissions:
+- Users can only see collections they have access to
+- If a user lacks access, an appropriate error message is displayed
+- Hidden collections and items are automatically filtered out
+
+## Related
+
+- [InteractiveDashboard](/sdk/interactive-dashboard) - Embed dashboards
+- [InteractiveQuestion](/sdk/interactive-question) - Embed questions
+- [Custom styling](/sdk/custom-styling) - Style the collection browser

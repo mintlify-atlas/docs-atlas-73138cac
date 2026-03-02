@@ -1,0 +1,434 @@
+---
+title: Building drivers
+description: Learn how to build database drivers for Metabase
+---
+
+Metabase drivers allow you to connect to different databases. Each driver is packaged as a JAR plugin that implements the driver interface. This guide will help you build a driver from scratch.
+
+## Before you start
+
+Before building a new driver:
+
+<Steps>
+  <Step title="Check if a driver already exists">
+    Review the [officially supported databases](https://www.metabase.com/docs/latest/databases/connecting) and [community drivers](/developers/community-drivers) to see if one already exists.
+  </Step>
+  
+  <Step title="Set up your development environment">
+    Follow the [development environment setup guide](/developers/development-environment) to get Metabase running locally.
+  </Step>
+  
+  <Step title="Learn about the driver architecture">
+    Understand the [driver interface](/developers/driver-interface) and how drivers work in Metabase.
+  </Step>
+</Steps>
+
+<Note>
+Having an in-depth understanding of Clojure is less important for JDBC-based drivers, but you should understand [multimethods](https://clojure.org/reference/multimethods).
+</Note>
+
+## Driver basics
+
+A Metabase driver:
+
+- **Provides database information** - Connection properties, capabilities, and features
+- **Introspects database schema** - Discovers tables, columns, and relationships
+- **Compiles MBQL queries** - Converts visual queries to native SQL/queries
+- **Executes queries** - Runs native queries and returns results
+
+## Driver structure
+
+Drivers are organized as modules in `/modules/drivers/` (for built-in drivers) or as standalone projects:
+
+```
+my-driver/
+├── deps.edn                          # Dependencies
+├── resources/
+│   └── metabase-plugin.yaml          # Plugin manifest
+├── src/
+│   └── metabase/
+│       └── driver/
+│           └── mydriver.clj          # Driver implementation
+└── test/
+    └── metabase/
+        ├── driver/
+        │   └── mydriver_test.clj     # Driver tests
+        └── test/
+            └── data/
+                └── mydriver.clj      # Test data setup
+```
+
+### Key files
+
+<Accordion title="deps.edn - Dependencies">
+  Defines your driver's dependencies, including JDBC drivers or database client libraries:
+  
+  ```clojure
+  {:deps {org.postgresql/postgresql {:mvn/version "42.7.0"}}}
+  ```
+</Accordion>
+
+<Accordion title="metabase-plugin.yaml - Plugin manifest">
+  Declares driver metadata, connection properties, and initialization steps:
+  
+  ```yaml
+  info:
+    name: My Database Driver
+    version: 1.0.0
+    description: Connects to My Database
+  
+  driver:
+    name: mydriver
+    display-name: My Database
+    parent: sql-jdbc
+    connection-properties:
+      - host
+      - port
+      - dbname
+      - user
+      - password
+  
+  init:
+    - step: load-namespace
+      namespace: metabase.driver.mydriver
+    - step: register-jdbc-driver
+      class: com.mydatabase.jdbc.Driver
+  ```
+</Accordion>
+
+<Accordion title="mydriver.clj - Driver implementation">
+  Implements driver methods using Clojure multimethods:
+  
+  ```clojure
+  (ns metabase.driver.mydriver
+    (:require [metabase.driver :as driver]
+              [metabase.driver.sql-jdbc.connection :as sql-jdbc.conn]))
+  
+  (driver/register! :mydriver, :parent :sql-jdbc)
+  
+  (defmethod driver/display-name :mydriver [_]
+    "My Database")
+  
+  (defmethod sql-jdbc.conn/connection-details->spec :mydriver
+    [_ {:keys [host port dbname] :as details}]
+    {:classname "com.mydatabase.jdbc.Driver"
+     :subprotocol "mydb"
+     :subname (str "//" host ":" port "/" dbname)})
+  ```
+</Accordion>
+
+## Building a JDBC driver
+
+Most SQL databases can use JDBC, which simplifies driver development.
+
+### Step 1: Create the plugin manifest
+
+Create `resources/metabase-plugin.yaml`:
+
+```yaml
+info:
+  name: Metabase SQLite Driver
+  version: 1.0.0-SNAPSHOT
+  description: Allows Metabase to connect to SQLite databases.
+
+driver:
+  name: sqlite
+  display-name: SQLite
+  parent: sql-jdbc
+  lazy-load: true
+  connection-properties:
+    - name: db
+      display-name: Filename
+      placeholder: /path/to/database.sqlite
+      required: true
+
+init:
+  - step: load-namespace
+    namespace: metabase.driver.sqlite
+  - step: register-jdbc-driver
+    class: org.sqlite.JDBC
+```
+
+### Step 2: Implement the driver
+
+Create `src/metabase/driver/sqlite.clj`:
+
+```clojure
+(ns metabase.driver.sqlite
+  (:require
+   [clojure.string :as str]
+   [metabase.driver :as driver]
+   [metabase.driver.sql-jdbc.connection :as sql-jdbc.conn]
+   [metabase.driver.sql-jdbc.execute :as sql-jdbc.execute]
+   [metabase.driver.sql.query-processor :as sql.qp])
+  (:import
+   [java.sql DatabaseMetaData]))
+
+(driver/register! :sqlite, :parent :sql-jdbc)
+
+(defmethod driver/display-name :sqlite [_]
+  "SQLite")
+
+(defmethod sql-jdbc.conn/connection-details->spec :sqlite
+  [_ {:keys [db]}]
+  {:classname "org.sqlite.JDBC"
+   :subprotocol "sqlite"
+   :subname db})
+
+(defmethod driver/supports? [:sqlite :foreign-keys] [_ _] false)
+
+(defmethod sql.qp/quote-style :sqlite [_] :ansi)
+
+(defmethod sql-jdbc.execute/set-timezone-sql :sqlite [_]
+  nil) ; SQLite doesn't support timezones
+```
+
+### Step 3: Define dependencies
+
+Create `deps.edn`:
+
+```clojure
+{:deps
+ {org.xerial/sqlite-jdbc {:mvn/version "3.45.1.0"}}}
+```
+
+### Step 4: Build the driver
+
+Build your driver JAR:
+
+```bash
+./bin/build-driver.sh sqlite
+```
+
+The JAR will be created in `modules/drivers/sqlite/target/uberjar/sqlite.metabase-driver.jar`.
+
+### Step 5: Install and test
+
+Copy the JAR to your Metabase plugins directory:
+
+```bash
+cp modules/drivers/sqlite/target/uberjar/sqlite.metabase-driver.jar plugins/
+```
+
+Restart Metabase and test the connection.
+
+## Parent drivers
+
+Parent drivers provide common functionality to reduce code duplication:
+
+### `:sql-jdbc` parent
+
+Most SQL databases with JDBC support should use `:sql-jdbc` as parent:
+
+```clojure
+(driver/register! :mydriver, :parent :sql-jdbc)
+```
+
+This provides:
+- Connection management
+- Query execution
+- Transaction handling
+- Basic sync functionality
+
+### `:sql` parent
+
+For SQL databases without JDBC (like BigQuery):
+
+```clojure
+(driver/register! :bigquery, :parent :sql)
+```
+
+You'll need to implement query execution yourself.
+
+### Multiple parents
+
+Drivers can have multiple parents:
+
+```clojure
+(driver/register! :bigquery, :parent #{:sql :google})
+```
+
+## Common driver methods
+
+Here are the most commonly implemented driver methods:
+
+<CodeGroup>
+```clojure Connection
+(defmethod sql-jdbc.conn/connection-details->spec :mydriver
+  [_ {:keys [host port dbname user password]}]
+  {:classname "com.mydb.Driver"
+   :subprotocol "mydb"
+   :subname (str "//" host ":" port "/" dbname)
+   :user user
+   :password password})
+```
+
+```clojure Features
+(defmethod driver/supports? [:mydriver :foreign-keys]
+  [_ _]
+  true)
+
+(defmethod driver/supports? [:mydriver :nested-queries]
+  [_ _]
+  false)
+```
+
+```clojure SQL Generation
+(defmethod sql.qp/quote-style :mydriver [_]
+  :ansi)
+
+(defmethod sql.qp/current-datetime-honeysql-form :mydriver [_]
+  :%now)
+```
+
+```clojure Type Mapping
+(defmethod sql-jdbc.sync/database-type->base-type :mydriver
+  [_ database-type]
+  (case database-type
+    "VARCHAR" :type/Text
+    "INTEGER" :type/Integer
+    "FLOAT"   :type/Float
+    :type/*))  ; Default
+```
+</CodeGroup>
+
+## Driver capabilities
+
+Declare what your database supports:
+
+```clojure
+(defmethod driver/database-supports? [:mydriver :foreign-keys] [_ _ _] true)
+(defmethod driver/database-supports? [:mydriver :nested-queries] [_ _ _] false)
+(defmethod driver/database-supports? [:mydriver :set-timezone] [_ _ _] true)
+(defmethod driver/database-supports? [:mydriver :left-join] [_ _ _] true)
+```
+
+## Connection properties
+
+Define connection properties in your manifest:
+
+```yaml
+connection-properties:
+  # Use built-in properties
+  - host
+  - port
+  - dbname
+  - user
+  - password
+  
+  # Custom properties
+  - name: ssl
+    display-name: Use SSL
+    type: boolean
+    default: false
+  
+  - name: additional-options
+    display-name: Additional Options
+    placeholder: "?option=value"
+    required: false
+```
+
+## Testing your driver
+
+Create driver tests in `test/metabase/driver/mydriver_test.clj`:
+
+```clojure
+(ns metabase.driver.mydriver-test
+  (:require
+   [clojure.test :refer :all]
+   [metabase.driver :as driver]
+   [metabase.test :as mt]))
+
+(deftest connection-test
+  (testing "Can connect to database"
+    (is (driver/can-connect? :mydriver {:host "localhost"
+                                         :port 5432
+                                         :dbname "test"}))))
+```
+
+Define test data setup in `test/metabase/test/data/mydriver.clj`:
+
+```clojure
+(ns metabase.test.data.mydriver
+  (:require
+   [metabase.test.data.interface :as tx]))
+
+(defmethod tx/dbdef->connection-details :mydriver
+  [_ _ {:keys [database-name]}]
+  {:host (tx/db-test-env-var-or-throw :mydriver :host "localhost")
+   :port (tx/db-test-env-var-or-throw :mydriver :port 5432)
+   :dbname database-name
+   :user (tx/db-test-env-var :mydriver :user)
+   :password (tx/db-test-env-var :mydriver :password)})
+```
+
+## Building non-JDBC drivers
+
+For databases without JDBC support (MongoDB, BigQuery, etc.):
+
+1. Use `:sql` as parent (if SQL-like) or no parent
+2. Implement query execution:
+
+```clojure
+(defmethod driver/execute-reducible-query :mydriver
+  [_ query context respond]
+  (let [native-query (compile-query query)
+        results (execute-native-query native-query)]
+    (respond results)))
+```
+
+3. Implement sync methods for schema introspection
+
+## Building the driver JAR
+
+### For modules in the Metabase repo
+
+```bash
+./bin/build-driver.sh mydriver
+```
+
+### For standalone projects
+
+Use the Clojure CLI:
+
+```bash
+clojure -X:build-driver
+```
+
+Or see the [build-drivers README](https://github.com/metabase/metabase/tree/master/bin) for detailed instructions.
+
+## Example drivers
+
+Learn from existing drivers:
+
+- [SQLite driver](https://github.com/metabase/metabase/tree/master/modules/drivers/sqlite) - Simple JDBC driver
+- [PostgreSQL driver](https://github.com/metabase/metabase/tree/master/modules/drivers/postgres) - Full-featured JDBC driver
+- [MongoDB driver](https://github.com/metabase/metabase/tree/master/modules/drivers/mongo) - Non-JDBC driver
+- [Sample driver](https://github.com/metabase/sample-driver) - Minimal example
+- [Sudoku driver](https://github.com/metabase/sudoku-driver) - Fun example
+
+## Publishing your driver
+
+To share your driver with the community:
+
+1. **Create a GitHub repository** with your driver code
+2. **Release JAR files** in GitHub Releases
+3. **Document installation** in your README
+4. **Add to community drivers** by submitting a PR to add your driver to the [community drivers list](/developers/community-drivers)
+
+<Note>
+Community drivers are not supported on Metabase Cloud.
+</Note>
+
+## Driver development announcements
+
+Stay informed about driver-related changes:
+
+- Subscribe to the [Metabase Community Authors mailing list](https://eepurl.com/gQcIO9)
+- Watch the [Driver Interface Changelog](https://github.com/metabase/metabase/blob/master/docs/developers-guide/driver-changelog.md)
+
+## Next steps
+
+- Learn about the [driver interface](/developers/driver-interface) in detail
+- Review [community drivers](/developers/community-drivers) for examples
+- Join the [Discourse community](https://discourse.metabase.com/) to ask questions

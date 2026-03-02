@@ -1,122 +1,207 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Metabase",
+  "theme": "sequoia",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#509EE3",
+    "light": "#9CC4E8",
+    "dark": "#2E5C8A"
   },
-  "favicon": "/favicon.svg",
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/metabase/metabase"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/metabase/metabase"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Getting Started",
             "pages": [
-              "index",
+              "introduction",
               "quickstart",
-              "development"
+              "installation",
+              "cloud-vs-self-hosting"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Questions & Dashboards",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "questions/asking-questions",
+              "questions/query-builder",
+              "questions/sql-editor",
+              "questions/native-queries",
+              "dashboards/creating-dashboards",
+              "dashboards/dashboard-filters",
+              "dashboards/subscriptions",
+              "dashboards/alerts"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Data Modeling",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "data-modeling/models",
+              "data-modeling/metrics",
+              "data-modeling/segments",
+              "data-modeling/metadata"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "Database Connections",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "databases/connecting",
+              "databases/supported-databases",
+              "databases/sync-scan",
+              "databases/users-roles-privileges"
+            ]
+          },
+          {
+            "group": "Embedding",
+            "pages": [
+              "embedding/introduction",
+              "embedding/sdk-introduction",
+              "embedding/sdk-components",
+              "embedding/modular-embedding",
+              "embedding/interactive-embedding",
+              "embedding/public-sharing"
+            ]
+          },
+          {
+            "group": "Administration",
+            "pages": [
+              "administration/settings",
+              "administration/users-and-groups",
+              "administration/permissions",
+              "administration/authentication",
+              "administration/email",
+              "administration/caching"
+            ]
+          },
+          {
+            "group": "Installation & Operations",
+            "pages": [
+              "operations/installing-metabase",
+              "operations/configuring-database",
+              "operations/upgrading",
+              "operations/backing-up",
+              "operations/environment-variables",
+              "operations/running-docker",
+              "operations/running-jar"
+            ]
+          },
+          {
+            "group": "AI Features",
+            "pages": [
+              "ai/metabot",
+              "ai/sql-generation",
+              "ai/agent-api"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Overview",
             "pages": [
-              "api-reference/introduction"
+              "api/overview",
+              "api/authentication",
+              "api/rate-limits"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Core Resources",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api/database",
+              "api/card",
+              "api/dashboard",
+              "api/collection",
+              "api/dataset"
+            ]
+          },
+          {
+            "group": "User Management",
+            "pages": [
+              "api/user",
+              "api/session",
+              "api/permissions"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "api/actions",
+              "api/embedding",
+              "api/public",
+              "api/settings"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "SDK Reference",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "sdk/installation",
+              "sdk/quickstart",
+              "sdk/configuration"
+            ]
+          },
+          {
+            "group": "Components",
+            "pages": [
+              "sdk/metabase-provider",
+              "sdk/interactive-question",
+              "sdk/static-question",
+              "sdk/interactive-dashboard",
+              "sdk/static-dashboard",
+              "sdk/collection-browser"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "sdk/theming",
+              "sdk/custom-styling",
+              "sdk/event-handlers",
+              "sdk/typescript-types"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Developers",
+        "groups": [
+          {
+            "group": "Contributing",
+            "pages": [
+              "developers/contributing",
+              "developers/development-environment",
+              "developers/code-structure",
+              "developers/testing"
+            ]
+          },
+          {
+            "group": "Drivers & Plugins",
+            "pages": [
+              "developers/building-drivers",
+              "developers/community-drivers",
+              "developers/driver-interface"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    ]
   }
 }

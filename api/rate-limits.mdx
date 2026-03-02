@@ -1,0 +1,258 @@
+---
+title: Rate limits
+description: Understanding API rate limits and best practices for making requests to the Metabase API
+---
+
+The Metabase API implements rate limiting to ensure fair usage and maintain system stability. Understanding these limits helps you build reliable integrations.
+
+## Rate limit overview
+
+Rate limits vary based on the type of endpoint and your Metabase instance configuration. Generally:
+
+- **Query endpoints** (`/api/dataset`, `/api/card/*/query`) have stricter limits due to database resource usage
+- **Metadata endpoints** (listing resources) have more generous limits
+- **Write operations** (creating/updating resources) have moderate limits
+
+<Note>
+Rate limits are configurable by instance administrators. Contact your Metabase admin for specific limits on your instance.
+</Note>
+
+## Rate limit headers
+
+API responses include headers that indicate your current rate limit status:
+
+<ResponseField name="X-Rate-Limit-Limit" type="integer">
+  Maximum number of requests allowed in the time window
+</ResponseField>
+
+<ResponseField name="X-Rate-Limit-Remaining" type="integer">
+  Number of requests remaining in the current window
+</ResponseField>
+
+<ResponseField name="X-Rate-Limit-Reset" type="integer">
+  Unix timestamp when the rate limit window resets
+</ResponseField>
+
+### Example response headers
+
+```http
+HTTP/1.1 200 OK
+X-Rate-Limit-Limit: 1000
+X-Rate-Limit-Remaining: 987
+X-Rate-Limit-Reset: 1710504600
+```
+
+## Rate limit errors
+
+When you exceed the rate limit, the API returns a `429 Too Many Requests` status code.
+
+### Error response
+
+```json
+{
+  "message": "Rate limit exceeded. Please try again later.",
+  "error": true,
+  "retry_after": 60
+}
+```
+
+<ResponseField name="retry_after" type="integer">
+  Seconds to wait before retrying the request
+</ResponseField>
+
+## Best practices
+
+### Implement exponential backoff
+
+When you receive a rate limit error, implement exponential backoff to retry requests:
+
+<CodeGroup>
+```javascript JavaScript
+async function makeRequestWithBackoff(url, options, maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    const response = await fetch(url, options);
+    
+    if (response.status === 429) {
+      const retryAfter = response.headers.get('Retry-After') || Math.pow(2, i);
+      await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+      continue;
+    }
+    
+    return response;
+  }
+  
+  throw new Error('Max retries exceeded');
+}
+```
+
+```python Python
+import time
+import requests
+
+def make_request_with_backoff(url, headers, max_retries=3):
+    for i in range(max_retries):
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code == 429:
+            retry_after = int(response.headers.get('Retry-After', 2 ** i))
+            time.sleep(retry_after)
+            continue
+            
+        return response
+    
+    raise Exception('Max retries exceeded')
+```
+</CodeGroup>
+
+### Monitor rate limit headers
+
+Check rate limit headers proactively to avoid hitting limits:
+
+```javascript
+const response = await fetch(url, options);
+const remaining = parseInt(response.headers.get('X-Rate-Limit-Remaining'));
+const limit = parseInt(response.headers.get('X-Rate-Limit-Limit'));
+
+if (remaining < limit * 0.1) {
+  console.warn('Approaching rate limit');
+  // Implement throttling
+}
+```
+
+### Batch requests efficiently
+
+Instead of making multiple individual requests, batch operations when possible:
+
+<Tabs>
+  <Tab title="Inefficient">
+    ```javascript
+    // Making separate requests for each card
+    for (const cardId of cardIds) {
+      const card = await fetch(`/api/card/${cardId}`);
+      // Process card
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Efficient">
+    ```javascript
+    // Fetch multiple cards in a single request
+    const cards = await fetch('/api/card/', {
+      method: 'POST',
+      body: JSON.stringify({ ids: cardIds })
+    });
+    ```
+  </Tab>
+</Tabs>
+
+### Cache responses
+
+Cache API responses that don't change frequently:
+
+```javascript
+const cache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+async function getCachedData(url, options) {
+  const cached = cache.get(url);
+  
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+  
+  const response = await fetch(url, options);
+  const data = await response.json();
+  
+  cache.set(url, { data, timestamp: Date.now() });
+  return data;
+}
+```
+
+### Use webhooks instead of polling
+
+For monitoring changes, use webhooks instead of repeatedly polling endpoints:
+
+<Warning>
+Polling endpoints frequently (e.g., every second) will quickly exhaust your rate limit. Use webhooks or longer intervals when polling is necessary.
+</Warning>
+
+### Optimize query endpoints
+
+Query execution endpoints consume more resources:
+
+<Tip>
+**Query optimization tips:**
+- Use query caching when appropriate
+- Limit result set sizes with filters
+- Execute queries during off-peak hours for large datasets
+- Use the `dataset` endpoints efficiently
+- Consider using saved questions instead of ad-hoc queries
+</Tip>
+
+## Endpoint-specific limits
+
+### Query execution
+
+Query endpoints have stricter limits:
+
+- `POST /api/dataset/` - Execute ad-hoc queries
+- `POST /api/card/{id}/query` - Execute saved question queries  
+- `POST /api/dashboard/{id}/dashcard/{id}/card/{id}/query` - Execute dashboard card queries
+
+<Note>
+Consider using query result caching or downloading results periodically rather than executing the same query repeatedly.
+</Note>
+
+### Public endpoints
+
+Public sharing endpoints have separate rate limits to prevent abuse:
+
+- `GET /api/public/card/{uuid}/query`
+- `GET /api/public/dashboard/{uuid}`
+
+### Metadata endpoints
+
+Metadata browsing typically has more generous limits:
+
+- `GET /api/database/`
+- `GET /api/collection/`
+- `GET /api/card/`
+
+## Monitoring and troubleshooting
+
+### Track your API usage
+
+Implement logging to monitor your API usage patterns:
+
+```javascript
+function logRateLimitStatus(response) {
+  console.log({
+    timestamp: new Date().toISOString(),
+    limit: response.headers.get('X-Rate-Limit-Limit'),
+    remaining: response.headers.get('X-Rate-Limit-Remaining'),
+    reset: new Date(parseInt(response.headers.get('X-Rate-Limit-Reset')) * 1000)
+  });
+}
+```
+
+### Identify rate limit bottlenecks
+
+If you're consistently hitting rate limits:
+
+1. Review which endpoints you're calling most frequently
+2. Identify opportunities for caching
+3. Batch requests where possible
+4. Optimize query complexity
+5. Consider upgrading your instance resources
+
+### Contact your administrator
+
+For higher rate limits:
+
+- Discuss your use case with your Metabase administrator
+- Request rate limit adjustments for specific endpoints
+- Consider upgrading to a plan with higher limits (for Cloud customers)
+
+<Note>
+Metabase Cloud plans may have different rate limits than self-hosted instances. Check your plan details or contact support for specific information.
+</Note>

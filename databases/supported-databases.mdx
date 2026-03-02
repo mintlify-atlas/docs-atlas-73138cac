@@ -1,0 +1,410 @@
+---
+title: Supported databases
+description: Complete list of officially supported databases in Metabase with connection details
+---
+
+# Supported databases
+
+Metabase officially supports 18 databases with drivers maintained by the Metabase team. Customers on [Pro and Enterprise plans](https://www.metabase.com/pricing/) receive official support for these databases.
+
+## Version support policy
+
+For each database, Metabase supports **the oldest supported version through the latest stable version**. This ensures compatibility while providing access to the latest features.
+
+<Note>
+  Always check your specific database documentation for details on supported versions and any version-specific requirements.
+</Note>
+
+## Cloud data warehouses
+
+Modern cloud-based data warehouses designed for analytics at scale.
+
+<Tabs>
+  <Tab title="BigQuery">
+    ### Google BigQuery
+    
+    Google Cloud Platform's serverless, highly scalable data warehouse.
+    
+    **Key features:**
+    - Serverless architecture
+    - Automatic scaling
+    - Integration with Google Cloud services
+    - Support for Google Drive data sources
+    
+    **Authentication:**
+    - Service account JSON file
+    
+    **Learn more:** [BigQuery connection guide](./connections/bigquery)
+  </Tab>
+  
+  <Tab title="Snowflake">
+    ### Snowflake
+    
+    Cloud-native data warehouse with separated storage and compute.
+    
+    **Key features:**
+    - Multi-cloud support (AWS, Azure, GCP)
+    - Zero-copy cloning
+    - Time travel queries
+    - Automatic scaling
+    
+    **Authentication:**
+    - Username and password
+    - Key pair authentication
+    
+    **Learn more:** [Snowflake connection guide](./connections/snowflake)
+  </Tab>
+  
+  <Tab title="Redshift">
+    ### Amazon Redshift
+    
+    AWS cloud data warehouse optimized for complex queries on large datasets.
+    
+    **Key features:**
+    - PostgreSQL-compatible
+    - Columnar storage
+    - Massively parallel processing
+    - AWS ecosystem integration
+    
+    **Authentication:**
+    - Username and password
+    - IAM authentication (Pro/Enterprise)
+    
+    **Learn more:** [Redshift connection guide](./connections/redshift)
+  </Tab>
+  
+  <Tab title="Databricks">
+    ### Databricks
+    
+    Unified analytics platform built on Apache Spark.
+    
+    **Key features:**
+    - Delta Lake support
+    - Machine learning integration
+    - Real-time analytics
+    - Lakehouse architecture
+    
+    **Authentication:**
+    - Personal access token
+    
+    **Learn more:** [Databricks connection guide](./connections/databricks)
+  </Tab>
+</Tabs>
+
+## Relational databases
+
+Traditional SQL databases for transactional and analytical workloads.
+
+<Tabs>
+  <Tab title="PostgreSQL">
+    ### PostgreSQL
+    
+    Advanced open-source relational database with robust features.
+    
+    **Key features:**
+    - ACID compliance
+    - JSON support with unfolding
+    - Full-text search
+    - Extensible architecture
+    - Supabase compatibility
+    
+    **Supported versions:** See [PostgreSQL versioning policy](https://www.postgresql.org/support/versioning/)
+    
+    **Learn more:** [PostgreSQL connection guide](./connections/postgresql)
+  </Tab>
+  
+  <Tab title="MySQL">
+    ### MySQL
+    
+    Popular open-source relational database.
+    
+    **Key features:**
+    - High performance
+    - Replication support
+    - JSON support with unfolding
+    - Wide ecosystem
+    
+    **Supported versions:** See [MySQL end-of-life dates](https://endoflife.software/applications/databases/mysql)
+    
+    **Special notes:**
+    - MySQL 8+ requires `mysql_native_password` authentication
+    - Uses MariaDB connector
+    
+    **Learn more:** [MySQL connection guide](./connections/mysql)
+  </Tab>
+  
+  <Tab title="MariaDB">
+    ### MariaDB
+    
+    MySQL-compatible relational database with enhanced features.
+    
+    **Key features:**
+    - MySQL drop-in replacement
+    - Enhanced performance
+    - Additional storage engines
+    - Active development
+    
+    **Learn more:** [MariaDB connection guide](./connections/mariadb)
+  </Tab>
+  
+  <Tab title="SQL Server">
+    ### Microsoft SQL Server
+    
+    Microsoft's enterprise relational database.
+    
+    **Key features:**
+    - Windows and Linux support
+    - Integration with Microsoft ecosystem
+    - Advanced security features
+    - In-memory OLTP
+    
+    **Learn more:** [SQL Server connection guide](./connections/sql-server)
+  </Tab>
+  
+  <Tab title="Oracle">
+    ### Oracle Database
+    
+    Enterprise-grade relational database with advanced features.
+    
+    **Key features:**
+    - High availability
+    - Advanced security
+    - Partitioning and compression
+    - Enterprise scalability
+    
+    **Learn more:** [Oracle connection guide](./connections/oracle)
+  </Tab>
+  
+  <Tab title="SQLite">
+    ### SQLite
+    
+    Lightweight embedded relational database.
+    
+    **Key features:**
+    - Zero configuration
+    - Single-file database
+    - Serverless
+    - Perfect for development and small applications
+    
+    **Learn more:** [SQLite connection guide](./connections/sqlite)
+  </Tab>
+</Tabs>
+
+## Analytical and columnar databases
+
+Databases optimized for analytical queries and large-scale data processing.
+
+<Tabs>
+  <Tab title="ClickHouse">
+    ### ClickHouse
+    
+    High-performance columnar database for real-time analytics.
+    
+    **Key features:**
+    - Extremely fast for analytical queries
+    - Columnar storage
+    - Real-time query processing
+    - Horizontal scalability
+    
+    **Learn more:** [ClickHouse connection guide](./connections/clickhouse)
+  </Tab>
+  
+  <Tab title="Vertica">
+    ### Vertica
+    
+    High-performance analytics platform with columnar storage.
+    
+    **Key features:**
+    - Massively parallel processing
+    - Advanced compression
+    - Machine learning capabilities
+    - Hybrid cloud support
+    
+    **Learn more:** [Vertica connection guide](./connections/vertica)
+  </Tab>
+</Tabs>
+
+## Distributed query engines
+
+SQL query engines that can query data across multiple sources.
+
+<Tabs>
+  <Tab title="Athena">
+    ### Amazon Athena
+    
+    Serverless query service for data in Amazon S3.
+    
+    **Key features:**
+    - Query S3 data directly
+    - No infrastructure to manage
+    - Pay per query
+    - Standard SQL support
+    
+    **Learn more:** [Athena connection guide](./connections/athena)
+  </Tab>
+  
+  <Tab title="Presto">
+    ### Presto
+    
+    Distributed SQL query engine for big data.
+    
+    **Key features:**
+    - Query data where it lives
+    - Connect to multiple data sources
+    - Interactive query speeds
+    - ANSI SQL support
+    
+    **Learn more:** [Presto connection guide](./connections/presto)
+  </Tab>
+  
+  <Tab title="Starburst">
+    ### Starburst
+    
+    Enterprise distribution of Trino (formerly Presto SQL).
+    
+    **Key features:**
+    - Query federation across sources
+    - Enhanced security
+    - Performance optimizations
+    - Enterprise support
+    
+    **Learn more:** [Starburst connection guide](./connections/starburst)
+  </Tab>
+  
+  <Tab title="SparkSQL">
+    ### SparkSQL
+    
+    SQL interface for Apache Spark.
+    
+    **Key features:**
+    - Process large datasets
+    - In-memory computing
+    - Multiple language support
+    - Unified analytics engine
+    
+    **Learn more:** [SparkSQL connection guide](./connections/sparksql)
+  </Tab>
+</Tabs>
+
+## Specialized databases
+
+Databases designed for specific use cases.
+
+<Tabs>
+  <Tab title="MongoDB">
+    ### MongoDB
+    
+    Document-oriented NoSQL database.
+    
+    **Key features:**
+    - Flexible document schema
+    - Horizontal scaling
+    - Rich query language
+    - Aggregation framework
+    
+    **Learn more:** [MongoDB connection guide](./connections/mongodb)
+  </Tab>
+  
+  <Tab title="Druid">
+    ### Apache Druid
+    
+    Real-time analytics database for event-driven data.
+    
+    **Key features:**
+    - Sub-second query latency
+    - Real-time ingestion
+    - Column-oriented storage
+    - Approximate algorithms
+    
+    **Learn more:** [Druid connection guide](./connections/druid)
+  </Tab>
+</Tabs>
+
+## Connection requirements
+
+### Common requirements
+
+All database connections in Metabase require:
+
+<CardGroup cols={2}>
+  <Card title="Network access" icon="network-wired">
+    Metabase must be able to reach your database server
+  </Card>
+  
+  <Card title="Database user" icon="user">
+    A dedicated user account with appropriate privileges
+  </Card>
+  
+  <Card title="Connection details" icon="link">
+    Host, port, database name, and credentials
+  </Card>
+  
+  <Card title="Firewall rules" icon="shield">
+    Allow traffic from Metabase to your database
+  </Card>
+</CardGroup>
+
+### Security options
+
+Metabase supports various security methods:
+
+- **SSL/TLS encryption**: Secure data in transit
+- **SSH tunneling**: Connect through a bastion host
+- **Authentication providers**: Azure Managed Identity, OAuth, IAM (Pro/Enterprise)
+- **Certificate authentication**: Client certificates for mutual TLS
+
+<Note>
+  Some security features are only available on Pro and Enterprise plans. See the [pricing page](https://www.metabase.com/pricing/) for details.
+</Note>
+
+## Community drivers
+
+Looking for a database not listed here? The Metabase community has created drivers for additional databases:
+
+<Card title="Community drivers" icon="users" href="../developers-guide/community-drivers">
+  Explore community-maintained database drivers
+</Card>
+
+<Warning>
+  Community drivers are not officially supported by Metabase. Use them at your own discretion and reach out to the driver maintainers for support.
+</Warning>
+
+## Cloud-hosted databases
+
+If your database is hosted on a cloud provider, you may need additional configuration:
+
+<CardGroup cols={3}>
+  <Card title="AWS RDS" icon="aws" href="./connections/aws-rds">
+    Amazon's managed database service
+  </Card>
+  
+  <Card title="Google Cloud SQL" icon="google">
+    Connect using standard database drivers
+  </Card>
+  
+  <Card title="Azure Database" icon="microsoft">
+    Use Azure Managed Identity (Pro/Enterprise)
+  </Card>
+</CardGroup>
+
+## Getting started
+
+Ready to connect your database?
+
+<CardGroup cols={2}>
+  <Card title="Add a database" icon="plus" href="./connecting">
+    Step-by-step guide to adding your first database
+  </Card>
+  
+  <Card title="Database privileges" icon="user-shield" href="./users-roles-privileges">
+    Set up proper user permissions
+  </Card>
+  
+  <Card title="Sync and scan" icon="sync" href="./sync-scan">
+    Understand how Metabase stays in sync
+  </Card>
+  
+  <Card title="Troubleshooting" icon="wrench" href="../troubleshooting-guide/db-connection">
+    Fix common connection issues
+  </Card>
+</CardGroup>

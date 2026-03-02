@@ -1,0 +1,239 @@
+---
+title: SQL generation
+description: Bring your own API key to generate SQL from natural language in your self-hosted Metabase.
+---
+
+<Info>
+One-shot SQL generation with your own API key is only available on self-hosted Metabases. For Metabase Cloud, check out [Metabot](/ai/metabot).
+</Info>
+
+Bring your own API key to generate SQL from natural language in the native editor. This feature allows self-hosted Metabase users to leverage AI-powered SQL generation without requiring a Metabase Cloud subscription.
+
+## Setting up SQL generation
+
+To enable SQL generation on a self-hosted Metabase:
+
+<Steps>
+  <Step title="Navigate to AI settings">
+    Go to **Admin settings > AI**
+  </Step>
+  
+  <Step title="Add your Anthropic API key">
+    Enter your **Anthropic API key** in the provided field
+    
+    <Note>
+    You'll need an API key from [Anthropic](https://www.anthropic.com/learn/build-with-claude). Currently, only Anthropic is supported.
+    </Note>
+  </Step>
+  
+  <Step title="Select your AI model">
+    Choose the AI model you'd like to use for SQL generation
+    
+    <Info>
+    Opus models (like claude-opus-4-5) typically give the best results for SQL generation.
+    </Info>
+  </Step>
+</Steps>
+
+Once you've entered the API key, anyone in your Metabase can use SQL generation in the native editor.
+
+## Generate SQL from natural language
+
+To generate SQL from a natural language prompt:
+
+<Steps>
+  <Step title="Open the native editor">
+    Navigate to the SQL editor in Metabase
+  </Step>
+  
+  <Step title="Trigger SQL generation">
+    Press **Cmd+Shift+I** (Mac) or **Ctrl+Shift+I** (Windows)
+  </Step>
+  
+  <Step title="Select tables">
+    Enter one or more tables that your query will reference
+    
+    <Note>
+    You must select at least one table for both new queries and edits.
+    </Note>
+  </Step>
+  
+  <Step title="Describe your query">
+    Type a prompt describing the query you want to write
+  </Step>
+  
+  <Step title="Generate and review">
+    Click **Generate** to create the SQL, then review the generated code before running it
+  </Step>
+</Steps>
+
+## Edit existing SQL
+
+You can also edit existing SQL queries using AI:
+
+1. Place your cursor in the query
+2. Trigger the prompt with **Cmd+Shift+I** (Mac) or **Ctrl+Shift+I** (Windows)
+3. Describe the change you want to make (like "add a filter for orders from this year")
+4. Review the suggested edits and accept or reject them
+
+<Note>
+Like with all generative AI, always double-check the output before running queries.
+</Note>
+
+## How it works
+
+### Context independence
+
+Each prompt is independent — the AI doesn't retain context from previous generations. This means:
+
+- Every generation starts fresh
+- You need to provide all context in each prompt
+- Previous prompts won't influence new ones
+
+### Schema context
+
+When you generate SQL, Metabase provides the AI with:
+
+- **Database schema** - Table and column structure from your selected tables
+- **Semantic types** - Field meanings and data types
+- **Relationships** - Foreign key relationships between tables
+- **Metadata** - Descriptions and display names you've added
+
+### Dialect-specific generation
+
+The SQL generator adapts to your database dialect automatically:
+
+<CodeGroup>
+
+```sql PostgreSQL
+-- Generated for PostgreSQL
+SELECT 
+  DATE_TRUNC('month', created_at) AS month,
+  COUNT(*) AS order_count
+FROM orders
+WHERE created_at >= CURRENT_DATE - INTERVAL '1 year'
+GROUP BY 1
+ORDER BY 1 DESC;
+```
+
+```sql MySQL
+-- Generated for MySQL
+SELECT 
+  DATE_FORMAT(created_at, '%Y-%m-01') AS month,
+  COUNT(*) AS order_count
+FROM orders
+WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)
+GROUP BY 1
+ORDER BY 1 DESC;
+```
+
+```sql BigQuery
+-- Generated for BigQuery
+SELECT 
+  DATE_TRUNC(created_at, MONTH) AS month,
+  COUNT(*) AS order_count
+FROM orders
+WHERE created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 YEAR)
+GROUP BY 1
+ORDER BY 1 DESC;
+```
+
+</CodeGroup>
+
+## Configuration options
+
+Admins can configure several settings for SQL generation:
+
+### API settings
+
+- **Anthropic API key** - Your API key from Anthropic (required)
+- **Model selection** - Choose which Claude model to use (default: claude-opus-4-5)
+- **Max tokens** - Maximum tokens for LLM responses (default: 4096)
+- **Request timeout** - Socket timeout in milliseconds (default: 60000ms)
+- **Connection timeout** - Connection timeout in milliseconds (default: 5000ms)
+
+### Rate limiting
+
+To prevent abuse and control costs:
+
+- **Per user limit** - Maximum requests per user per minute (default: 20)
+- **Per IP limit** - Maximum requests per IP address per minute (default: 100)
+
+<Info>
+These rate limits help manage API costs and prevent excessive usage. Adjust them based on your team's needs and API budget.
+</Info>
+
+## Best practices
+
+### Improve generation quality
+
+<Steps>
+  <Step title="Add table and field descriptions">
+    Provide context about what your tables and fields represent. The AI uses these descriptions to better understand your data model.
+  </Step>
+  
+  <Step title="Set correct semantic types">
+    Ensure fields have accurate semantic types (e.g., Creation Date, Email, Price). This helps the AI generate appropriate SQL operations.
+  </Step>
+  
+  <Step title="Be specific in prompts">
+    Instead of "show me sales", try "show me total sales by month for the last year, sorted by month descending".
+  </Step>
+  
+  <Step title="Mention specific tables">
+    Reference table names in your prompt to ensure the AI uses the correct tables: "Using the orders and customers tables, show me..."
+  </Step>
+</Steps>
+
+### Security considerations
+
+- API keys are encrypted when stored in Metabase
+- SQL generation respects user permissions - users can only generate queries for tables they have access to
+- Generated SQL is not automatically executed, giving users a chance to review before running
+- Rate limits prevent excessive API usage
+
+## Differences from Metabot
+
+SQL generation on self-hosted differs from Metabot in several ways:
+
+| Feature | Self-hosted SQL Generation | Metabot (Cloud) |
+|---------|---------------------------|------------------|
+| **Availability** | Self-hosted only | Cloud only |
+| **Authentication** | Your own Anthropic API key | Included in add-on |
+| **Context** | One-shot (no conversation history) | Maintains conversation context |
+| **Capabilities** | SQL generation only | SQL, query builder, analysis, fixing errors |
+| **Chat interface** | Inline editing only | Full chat sidebar |
+| **Model selection** | Choose your Claude model | Managed by Metabase |
+| **Cost** | Pay Anthropic directly | Included in Metabot pricing |
+
+## Troubleshooting
+
+### "LLM is not configured" error
+
+Make sure you've added a valid Anthropic API key in **Admin settings > AI**. The key must start with `sk-ant-`.
+
+### "No tables found" error
+
+You must select at least one table before generating SQL. Either:
+- Use @mentions to reference tables: `@orders @customers`
+- Provide source SQL that references tables
+- Explicitly select tables in the interface
+
+### "Failed to parse SQL" error
+
+If Metabase cannot parse your existing SQL to extract table references, use @mentions to provide table context instead.
+
+### Poor quality results
+
+Improve results by:
+- Adding descriptions to tables and fields
+- Setting correct semantic types
+- Being more specific in your prompts
+- Using Opus models instead of Sonnet
+- Mentioning specific table names in prompts
+
+## Further reading
+
+- [The native/SQL editor](https://www.metabase.com/docs/latest/questions/native-editor/writing-sql)
+- [Metabot](/ai/metabot)
+- [Metadata editing](https://www.metabase.com/docs/latest/data-modeling/metadata-editing)

@@ -1,0 +1,457 @@
+---
+title: 'Creating dashboards'
+description: 'Learn how to create, organize, and customize dashboards in Metabase to monitor your key metrics and share insights with your team.'
+---
+
+Dashboards are collections of questions (charts and tables) arranged on a page. They provide at-a-glance views of your key metrics and allow you to share insights with your team.
+
+## What is a dashboard?
+
+A dashboard groups related questions into a visual report. You can think of dashboards as:
+
+- **Monitoring tools**: Track KPIs and important metrics
+- **Reports**: Share regular updates with stakeholders
+- **Exploratory views**: Provide interactive ways to investigate data
+- **Decision-making aids**: Surface insights for data-driven decisions
+
+<Info>
+Dashboards can be shared via email, Slack, public links, or embedded in your applications. You can set up automatic delivery schedules to keep everyone informed.
+</Info>
+
+## Creating your first dashboard
+
+<Steps>
+  <Step title="Create a new dashboard">
+    Click **+ New** in the main navigation and select **Dashboard**.
+  </Step>
+  
+  <Step title="Name and describe your dashboard">
+    - **Name**: Choose a clear, descriptive name like "Sales Performance" or "Customer Metrics"
+    - **Description**: Add context about what the dashboard shows and who should use it
+    - **Collection**: Select where to save the dashboard
+  </Step>
+  
+  <Step title="Click Create">
+    Metabase takes you to your new, empty dashboard in edit mode.
+  </Step>
+  
+  <Step title="Add questions">
+    Click the **+** icon to add questions from collections or create new ones.
+  </Step>
+</Steps>
+
+## Adding content to dashboards
+
+Dashboards can contain several types of cards:
+
+<Tabs>
+  <Tab title="Questions">
+    Add saved questions or create new ones:
+    
+    **From existing questions:**
+    1. Click the **+** icon in edit mode
+    2. Select **Add a saved question**
+    3. Browse or search for the question
+    4. Click to add it to your dashboard
+    
+    **Create new questions:**
+    1. Click the **+** icon
+    2. Select **Add a question** or **Add a SQL query**
+    3. Build your question
+    4. It will be automatically added to the dashboard
+  </Tab>
+  
+  <Tab title="Text and headings">
+    Add context and structure with text cards:
+    
+    1. Click the **T** icon in edit mode
+    2. Choose **Heading** or **Text**
+    3. Write your content
+    
+    **Headings** span the full width and are great for section titles.
+    
+    **Text cards** support Markdown for:
+    - Formatting (bold, italic, lists)
+    - Links to other dashboards or external resources
+    - Images and GIFs
+    - Code snippets
+    - Tables
+  </Tab>
+  
+  <Tab title="Link cards">
+    Create navigation to related dashboards or resources:
+    
+    1. Click the **link** icon in edit mode
+    2. Select **Link**
+    3. Search for internal Metabase items or paste an external URL
+    
+    Link cards help create dashboard navigation flows and guide users to related content.
+  </Tab>
+  
+  <Tab title="Iframes">
+    Embed external content like videos, slides, or other web pages:
+    
+    1. Click the **link** icon in edit mode
+    2. Select **Iframe**
+    3. Paste the iframe embed code
+    
+    Useful for:
+    - Tutorial videos
+    - Google Sheets for data entry
+    - External charts from other tools
+    - Documentation pages
+  </Tab>
+</Tabs>
+
+<Warning>
+Questions saved directly to dashboards can only be used in that specific dashboard. To reuse questions across multiple dashboards, save them to a collection instead.
+</Warning>
+
+## Arranging dashboard cards
+
+Enter edit mode (click the **pencil** icon) to arrange your dashboard:
+
+<CardGroup cols={2}>
+  <Card title="Move cards" icon="arrows-up-down-left-right">
+    Click and drag cards to reposition them. Other cards automatically adjust to make room.
+  </Card>
+  
+  <Card title="Resize cards" icon="up-right-and-down-left-from-center">
+    Drag the handle in the bottom-right corner to change card size. Nearby cards shift accordingly.
+  </Card>
+  
+  <Card title="Duplicate cards" icon="copy">
+    Hover over a card and click the duplicate icon to create a copy.
+  </Card>
+  
+  <Card title="Move between tabs" icon="folder-tree">
+    Hover over a card, click the move icon, and select the destination tab.
+  </Card>
+  
+  <Card title="Replace cards" icon="arrows-rotate">
+    Hover over a card and click replace to swap the question with another.
+  </Card>
+  
+  <Card title="Remove cards" icon="xmark">
+    Hover over a card and click the X to remove it from the dashboard.
+  </Card>
+</CardGroup>
+
+Cards snap to a grid to keep your dashboard organized. Metabase automatically adjusts visualizations to look great at any size.
+
+## Using dashboard sections
+
+Dashboard sections are pre-designed templates that speed up dashboard creation:
+
+<Tabs>
+  <Tab title="KPI Grid">
+    Perfect for displaying multiple metrics in a clean grid layout. Great for executive dashboards showing key performance indicators.
+    
+    ![KPI Grid layout](https://metabase.com/images/docs/kpi-grid.png)
+  </Tab>
+  
+  <Tab title="Large chart with KPIs">
+    Features a prominent chart on the left with supporting KPIs on the right. Ideal when you have one primary metric to highlight.
+    
+    ![Large chart with KPIs](https://metabase.com/images/docs/large-chart-kpis.png)
+  </Tab>
+  
+  <Tab title="KPIs with chart below">
+    Shows KPIs at the top with a detailed chart underneath. Works well for drill-down dashboards.
+    
+    ![KPIs with chart below](https://metabase.com/images/docs/kpis-chart-below.png)
+  </Tab>
+</Tabs>
+
+To add a section:
+1. Enter edit mode
+2. Click **Add section**
+3. Choose your layout
+4. Select questions for each card in the section
+
+<Note>
+Sections are just starting points. Once added, you can rearrange, resize, or modify cards as needed.
+</Note>
+
+## Dashboard tabs
+
+Organize related content across multiple tabs:
+
+### Creating and managing tabs
+
+<Steps>
+  <Step title="Add a new tab">
+    Click the **+** next to existing tabs while in edit mode.
+  </Step>
+  
+  <Step title="Name your tab">
+    Give it a clear name that describes the content, like "Overview," "Details," or "Regional Breakdown."
+  </Step>
+  
+  <Step title="Move cards between tabs">
+    Hover over a card, click the move icon, and select the destination tab.
+  </Step>
+  
+  <Step title="Duplicate a tab">
+    Click the down arrow next to a tab name to duplicate it along with all its cards.
+  </Step>
+</Steps>
+
+<Tip>
+Use tabs to organize dashboards by:
+- Detail level (overview → details)
+- Time period (monthly → weekly → daily)
+- Department or team
+- Question type (metrics → trends → details)
+</Tip>
+
+## Dashboard width settings
+
+Control how your dashboard uses screen space:
+
+<Tabs>
+  <Tab title="Fixed width">
+    **Default setting**
+    
+    Restricts the layout to a fixed width in the center of the screen. This maintains consistent appearance across different screen sizes.
+    
+    Best for:
+    - Dashboards viewed on varying screen sizes
+    - Presentations on large monitors
+    - Consistent, predictable layouts
+  </Tab>
+  
+  <Tab title="Full width">
+    Expands the dashboard to use the entire screen width.
+    
+    Best for:
+    - Maximizing visible data on wide monitors
+    - Dashboards with many cards
+    - Dedicated dashboard displays
+  </Tab>
+</Tabs>
+
+Change the width setting from the three-dot menu (**...**) in the top right of the dashboard.
+
+## Customizing card visualization settings
+
+You can modify how questions appear on dashboards without changing the original question:
+
+<Steps>
+  <Step title="Enter edit mode">
+    Click the **pencil** icon to edit the dashboard.
+  </Step>
+  
+  <Step title="Open visualization settings">
+    Hover over a card and click the **palette** icon or **pencil** icon.
+  </Step>
+  
+  <Step title="Adjust settings">
+    Modify:
+    - Chart colors and styling
+    - Axis labels and ranges
+    - Goal lines
+    - Data labels
+    - Legend position
+  </Step>
+  
+  <Step title="Save changes">
+    Click **Done** on the card, then **Save** on the dashboard.
+  </Step>
+</Steps>
+
+<Info>
+Changes to visualization settings on a dashboard card only affect that specific card, not the original question. This lets you customize the same question differently across multiple dashboards.
+</Info>
+
+### Hiding empty cards
+
+Hide cards that don't return results:
+
+1. Open visualization settings for the card
+2. Find **Hide this card if there are no results**
+3. Toggle it on
+
+The query still runs in the background. If it returns results, the card appears. If not, it stays hidden and other cards adjust to fill the space.
+
+### Resetting visualization settings
+
+To revert a card to the original question's settings:
+
+1. Enter dashboard edit mode
+2. Click the palette icon on the card
+3. Click **Reset to defaults** (bottom right)
+4. Save the dashboard
+
+## Adding text with variables
+
+Text cards can include dynamic content that updates based on dashboard filters:
+
+```markdown
+# {{region}} sales performance
+
+Showing results [[for {{time_period}}]]
+```
+
+When you connect these variables to dashboard filters:
+- `{{region}}` displays the selected region
+- Text in double brackets `[[ ]]` only appears if the filter has a value
+
+This creates dynamic headings and descriptions that reflect the current filter state.
+
+## Duplicating dashboards
+
+Create copies of existing dashboards:
+
+<Steps>
+  <Step title="Open the dashboard">
+    Navigate to the dashboard you want to duplicate.
+  </Step>
+  
+  <Step title="Access the menu">
+    Click the **...** menu in the top right.
+  </Step>
+  
+  <Step title="Select Duplicate">
+    Choose **Duplicate** from the menu.
+  </Step>
+  
+  <Step title="Configure duplication">
+    - Choose the destination collection
+    - Decide whether to duplicate questions or reference originals
+    - Set the new dashboard name
+  </Step>
+</Steps>
+
+<Warning>
+Duplication copies the dashboard structure and cards but NOT:
+- Dashboard subscriptions
+- Public links or embedding settings
+- Actions
+- Sharing configurations
+</Warning>
+
+## Fullscreen mode and auto-refresh
+
+### Fullscreen dashboards
+
+Perfect for TV displays or monitoring screens:
+
+1. Click the **fullscreen** icon (arrows pointing outward) in the top right
+2. The dashboard fills the entire screen
+3. Press **Esc** to exit fullscreen
+
+### Auto-refresh
+
+Keep dashboards current with automatic refreshing:
+
+1. Click the **clock** icon in the top right
+2. Choose refresh interval:
+   - 1 minute
+   - 5 minutes
+   - 10 minutes
+   - 15 minutes
+   - 30 minutes
+   - 60 minutes
+
+<Tip>
+Combine fullscreen mode and auto-refresh for always-current monitoring dashboards on dedicated displays.
+</Tip>
+
+<Warning>
+Auto-refresh re-runs all queries on the dashboard at the selected interval. Consider:
+- Number of cards on the dashboard
+- Query complexity and execution time
+- Database load and costs
+- Freshness requirements
+</Warning>
+
+## Configuring dashboards via URL
+
+Customize dashboard behavior by adding parameters to the URL:
+
+```
+https://your-metabase.com/dashboard/123#fullscreen&night&refresh=60
+```
+
+Available parameters:
+- `#fullscreen`: Enable fullscreen mode
+- `&night`: Enable night mode (requires fullscreen)
+- `&refresh=60`: Auto-refresh every 60 seconds
+
+<Info>
+This is useful for scripted displays, kiosk modes, or bookmarkable dashboard configurations.
+</Info>
+
+## Dashboard version history
+
+Metabase automatically tracks dashboard changes:
+
+- **Last 15 versions** are saved automatically
+- **View changes**: See what was added, removed, or modified
+- **Revert**: Restore previous versions if needed
+- **Track authors**: See who made each change and when
+
+Access version history from the info panel (click the **i** icon in the top right).
+
+## Best practices for dashboard design
+
+<CardGroup cols={2}>
+  <Card title="Start with key metrics" icon="star">
+    Place the most important information at the top. People scan top-to-bottom, left-to-right.
+  </Card>
+  
+  <Card title="Keep it focused" icon="bullseye">
+    Each dashboard should tell one story. If you exceed 10 cards, consider splitting into multiple dashboards.
+  </Card>
+  
+  <Card title="Add context" icon="file-lines">
+    Use text cards to explain what metrics mean, what actions to take, or why certain trends matter.
+  </Card>
+  
+  <Card title="Use consistent sizing" icon="table-cells">
+    Similar metrics should have similar card sizes. This creates visual rhythm and makes scanning easier.
+  </Card>
+  
+  <Card title="Group related content" icon="object-group">
+    Use headings and sections to organize cards by topic, department, or metric category.
+  </Card>
+  
+  <Card title="Add filters" icon="filter">
+    Make dashboards interactive with filters. One flexible dashboard beats many static variations.
+  </Card>
+  
+  <Card title="Test on different screens" icon="display">
+    View your dashboard on laptops, desktops, and tablets to ensure it works everywhere.
+  </Card>
+  
+  <Card title="Optimize performance" icon="gauge">
+    Use dashboard caching, limit the number of cards, and optimize underlying queries for faster load times.
+  </Card>
+</CardGroup>
+
+## Dashboard permissions
+
+<Info>
+Your ability to create and edit dashboards depends on your permissions:
+- **View access**: See the dashboard and its cards
+- **Curate access**: Edit, move, and delete dashboards in a collection
+</Info>
+
+To create a dashboard in a collection, you need curate access to that collection. To add questions to a dashboard, you need access to those questions.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Dashboard filters" icon="filter" href="/dashboards/dashboard-filters">
+    Make your dashboards interactive with filters that update multiple cards
+  </Card>
+  
+  <Card title="Subscriptions" icon="paper-plane" href="/dashboards/subscriptions">
+    Send dashboard results via email or Slack on a schedule
+  </Card>
+  
+  <Card title="Alerts" icon="bell" href="/dashboards/alerts">
+    Get notified when your metrics reach important thresholds
+  </Card>
+</CardGroup>

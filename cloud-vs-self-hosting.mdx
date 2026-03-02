@@ -1,0 +1,532 @@
+---
+title: Cloud vs self-hosting
+description: Compare Metabase Cloud and self-hosting to choose the right deployment option for your organization.
+keywords: ['cloud', 'self-hosting', 'deployment', 'comparison', 'infrastructure']
+---
+
+# Cloud vs self-hosting
+
+Choosing between Metabase Cloud and self-hosting depends on your organization's needs, resources, and constraints.
+
+## Quick comparison
+
+<Info>
+Both deployment options support all Metabase features. The difference is in who manages the infrastructure.
+</Info>
+
+| Feature | Metabase Cloud | Self-hosted |
+| --- | --- | --- |
+| **Setup time** | Up and running in minutes | Requires infrastructure setup |
+| **Upgrades** | Automatic with each release | Manual |
+| **High availability** | ✅ Included | You configure (~$48+/month) |
+| **Load balancer** | ✅ Included | You configure (~$12+/month) |
+| **Application database** | ✅ Managed | You configure (~$40-60+/month) |
+| **SMTP server** | ✅ Included | You configure (~$12+/month) |
+| **SSL certificate** | ✅ Included | You configure |
+| **Backups** | ✅ Automatic | You configure |
+| **Monitoring** | ✅ Included | You configure |
+| **Multi-zone availability** | ✅ Included | You configure |
+| **SOC 2 Type 2 auditing** | ✅ Included | You obtain certification |
+| **Support** | Email with SLA | Forum (paid plans get support) |
+| **Custom drivers** | ❌ Not supported | ✅ Supported |
+| **Fork the code** | ❌ Not available | ✅ Available |
+| **Infrastructure cost** | $0 (included in plan) | ~$112+ per month |
+| **Your money goes to** | Improving Metabase | Third-party cloud providers |
+
+<Note>
+Infrastructure costs for self-hosting are estimates for a production-grade setup with comparable features to Cloud. You can build cheaper setups, but they won't include managed services, high availability, or support.
+</Note>
+
+## Metabase Cloud
+
+<Check>
+**Recommended** for most organizations - Let us handle the infrastructure so you can focus on analyzing data.
+</Check>
+
+### What's included
+
+<CardGroup cols={2}>
+  <Card title="Instant setup" icon="bolt">
+    Sign up and start analyzing data in minutes. No servers to provision or databases to configure.
+  </Card>
+  <Card title="Automatic upgrades" icon="arrow-up">
+    Always on the latest version with new features, bug fixes, and security patches.
+  </Card>
+  <Card title="High availability" icon="server">
+    Multi-zone deployment ensures your Metabase stays online even if a zone fails.
+  </Card>
+  <Card title="Managed backups" icon="floppy-disk">
+    Automatic daily backups of your application data with point-in-time recovery.
+  </Card>
+  <Card title="Built-in SMTP" icon="envelope">
+    Email and Slack notifications work immediately without configuration.
+  </Card>
+  <Card title="SSL certificate" icon="lock">
+    Secure HTTPS with automatic certificate renewal.
+  </Card>
+  <Card title="Expert support" icon="life-ring">
+    Email support with SLA from the team that builds Metabase.
+  </Card>
+  <Card title="SOC 2 Type 2" icon="shield-check">
+    Enterprise-grade security compliance included.
+  </Card>
+</CardGroup>
+
+### Cloud benefits
+
+<Tabs>
+  <Tab title="Zero maintenance">
+    **No infrastructure to manage:**
+    - No servers to patch or update
+    - No databases to tune or backup
+    - No monitoring to configure
+    - No scaling to worry about
+    - No SSL certificates to renew
+
+    **Your team can focus on:**
+    - Analyzing data
+    - Building dashboards
+    - Answering business questions
+    - Training users
+  </Tab>
+  <Tab title="Always up-to-date">
+    **Automatic upgrades include:**
+    - New features as soon as they're released
+    - Security patches applied immediately
+    - Bug fixes without manual intervention
+    - Zero downtime during upgrades
+
+    **No upgrade work for you:**
+    - No testing required
+    - No deployment windows
+    - No rollback planning
+    - No version compatibility worries
+  </Tab>
+  <Tab title="Built-in reliability">
+    **Production-ready infrastructure:**
+    - Multi-zone deployment for high availability
+    - Automatic failover if zones go down
+    - Load balancing included
+    - Daily backups with point-in-time recovery
+
+    **Monitoring and alerts:**
+    - We monitor your instance 24/7
+    - Automatic issue detection and resolution
+    - Proactive performance optimization
+  </Tab>
+  <Tab title="Expert support">
+    **Direct access to the Metabase team:**
+    - Email support with SLA
+    - Help from engineers who build Metabase
+    - Best practices guidance
+    - Architecture recommendations
+
+    **Faster resolution:**
+    - We have full visibility into your instance
+    - Can diagnose issues quickly
+    - Can apply fixes immediately
+  </Tab>
+</Tabs>
+
+### Cloud pricing
+
+Metabase Cloud plans include:
+
+- **Starter** - Free for small teams, includes core features
+- **Pro** - Advanced features like SSO and permissions
+- **Enterprise** - Full-featured with audit logging and serialization
+
+<Info>
+All plans include hosting, upgrades, backups, monitoring, and support. No hidden infrastructure costs.
+
+[View pricing →](https://www.metabase.com/pricing/)
+</Info>
+
+### When to choose Cloud
+
+Metabase Cloud is ideal when:
+
+<CardGroup cols={2}>
+  <Card icon="clock">
+    **You need to move fast**
+    
+    Get started in minutes instead of weeks setting up infrastructure.
+  </Card>
+  <Card icon="users">
+    **You have a small team**
+    
+    Don't spend engineering time on infrastructure management.
+  </Card>
+  <Card icon="dollar-sign">
+    **You want predictable costs**
+    
+    One monthly bill instead of multiple cloud services.
+  </Card>
+  <Card icon="chart-line">
+    **You want to focus on analytics**
+    
+    Spend time analyzing data, not managing servers.
+  </Card>
+  <Card icon="rocket">
+    **You want the latest features**
+    
+    Get new capabilities automatically without upgrade work.
+  </Card>
+  <Card icon="shield">
+    **You need compliance**
+    
+    SOC 2 Type 2 certification included.
+  </Card>
+</CardGroup>
+
+## Self-hosting
+
+Self-hosting gives you complete control over your Metabase deployment.
+
+### What self-hosting requires
+
+<Warning>
+Self-hosting is more complex than Cloud and requires ongoing maintenance.
+</Warning>
+
+**Infrastructure you need to provide:**
+
+<AccordionGroup>
+  <Accordion title="Application server(s)" icon="server">
+    - Compute instances to run Metabase
+    - High availability configuration (multiple instances)
+    - Operating system maintenance and patching
+    - Java runtime management
+    
+    **Estimated cost:** ~$48/month for HA setup
+  </Accordion>
+  <Accordion title="Application database" icon="database">
+    - PostgreSQL or MySQL database
+    - Regular backups and recovery testing
+    - Performance tuning and monitoring
+    - Storage management
+    
+    **Estimated cost:** ~$40-60/month for managed database
+  </Accordion>
+  <Accordion title="Load balancer" icon="scale-balanced">
+    - Distribute traffic across instances
+    - Health checks and automatic failover
+    - SSL/TLS termination
+    
+    **Estimated cost:** ~$12/month
+  </Accordion>
+  <Accordion title="SMTP server" icon="envelope">
+    - Email service for alerts and subscriptions
+    - Delivery monitoring
+    - Spam prevention configuration
+    
+    **Estimated cost:** ~$12/month
+  </Accordion>
+  <Accordion title="SSL certificates" icon="lock">
+    - Certificate acquisition and renewal
+    - Security configuration
+    - Certificate management
+    
+    **Estimated cost:** Free (Let's Encrypt) to $100+/year
+  </Accordion>
+  <Accordion title="Backups" icon="floppy-disk">
+    - Automated backup system
+    - Backup verification and testing
+    - Off-site storage
+    - Recovery procedures
+    
+    **Estimated cost:** Included in database cost or separate backup service
+  </Accordion>
+  <Accordion title="Monitoring" icon="chart-line">
+    - Application and infrastructure monitoring
+    - Log aggregation and analysis
+    - Alert configuration
+    - On-call rotation
+    
+    **Estimated cost:** Time + monitoring tools
+  </Accordion>
+</AccordionGroup>
+
+**Ongoing responsibilities:**
+
+- **Upgrades** - Test and deploy new versions manually
+- **Security patches** - Monitor and apply security updates
+- **Scaling** - Add capacity as usage grows
+- **Troubleshooting** - Diagnose and fix issues yourself
+- **Disaster recovery** - Plan and test recovery procedures
+
+### Self-hosting benefits
+
+<Tabs>
+  <Tab title="Complete control">
+    **Full infrastructure control:**
+    - Choose your cloud provider or on-premises
+    - Configure every aspect of deployment
+    - Customize infrastructure to your needs
+    - Control upgrade timing and rollout
+
+    **Data sovereignty:**
+    - Data stays in your infrastructure
+    - Choose exact data location
+    - Meet specific compliance requirements
+  </Tab>
+  <Tab title="Customization">
+    **Code-level customization:**
+    - Fork and modify Metabase source code
+    - Add custom features
+    - Integrate with internal systems
+    - Build custom drivers
+
+    **Infrastructure customization:**
+    - Deploy to specialized environments
+    - Use custom authentication systems
+    - Integrate with your monitoring stack
+  </Tab>
+  <Tab title="Advanced use cases">
+    **Special requirements:**
+    - Air-gapped environments (no internet access)
+    - Custom database drivers not supported on Cloud
+    - Integration with on-premises systems
+    - Specific network topologies
+  </Tab>
+</Tabs>
+
+### When you should self-host
+
+<CardGroup cols={2}>
+  <Card icon="scale-balanced">
+    **Regulatory requirements**
+    
+    HIPAA or other regulations require specific infrastructure controls.
+  </Card>
+  <Card icon="code">
+    **Custom builds**
+    
+    You need to fork Metabase and add custom features.
+  </Card>
+  <Card icon="database">
+    **Community drivers**
+    
+    You need databases not officially supported on Cloud.
+  </Card>
+  <Card icon="shield">
+    **Air-gapped environment**
+    
+    You need to run without internet access for security/compliance.
+  </Card>
+  <Card icon="network-wired">
+    **On-premises requirement**
+    
+    Your organization prohibits cloud services.
+  </Card>
+  <Card icon="wrench">
+    **Deep customization**
+    
+    You need source-level modifications to Metabase.
+  </Card>
+</CardGroup>
+
+<Note>
+If you need an air-gapped environment, check out our [air-gap offering](https://www.metabase.com/product/air-gapping).
+</Note>
+
+### Self-hosting cost breakdown
+
+<Warning>
+Infrastructure costs are just the beginning. Consider the engineering time required for setup, maintenance, and troubleshooting.
+</Warning>
+
+**Minimum production infrastructure:**
+
+| Component | Monthly Cost (estimate) |
+| --- | --- |
+| Application servers (HA) | $48+ |
+| Managed database | $40-60 |
+| Load balancer | $12 |
+| SMTP service | $12 |
+| **Total infrastructure** | **~$112-132/month** |
+
+**Plus hidden costs:**
+
+- **Setup time** - 1-2 weeks of engineering time
+- **Ongoing maintenance** - 4-8 hours per month
+- **Upgrade testing** - 2-4 hours per upgrade
+- **Incident response** - Variable
+- **Monitoring and alerting** - Additional tools and time
+
+<Tip>
+Compare this to Metabase Cloud, where all infrastructure, maintenance, and support are included in your plan price.
+</Tip>
+
+## Making the decision
+
+<Steps>
+  <Step title="Assess your requirements">
+    Do you have any of these requirements?
+    
+    - Regulatory requirements for specific infrastructure
+    - Need for custom code modifications
+    - Community database drivers
+    - Air-gapped environment
+    - On-premises-only policy
+
+    If **yes**, self-hosting may be necessary.  
+    If **no**, Cloud is likely the better choice.
+  </Step>
+  <Step title="Evaluate your resources">
+    Can your team handle:
+    
+    - Setting up and configuring infrastructure
+    - Managing databases, backups, and monitoring
+    - Upgrading Metabase regularly
+    - Troubleshooting issues
+    - On-call responsibilities
+
+    If **no**, Cloud handles all of this for you.  
+    If **yes**, you have the option to self-host.
+  </Step>
+  <Step title="Calculate total cost">
+    **Cloud:** Plan price (includes everything)
+    
+    **Self-hosting:**
+    - Infrastructure costs (~$112+/month)
+    - Engineering time (setup + ongoing)
+    - Opportunity cost (time not spent on analytics)
+
+    Often, Cloud costs less when you factor in engineering time.
+  </Step>
+  <Step title="Choose your deployment">
+    <CardGroup cols={2}>
+      <Card title="Start with Cloud" icon="cloud" href="https://store.metabase.com/checkout">
+        Get up and running in minutes with zero infrastructure work.
+      </Card>
+      <Card title="Self-host" icon="server" href="/installation">
+        Full control and customization with Docker or JAR deployment.
+      </Card>
+    </CardGroup>
+  </Step>
+</Steps>
+
+## Switching between deployments
+
+<Info>
+You're not locked into your choice. You can migrate between Cloud and self-hosting whenever your needs change.
+</Info>
+
+### Cloud to self-hosted
+
+Migrate your Metabase from Cloud to your own infrastructure:
+
+- Export your application data
+- Set up self-hosted infrastructure
+- Import your questions, dashboards, and settings
+
+[Migration guide →](https://www.metabase.com/docs/latest/cloud/migrate/cloud-to-self-hosted)
+
+### Self-hosted to Cloud
+
+Move from self-hosting to Cloud:
+
+- Back up your application database
+- Contact Metabase support to initiate migration
+- We'll help import your content to Cloud
+
+[Migration guide →](https://www.metabase.com/docs/latest/cloud/migrate/guide)
+
+## Pro and Enterprise features
+
+<Check>
+Pro and Enterprise features are available on both Cloud and self-hosted deployments.
+</Check>
+
+Advanced features include:
+
+- **SSO** - SAML, JWT, and LDAP authentication
+- **Advanced permissions** - Row-level and column-level security
+- **Audit logging** - Track all user activity
+- **Serialization** - Version control for content
+- **White-labeling** - Customize branding
+- **And much more**
+
+<Info>
+Both hosting options support all Pro and Enterprise features. The difference is only in who manages the infrastructure.
+
+[Compare plans →](https://www.metabase.com/pricing/)
+</Info>
+
+## Frequently asked questions
+
+<AccordionGroup>
+  <Accordion title="Can I start with Cloud and switch to self-hosting later?">
+    Yes! You can migrate your content from Cloud to self-hosted anytime.
+
+    This is a common path for organizations that:
+    - Start with Cloud to move quickly
+    - Develop custom requirements over time
+    - Want to evaluate Metabase before investing in infrastructure
+
+    [Migration guide →](https://www.metabase.com/docs/latest/cloud/migrate/cloud-to-self-hosted)
+  </Accordion>
+  <Accordion title="Is my data stored on Metabase Cloud servers?">
+    No, your data stays in your databases. Metabase Cloud only stores:
+    - Questions and dashboard definitions
+    - User accounts and permissions
+    - Cached query results (if caching is enabled)
+
+    Metabase queries your databases in real-time and never copies your data.
+  </Accordion>
+  <Accordion title="Does self-hosting cost less than Cloud?">
+    Usually no, when you factor in:
+    - Infrastructure costs (~$112+/month)
+    - Engineering time for setup and maintenance
+    - Opportunity cost (time not spent on analytics)
+    - Risk of downtime without HA setup
+
+    Cloud typically costs less and delivers more value.
+  </Accordion>
+  <Accordion title="Can I use custom database drivers on Cloud?">
+    No, Metabase Cloud only supports officially maintained drivers. This ensures:
+    - Quality and reliability
+    - Support for troubleshooting
+    - Security vetting
+    - Consistent performance
+
+    If you need community drivers, you'll need to self-host.
+  </Accordion>
+  <Accordion title="Can I control when Cloud upgrades happen?">
+    By default, Cloud upgrades automatically with each release. 
+
+    If you're using the Embedded SDK, you can request to pin your version so you can control upgrade timing. [Contact support](https://www.metabase.com/help-premium) to set this up.
+  </Accordion>
+  <Accordion title="What level of access does Metabase have to Cloud instances?">
+    The Metabase team can:
+    - Access logs for troubleshooting
+    - View instance health metrics
+    - Apply configuration changes you request
+    - Perform emergency maintenance
+
+    We cannot:
+    - See your data in connected databases
+    - View your question results
+    - Access without logging and alerting
+
+    All access is logged and monitored.
+  </Accordion>
+</AccordionGroup>
+
+## Get started
+
+<CardGroup cols={2}>
+  <Card title="Try Metabase Cloud" icon="cloud" href="https://store.metabase.com/checkout">
+    Start your free trial - no credit card required
+  </Card>
+  <Card title="Install self-hosted" icon="server" href="/installation">
+    Download and install Metabase on your infrastructure
+  </Card>
+  <Card title="Talk to an expert" icon="comments" href="https://www.metabase.com/partners/">
+    Get help from a Metabase Expert
+  </Card>
+  <Card title="Compare pricing" icon="dollar-sign" href="https://www.metabase.com/pricing/">
+    See all plan options and features
+  </Card>
+</CardGroup>

@@ -1,0 +1,597 @@
+---
+title: Caching
+description: Configure query result caching to improve performance and reduce database load in Metabase.
+---
+
+Caching stores query results so subsequent views load instantly without re-querying your database. This dramatically improves performance for data that doesn't change frequently.
+
+<Info>
+**When caching helps most:**
+- Data updates once daily or less frequently
+- Complex queries that take minutes to run
+- High-traffic dashboards viewed by many users
+- Reports shared across teams
+</Info>
+
+## How caching works
+
+Understand the caching lifecycle to configure policies effectively.
+
+<Steps>
+  <Step title="First query execution">
+    User runs a question for the first time. Metabase checks for cached results but finds none.
+  </Step>
+  <Step title="Query and cache">
+    Metabase queries your database, returns results to the user, and stores (caches) the results.
+  </Step>
+  <Step title="Cache validity period">
+    Cached results remain valid according to your caching policy (e.g., 1 hour duration policy).
+  </Step>
+  <Step title="Subsequent queries">
+    When another user runs the same question within the validity period, Metabase returns cached results instantly.
+  </Step>
+  <Step title="Cache expiration">
+    After the validity period expires, Metabase deletes cached results on the next query.
+  </Step>
+  <Step title="Cache refresh">
+    Metabase queries the database again, returns fresh results, and caches them for the next validity period.
+  </Step>
+</Steps>
+
+<Note>
+By default, caches refresh only when someone views an item after expiration. Enable [automatic cache refresh](#refresh-cache-automatically) to refresh proactively.
+</Note>
+
+## Cache invalidation policies
+
+Policies determine how long cached results remain valid before expiring.
+
+### Duration caching policy
+
+<Info>
+Duration policies are available on Pro and Enterprise plans.
+</Info>
+
+Invalidate cache after a specified number of hours.
+
+<Accordion title="How duration policies work">
+  **Configuration example**: 24-hour duration
+  
+  **Behavior:**
+  - First query: Runs against database, caches for 24 hours
+  - Hour 12: Returns cached results (still valid)
+  - Hour 25: Cache expired, runs against database, caches for another 24 hours
+  
+  **Best for:**
+  - Data with predictable update frequency
+  - Consistent performance requirements
+  - Simple cache management
+</Accordion>
+
+**Configuration steps:**
+<Steps>
+  <Step title="Select duration policy">
+    Choose **Duration** in caching settings
+  </Step>
+  <Step title="Set hours">
+    Enter the number of hours results should remain cached
+  </Step>
+  <Step title="Save policy">
+    Apply the configuration
+  </Step>
+</Steps>
+
+### Schedule caching policy
+
+<Info>
+Schedule policies are available on Pro and Enterprise plans.
+</Info>
+
+Invalidate cache on a regular schedule aligned with your data refresh patterns.
+
+<Accordion title="How schedule policies work">
+  **Configuration example**: Daily at 6 AM
+  
+  **Behavior:**
+  - First query at 8 AM: Runs against database, caches until 6 AM next day
+  - Query at 11 AM: Returns cached results
+  - Query at 7 AM next day: Cache expired (invalidated at 6 AM), runs against database
+  
+  **Best for:**
+  - Data that updates on a regular schedule (nightly ETL jobs)
+  - Aligning cache invalidation with data freshness
+  - Coordinating multiple cached items
+</Accordion>
+
+**Schedule options:**
+- **Hourly**: Specific minute each hour
+- **Daily**: Specific time each day
+- **Weekly**: Specific day and time each week
+- **Monthly**: Specific day and time each month
+
+<Note>
+We do not yet support lunar cycles. 🌙
+</Note>
+
+**Configuration steps:**
+<Steps>
+  <Step title="Select schedule policy">
+    Choose **Schedule** in caching settings
+  </Step>
+  <Step title="Set frequency">
+    Select hourly, daily, weekly, or monthly
+  </Step>
+  <Step title="Configure timing">
+    Specify when to invalidate the cache
+  </Step>
+  <Step title="Save policy">
+    Apply the configuration
+  </Step>
+</Steps>
+
+### Adaptive caching policy
+
+Automatically determine cache duration based on query execution time.
+
+<Accordion title="How adaptive policies work">
+  **Configuration example:**
+  - Minimum duration: 10 seconds
+  - Multiplier: 100
+  
+  **Scenario**: A query takes 30 seconds on average
+  
+  **Calculation**: 30 seconds × 100 = 3,000 seconds (50 minutes)
+  
+  **Behavior:**
+  - Only queries averaging >10 seconds are cached
+  - This query's results are cached for 50 minutes
+  - Average execution time recalculates with each database query
+  
+  **Best for:**
+  - Mixed query performance (fast and slow queries)
+  - Automatically prioritizing expensive queries
+  - Adapting to changing query performance
+</Accordion>
+
+**Configuration parameters:**
+
+| Parameter | Description | Example |
+|-----------|-------------|----------|
+| **Minimum query duration** | Only cache queries taking longer than this (seconds) | 10 |
+| **Multiplier** | Multiply average execution time by this number for cache duration | 100 |
+
+**Configuration steps:**
+<Steps>
+  <Step title="Select adaptive policy">
+    Choose **Adaptive** in caching settings
+  </Step>
+  <Step title="Set minimum duration">
+    Enter minimum query execution time threshold
+  </Step>
+  <Step title="Set multiplier">
+    Enter the multiplier for cache duration calculation
+  </Step>
+  <Step title="Save policy">
+    Apply the configuration
+  </Step>
+</Steps>
+
+<Info>
+View caching and query statistics in [Usage analytics](https://docs.metabase.com/usage-and-performance-tools/usage-analytics.html) on Pro and Enterprise plans.
+</Info>
+
+### Don't cache results
+
+Disable caching to always query the database for fresh results.
+
+<Accordion title="When to disable caching">
+  **Use cases:**
+  - Real-time data requirements
+  - Frequently changing data
+  - Compliance requiring live data
+  - Low-traffic items where caching overhead isn't worth it
+  
+  **Impact:**
+  - Every view queries the database
+  - Slower load times
+  - Higher database load
+  - Always current data
+</Accordion>
+
+## Refresh cache automatically
+
+<Info>
+Automatic cache refresh is available on Pro and Enterprise plans.
+</Info>
+
+Proactively refresh caches when they expire instead of waiting for someone to view the item.
+
+### Benefits
+
+<Accordion title="Why use automatic refresh">
+  **Without automatic refresh:**
+  - Cache expires at 6 AM
+  - First viewer at 8 AM waits for query to run
+  - Cache refreshes
+  - Subsequent viewers get cached results
+  
+  **With automatic refresh:**
+  - Cache expires at 6 AM
+  - Metabase automatically queries database at 6 AM
+  - Cache refreshes
+  - All viewers at 8 AM get cached results immediately
+  
+  **Result**: Consistent fast performance for all users
+</Accordion>
+
+### Configuration
+
+<Steps>
+  <Step title="Select duration or schedule policy">
+    Automatic refresh requires a Duration or Schedule policy
+  </Step>
+  <Step title="Enable automatic refresh">
+    Toggle on **Refresh cache automatically**
+  </Step>
+  <Step title="Save settings">
+    Apply the configuration
+  </Step>
+</Steps>
+
+### Compatibility limitations
+
+<Warning>
+Automatic cache refresh is NOT compatible with these permissions setups:
+
+- [Row and column security](/administration/permissions#row-and-column-security)
+- [Connection impersonation](https://docs.metabase.com/permissions/impersonation.html)
+- [Database routing](https://docs.metabase.com/permissions/database-routing.html)
+
+These create user-specific queries, making automatic refresh impractical. Manual caching still works.
+</Warning>
+
+### Parameter handling
+
+Metabase intelligently caches parameter combinations.
+
+<Accordion title="How parameter caching works">
+  **Automatic refresh caches:**
+  1. Results with default parameter values
+  2. Up to 10 most frequently used parameter value combinations from the last caching period
+  
+  **Example**: Dashboard with category filter (default: `Doohickey`)
+  
+  **Last 24 hours usage:**
+  - `Widget`: 50 views
+  - `Gizmo`: 30 views
+  - `Gadget`: 5 views
+  
+  **Next automatic refresh caches:**
+  - `Doohickey` (default)
+  - `Widget` (most frequent)
+  - `Gizmo` (second most frequent)
+  
+  If no one runs the query during a caching period, only the default parameter value is cached.
+</Accordion>
+
+### Monitoring automatic refresh
+
+Track automatic cache refreshes in the query log:
+
+<Steps>
+  <Step title="Open Usage Analytics">
+    Navigate to the Usage Analytics collection
+  </Step>
+  <Step title="View Query Log">
+    Open the Query Log model
+  </Step>
+  <Step title="Filter by source">
+    Filter **Query source** by `cache-refresh`
+  </Step>
+</Steps>
+
+## Caching policy hierarchy
+
+Metabase applies the first available policy in this priority order:
+
+1. **Question policy** (highest priority)
+2. **Dashboard policy**
+3. **Database policy**
+4. **Default policy** (lowest priority)
+
+<Accordion title="Example policy interaction">
+  **Setup:**
+  - Default policy: Don't cache
+  - Sales database policy: 24-hour duration
+  - Executive Dashboard policy: 12-hour duration
+  - Revenue Question policy: 1-hour duration
+  
+  **Results:**
+  - Revenue Question on Executive Dashboard: Uses 1-hour (question policy wins)
+  - Other questions on Executive Dashboard: Use 12-hour (dashboard policy)
+  - Questions in Sales database (not on dashboard): Use 24-hour (database policy)
+  - Questions in other databases: No caching (default policy)
+</Accordion>
+
+<Info>
+Set specific policies only where needed. Items without specific policies inherit from the next level up.
+</Info>
+
+## Configuring caching policies
+
+### Default caching policy
+
+Set a site-wide default for all databases.
+
+<Steps>
+  <Step title="Open performance settings">
+    Press `Cmd/Ctrl + K` and search "Performance", or navigate to **Admin** > **Performance**
+  </Step>
+  <Step title="Database caching tab">
+    Click **Database caching**
+  </Step>
+  <Step title="Set default policy">
+    Click the button next to **Default policy** and select a [cache invalidation policy](#cache-invalidation-policies)
+  </Step>
+  <Step title="Save settings">
+    Apply the configuration
+  </Step>
+</Steps>
+
+### Database caching policy
+
+<Info>
+Database-specific caching is available on Pro and Enterprise plans.
+</Info>
+
+Override the default policy for specific databases.
+
+<Steps>
+  <Step title="Navigate to performance">
+    Go to **Admin** > **Performance** > **Database caching**
+  </Step>
+  <Step title="Select database">
+    Find the database to configure
+  </Step>
+  <Step title="Set policy">
+    Click the current policy and select a new [cache invalidation policy](#cache-invalidation-policies)
+  </Step>
+  <Step title="Save changes">
+    Apply the configuration
+  </Step>
+</Steps>
+
+<Note>
+Databases set to "Use default" automatically display the current default policy and update when the default changes.
+</Note>
+
+### Dashboard caching policy
+
+<Info>
+Dashboard caching is available on Pro and Enterprise plans.
+</Info>
+
+Requires [Curate access](https://docs.metabase.com/permissions/collections.html#curate-access) to the dashboard's collection.
+
+<Steps>
+  <Step title="Open dashboard">
+    Navigate to your dashboard
+  </Step>
+  <Step title="Edit settings">
+    Click **three dots** icon (top-right) > **Edit settings**
+  </Step>
+  <Step title="Configure caching">
+    Click the current caching policy to change it
+  </Step>
+  <Step title="Select new policy">
+    Choose a [cache invalidation policy](#cache-invalidation-policies)
+  </Step>
+  <Step title="Optional: Enable automatic refresh">
+    Toggle on **Refresh cache automatically** if desired
+  </Step>
+  <Step title="Optional: Clear cache">
+    Click **Clear cache for this dashboard** to immediately invalidate all cached results
+  </Step>
+  <Step title="Save changes">
+    Apply the configuration
+  </Step>
+</Steps>
+
+### Question caching policy
+
+<Info>
+Question caching is available on Pro and Enterprise plans.
+</Info>
+
+Requires [Curate access](https://docs.metabase.com/permissions/collections.html#curate-access) to the question's collection.
+
+<Steps>
+  <Step title="Open question">
+    Navigate to your question
+  </Step>
+  <Step title="Edit settings">
+    Click **three dots** menu (**...**) > **Edit settings**
+  </Step>
+  <Step title="Configure caching">
+    Under **Caching**, select a [cache invalidation policy](#cache-invalidation-policies)
+  </Step>
+  <Step title="Optional: Enable automatic refresh">
+    If using Duration or Schedule policy, toggle on **Refresh cache automatically**
+  </Step>
+  <Step title="Save changes">
+    Apply the configuration
+  </Step>
+</Steps>
+
+## Clearing cached results
+
+Manually invalidate caches to force fresh queries.
+
+### Clear question or dashboard cache
+
+<Steps>
+  <Step title="Open the item">
+    Navigate to the question or dashboard
+  </Step>
+  <Step title="Open info panel">
+    Click the **Info** icon
+  </Step>
+  <Step title="Access caching policy">
+    Click **Caching policy**
+  </Step>
+  <Step title="Clear cache">
+    Click **Clear cache** at the bottom of the sidebar
+  </Step>
+</Steps>
+
+### Clear database cache
+
+<Steps>
+  <Step title="Navigate to performance">
+    Click **grid icon** > **Admin** > **Performance** > **Database caching**
+  </Step>
+  <Step title="Select database">
+    Choose the database
+  </Step>
+  <Step title="Clear cache">
+    Click **Clear cache** at the bottom of the page
+  </Step>
+</Steps>
+
+<Warning>
+Clearing a database cache invalidates all cached results for every question using that database.
+</Warning>
+
+## Cache storage location
+
+**Self-hosted Metabase:**
+Cached results are stored in your [application database](https://docs.metabase.com/installation-and-operation/configuring-application-database.html).
+
+**Metabase Cloud:**
+Cached results are stored on Metabase's servers in the United States (Metabase manages your application database).
+
+<Info>
+All cached data is stored securely with appropriate encryption and access controls.
+</Info>
+
+## Best practices
+
+<Steps>
+  <Step title="Align cache with data freshness">
+    Set cache policies to match when your data actually updates (e.g., daily cache for nightly ETL)
+  </Step>
+  <Step title="Use automatic refresh for dashboards">
+    Enable automatic refresh on high-traffic dashboards to ensure consistent performance
+  </Step>
+  <Step title="Monitor cache effectiveness">
+    Review Usage Analytics to identify which queries benefit most from caching
+  </Step>
+  <Step title="Start with database-level policies">
+    Set database defaults first, then override for specific items as needed
+  </Step>
+  <Step title="Cache expensive queries">
+    Prioritize caching for slow, complex queries that multiple users access
+  </Step>
+  <Step title="Clear cache after data updates">
+    Manually clear caches after major data loads or schema changes
+  </Step>
+  <Step title="Test caching policies">
+    Verify cached results match fresh queries before deploying to production
+  </Step>
+</Steps>
+
+## Performance optimization strategies
+
+<Accordion title="For infrequently updated data">
+  **Scenario**: Sales data updates nightly at 2 AM
+  
+  **Strategy**:
+  - Use Schedule policy: Daily at 2:30 AM
+  - Enable automatic cache refresh
+  - Set on database or dashboard level
+  
+  **Result**: Fresh data available when users arrive at 8 AM
+</Accordion>
+
+<Accordion title="For mixed-frequency updates">
+  **Scenario**: Multiple tables with different update patterns
+  
+  **Strategy**:
+  - Database default: Adaptive policy (min 5 sec, multiplier 100)
+  - Fast-changing tables: Don't cache (question level)
+  - Executive dashboards: Schedule policy (question level)
+  
+  **Result**: Appropriate caching for each use case
+</Accordion>
+
+<Accordion title="For high-traffic dashboards">
+  **Scenario**: Executive dashboard viewed 1000+ times daily
+  
+  **Strategy**:
+  - Dashboard policy: Duration 1 hour
+  - Enable automatic cache refresh
+  - Monitor query log for parameter usage patterns
+  
+  **Result**: Instant loads for most users, minimal database impact
+</Accordion>
+
+<Accordion title="For development environments">
+  **Scenario**: Frequent schema and data changes
+  
+  **Strategy**:
+  - Default policy: Don't cache
+  - Or use very short duration (5 minutes)
+  - Clear cache after each deployment
+  
+  **Result**: Always see current data during development
+</Accordion>
+
+## Troubleshooting
+
+<Accordion title="Cached results seem stale">
+  **Check:**
+  1. Caching policy duration/schedule
+  2. When cache was last refreshed
+  3. If automatic refresh is enabled
+  4. Database timezone settings
+  
+  **Solution**: Clear cache manually or adjust policy
+</Accordion>
+
+<Accordion title="Caching not improving performance">
+  **Verify:**
+  1. Cache policy is active (not "Don't cache")
+  2. Questions are being viewed more than once
+  3. Parameters remain consistent between views
+  4. Application database has adequate storage
+  
+  **Solution**: Review Usage Analytics to confirm cache hit rates
+</Accordion>
+
+<Accordion title="Automatic refresh not working">
+  **Check:**
+  1. Permission setup (row/column security, impersonation, routing)
+  2. Scheduled tasks are running
+  3. Metabase server time is correct
+  4. Query log shows cache-refresh source entries
+  
+  **Solution**: Disable incompatible permissions or adjust refresh schedule
+</Accordion>
+
+<Accordion title="Cache storage consuming too much space">
+  **Actions:**
+  1. Review caching policies on large result sets
+  2. Shorten cache duration for infrequently accessed items
+  3. Use "Don't cache" for low-value queries
+  4. Clear caches for unused items
+  5. Consider application database storage limits
+  
+  **Solution**: Optimize which results are cached based on value vs. size
+</Accordion>
+
+## Related documentation
+
+- [Model persistence](https://docs.metabase.com/data-modeling/model-persistence.html)
+- [Usage analytics](https://docs.metabase.com/usage-and-performance-tools/usage-analytics.html)
+- [Performance tools](https://docs.metabase.com/usage-and-performance-tools/tools.html)
+- [Database optimization](https://www.metabase.com/learn/administration/metabase-performance)

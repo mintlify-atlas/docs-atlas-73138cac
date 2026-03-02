@@ -1,0 +1,346 @@
+---
+title: Code structure
+description: Understanding the Metabase codebase organization
+---
+
+Metabase is organized into clear frontend and backend sections, with additional directories for testing, configuration, and drivers. Understanding the structure will help you navigate and contribute to the codebase effectively.
+
+## Repository overview
+
+```
+metabase/
+├── frontend/           # Frontend application (TypeScript/React)
+├── src/               # Backend source code (Clojure)
+├── test/              # Backend tests (Clojure)
+├── modules/           # Database drivers and extensions
+├── e2e/               # End-to-end tests (Cypress)
+├── docs/              # Developer documentation
+├── resources/         # Static resources and config
+├── bin/               # Build and utility scripts
+└── enterprise/        # Enterprise features
+```
+
+## Frontend structure
+
+The frontend is located in `/frontend` and uses TypeScript, React, Redux, and Mantine UI.
+
+### Frontend organization
+
+```
+frontend/
+├── src/
+│   ├── metabase/
+│   │   ├── api/              # RTK Query API definitions
+│   │   ├── components/       # Shared components
+│   │   ├── ui/              # Mantine-based UI library
+│   │   ├── query_builder/   # Query builder feature
+│   │   ├── dashboard/       # Dashboard feature
+│   │   ├── home/            # Home page
+│   │   ├── admin/           # Admin settings
+│   │   └── ...
+│   └── metabase-types/      # TypeScript type definitions
+├── test/                    # Frontend tests
+└── __support__/             # Test utilities and mocks
+```
+
+### Key frontend directories
+
+<Accordion title="/frontend/src/metabase">
+  The main application code, organized by feature:
+  
+  - **api/** - All API endpoints using RTK Query
+  - **query_builder/** - Visual query builder logic
+  - **dashboard/** - Dashboard creation and viewing
+  - **ui/** - Reusable UI components built on Mantine
+  - **components/** - Shared components across features
+  - **lib/** - Utility functions and helpers
+</Accordion>
+
+<Accordion title="/frontend/src/metabase-types">
+  TypeScript type definitions:
+  
+  - **api/** - Types matching backend API responses
+  - **store/** - Redux store shape types
+  - **types/** - General application types
+</Accordion>
+
+### Frontend tech stack
+
+- **TypeScript** - Primary language (migrating from JavaScript)
+- **React 18** - UI framework
+- **Redux Toolkit** - State management
+- **RTK Query** - Data fetching and caching
+- **Mantine** - UI component library
+- **Emotion** - CSS-in-JS (legacy, being phased out)
+- **Jest** - Unit testing
+- **Cypress** - End-to-end testing
+
+## Backend structure
+
+The backend is located in `/src` and written in Clojure.
+
+### Backend organization
+
+```
+src/
+├── metabase/
+│   ├── api/              # REST API endpoints
+│   ├── models/           # Database models
+│   ├── driver/           # Core driver interface
+│   ├── driver.sql/       # SQL driver abstractions
+│   ├── driver.sql-jdbc/  # JDBC driver abstractions
+│   ├── query_processor/  # MBQL query processing
+│   ├── sync/            # Database sync and metadata
+│   ├── db/              # Application database access
+│   ├── mbql/            # MBQL query language
+│   ├── util/            # Utility functions
+│   └── ...
+```
+
+### Key backend directories
+
+<Accordion title="/src/metabase/api">
+  REST API endpoint definitions. Each file defines routes for a specific resource:
+  
+  - **database.clj** - Database connection endpoints
+  - **card.clj** - Question/card endpoints
+  - **dashboard.clj** - Dashboard endpoints
+  - **table.clj** - Table metadata endpoints
+</Accordion>
+
+<Accordion title="/src/metabase/models">
+  Toucan2 models for the application database:
+  
+  - **database.clj** - Database connections
+  - **card.clj** - Saved questions
+  - **dashboard.clj** - Dashboards
+  - **user.clj** - User accounts
+</Accordion>
+
+<Accordion title="/src/metabase/driver">
+  Core driver interface and implementations. Drivers provide:
+  
+  - Database capabilities and features
+  - Schema introspection (sync)
+  - MBQL to native query compilation
+  - Query execution
+</Accordion>
+
+<Accordion title="/src/metabase/query_processor">
+  MBQL query processing pipeline:
+  
+  - Query preprocessing and middleware
+  - Permission checking
+  - Query optimization
+  - Result post-processing
+</Accordion>
+
+### Backend tech stack
+
+- **Clojure 1.12** - Primary language
+- **Ring** - HTTP server abstraction
+- **Compojure** - Routing
+- **Toucan2** - ORM for application database
+- **Honey SQL** - SQL query generation
+- **clojure.test** - Testing framework
+
+## Database drivers
+
+Drivers are organized as separate modules in `/modules/drivers/`:
+
+```
+modules/drivers/
+├── postgres/
+│   ├── deps.edn
+│   ├── resources/
+│   │   └── metabase-plugin.yaml
+│   ├── src/metabase/driver/postgres.clj
+│   └── test/
+├── mysql/
+├── mongodb/
+├── bigquery/
+└── ...
+```
+
+### Driver components
+
+<Steps>
+  <Step title="deps.edn">
+    Defines driver dependencies (JDBC drivers, client libraries, etc.)
+  </Step>
+  
+  <Step title="metabase-plugin.yaml">
+    Plugin manifest with driver metadata, connection properties, and initialization steps
+  </Step>
+  
+  <Step title="src/metabase/driver/<name>.clj">
+    Driver implementation with multimethod implementations for driver interface
+  </Step>
+  
+  <Step title="test/">
+    Driver-specific tests and test data definitions
+  </Step>
+</Steps>
+
+Learn more about [building drivers](/developers/building-drivers).
+
+## Testing structure
+
+### Backend tests
+
+Located in `/test/metabase/`, mirroring the source structure:
+
+```
+test/
+├── metabase/
+│   ├── api/              # API endpoint tests
+│   ├── models/           # Model tests
+│   ├── query_processor/  # Query processor tests
+│   ├── driver/           # Driver interface tests
+│   └── test/
+│       └── data/         # Test data and fixtures
+```
+
+### Frontend tests
+
+<Note>
+New unit tests are placed alongside the components they test. Legacy tests are in `/frontend/test/`.
+</Note>
+
+```
+frontend/
+├── test/                 # Legacy test location
+│   ├── __support__/      # Test utilities
+│   └── metabase/
+└── src/metabase/
+    └── components/
+        ├── Button.tsx
+        └── Button.unit.spec.tsx  # ✅ New pattern
+```
+
+### End-to-end tests
+
+Cypress tests in `/e2e/`:
+
+```
+e2e/
+├── test/
+│   ├── scenarios/
+│   │   ├── question/     # Query builder tests
+│   │   ├── dashboard/    # Dashboard tests
+│   │   └── admin/        # Admin tests
+│   └── support/          # Cypress helpers
+└── runner/               # Test runner scripts
+```
+
+## Build and configuration
+
+### Build scripts
+
+Located in `/bin/`:
+
+- **build.sh** - Build complete Metabase JAR
+- **build-drivers.sh** - Build all database drivers
+- **build-driver.sh** - Build single driver
+- **dev-install** - Automated development setup
+
+### Configuration files
+
+<CodeGroup>
+```yaml deps.edn
+# Clojure dependencies and aliases
+:deps {...}
+:aliases {
+  :dev {...}
+  :test {...}
+  :drivers {...}
+}
+```
+
+```json package.json
+# Frontend dependencies and scripts
+{
+  "scripts": {
+    "dev": "...",
+    "build": "...",
+    "test": "..."
+  }
+}
+```
+
+```javascript rspack.main.config.js
+# Frontend build configuration
+module.exports = {
+  entry: {...},
+  output: {...},
+  plugins: [...]
+};
+```
+</CodeGroup>
+
+## Enterprise features
+
+Enterprise Edition code is in `/enterprise/`:
+
+```
+enterprise/
+├── backend/
+│   └── src/metabase_enterprise/  # Enterprise backend features
+└── frontend/
+    └── src/metabase-enterprise/   # Enterprise frontend features
+```
+
+## Resources and static files
+
+```
+resources/
+├── frontend_client/    # Compiled frontend assets
+├── migrations/        # Database migrations
+├── modules/           # Clojure module configs
+└── embedding-sdk/     # Embedding SDK resources
+```
+
+## Documentation
+
+- **/docs** - Developer documentation (source files)
+- **/.claude** - AI coding assistant skills and conventions
+- **README.md** - Project overview and quick start
+
+## Naming conventions
+
+### Frontend
+
+- **Components** - PascalCase (e.g., `QueryBuilder.tsx`)
+- **Hooks** - camelCase with `use` prefix (e.g., `useQuery.ts`)
+- **Utils** - camelCase (e.g., `formatDate.ts`)
+- **Constants** - UPPER_SNAKE_CASE (e.g., `MAX_RESULTS`)
+
+### Backend
+
+- **Namespaces** - kebab-case (e.g., `metabase.query-processor`)
+- **Functions** - kebab-case (e.g., `process-query`)
+- **Multimethods** - kebab-case (e.g., `mbql->native`)
+
+## Working with the codebase
+
+### Finding code
+
+<Accordion title="Finding API endpoints">
+  Backend API endpoints are in `/src/metabase/api/`. Each resource has its own file.
+  
+  Frontend API definitions using RTK Query are in `/frontend/src/metabase/api/`.
+</Accordion>
+
+<Accordion title="Finding components">
+  Search in `/frontend/src/metabase/` by feature name. Components are organized by the feature they belong to.
+</Accordion>
+
+<Accordion title="Finding driver code">
+  Driver implementations are in `/modules/drivers/<driver-name>/` for built-in drivers, or `/src/metabase/driver/` for core driver interfaces.
+</Accordion>
+
+## Next steps
+
+- Learn about [testing practices](/developers/testing)
+- Understand the [driver interface](/developers/driver-interface)
+- Read about [building drivers](/developers/building-drivers)

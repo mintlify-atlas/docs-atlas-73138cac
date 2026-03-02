@@ -1,0 +1,723 @@
+---
+title: Database users, roles, and privileges
+description: Set up database users and roles for Metabase with appropriate read and write permissions
+---
+
+# Database users, roles, and privileges
+
+For Metabase to connect, query, and optionally write to your database, you need to create a dedicated database user with the appropriate privileges. This guide explains how to set up database users and roles following security best practices.
+
+## Recommended setup
+
+We recommend creating a dedicated `metabase` database user with **read-only access** to the schemas and tables you want to analyze.
+
+<Note>
+  Creating dedicated users and roles for Metabase makes it easier to manage permissions, audit usage, and troubleshoot issues without affecting other systems.
+</Note>
+
+### Role-based privilege structure
+
+Organize privileges into roles based on use cases:
+
+<CardGroup cols={2}>
+  <Card title="Analytics role" icon="chart-line">
+    **Read-only access** for querying and analysis
+  </Card>
+  
+  <Card title="Transforms role" icon="arrows-spin">
+    **Write access** to schema for transforms
+  </Card>
+  
+  <Card title="Uploads role" icon="upload">
+    **Write access** to schema for CSV uploads
+  </Card>
+  
+  <Card title="Actions role" icon="bolt">
+    **Write access** to tables for actions and editable data
+  </Card>
+  
+  <Card title="Model persistence role" icon="floppy-disk">
+    **Write access** to schema for persisted models
+  </Card>
+</CardGroup>
+
+### Benefits of role-based permissions
+
+<Accordion title="Why use roles instead of direct user permissions?">
+  **Easier maintenance:**
+  - Grant or revoke privileges by adding/removing roles
+  - No need to modify individual user permissions
+  
+  **Reusability:**
+  - Use the same `analytics` role for other BI tools
+  - Share common privilege sets across multiple users
+  
+  **Granular control:**
+  - Revoke write access for one feature without affecting others
+  - Example: Disable model persistence without affecting actions
+  
+  **Better security:**
+  - Clear separation between read and write operations
+  - Easier to audit who has which privileges
+</Accordion>
+
+<Note>
+  On Metabase Pro and Enterprise plans, use separate [writeable connections](./writeable-connection) for operations that require write access.
+</Note>
+
+## Minimum database privileges
+
+To query your data in Metabase, the database user needs:
+
+- **CONNECT** privilege to your database
+- **SELECT** privilege on schemas or tables you want to use
+
+### Setting up read-only access
+
+Here's how to create a properly configured read-only user (PostgreSQL example):
+
+<Tabs>
+  <Tab title="Step-by-step">
+    ### Create analytics role and user
+    
+    Follow these steps as a database administrator:
+    
+    **1. Create an analytics role**
+    ```sql
+    CREATE ROLE analytics WITH LOGIN;
+    ```
+    
+    **2. Grant connection privilege**
+    ```sql
+    GRANT CONNECT ON DATABASE "your_database" TO analytics;
+    ```
+    
+    **3. Create Metabase user**
+    ```sql
+    CREATE USER metabase WITH PASSWORD "your_password";
+    ```
+    
+    **4. Add user to role**
+    ```sql
+    GRANT analytics TO metabase;
+    ```
+    
+    **5. Grant query privileges** (choose one option)
+  </Tab>
+  
+  <Tab title="Complete script">
+    ### Full PostgreSQL setup script
+    
+    ```sql
+    -- Create a role named "analytics"
+    CREATE ROLE analytics WITH LOGIN;
+    
+    -- Add the CONNECT privilege to the role
+    GRANT CONNECT ON DATABASE "your_database" TO analytics;
+    
+    -- Create a database user named "metabase"
+    CREATE USER metabase WITH PASSWORD "your_password";
+    
+    -- Give the role to the metabase user
+    GRANT analytics TO metabase;
+    
+    -- Add query privileges to the role (choose one option below)
+    ```
+  </Tab>
+</Tabs>
+
+### Query privilege options
+
+Choose the appropriate privilege level based on your security requirements:
+
+<AccordionGroup>
+  <Accordion title="Option 1: All data (PostgreSQL 14+)">
+    **Recommended for:** Development environments, full analytics access
+    
+    ```sql
+    -- Grant read access to all data in the database
+    GRANT pg_read_all_data TO analytics;
+    ```
+    
+    <Note>
+      The `pg_read_all_data` role is only available in PostgreSQL 14 or higher. See [Predefined Roles](https://www.postgresql.org/docs/current/predefined-roles.html) in PostgreSQL documentation.
+    </Note>
+  </Accordion>
+  
+  <Accordion title="Option 2: All schemas">
+    **Recommended for:** Access to all schemas in a specific database
+    
+    ```sql
+    -- Grant access to all schemas in the database
+    GRANT USAGE ON SCHEMA "your_schema" TO analytics;
+    GRANT SELECT ON ALL TABLES IN SCHEMA "your_schema" TO analytics;
+    ```
+  </Accordion>
+  
+  <Accordion title="Option 3: Specific schema">
+    **Recommended for:** Production environments with isolated analytics schema
+    
+    ```sql
+    -- Grant access to a specific schema
+    GRANT USAGE ON SCHEMA "your_schema" TO analytics;
+    GRANT SELECT ON ALL TABLES IN SCHEMA "your_schema" TO analytics;
+    
+    -- Automatically grant SELECT on new tables in the schema
+    ALTER DEFAULT PRIVILEGES IN SCHEMA "your_schema"
+      GRANT SELECT ON TABLES TO analytics;
+    ```
+    
+    <Note>
+      The `ALTER DEFAULT PRIVILEGES` statement ensures that new tables automatically inherit the SELECT privilege.
+    </Note>
+  </Accordion>
+  
+  <Accordion title="Option 4: Specific tables">
+    **Recommended for:** Maximum security with explicit table access
+    
+    ```sql
+    -- Grant access to specific tables only
+    GRANT USAGE ON SCHEMA "your_schema" TO analytics;
+    GRANT SELECT ON "your_schema"."your_table" TO analytics;
+    GRANT SELECT ON "your_schema"."another_table" TO analytics;
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Additional optional privileges
+
+Depending on your Metabase usage, you may also need:
+
+<Tabs>
+  <Tab title="Temporary tables">
+    ### TEMPORARY privilege
+    
+    Some complex queries create temporary tables during execution.
+    
+    ```sql
+    GRANT TEMPORARY ON DATABASE "your_database" TO analytics;
+    ```
+  </Tab>
+  
+  <Tab title="Stored procedures">
+    ### EXECUTE privilege
+    
+    If you want to use stored procedures or user-defined functions:
+    
+    ```sql
+    GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA "your_schema" TO analytics;
+    ```
+  </Tab>
+</Tabs>
+
+## Grant all database privileges
+
+<Warning>
+  Granting all privileges is **not recommended for production** environments. Only use this approach for local development or testing.
+</Warning>
+
+For development or testing environments, you can give the Metabase user full access:
+
+```sql
+-- Create a database user named "metabase"
+CREATE USER metabase WITH PASSWORD "your_password";
+
+-- Give the user read and write privileges to anything in the database
+GRANT ALL PRIVILEGES ON DATABASE "your_database" TO metabase;
+```
+
+## Privileges to enable actions and editable table data
+
+Both [actions](../actions/introduction) and [editable table data](../data-modeling/editable-tables) allow Metabase to write data back to specific tables.
+
+<Tabs>
+  <Tab title="Overview">
+    ### When you need write access
+    
+    Enable write access if you want to:
+    - Create, update, or delete records through Metabase
+    - Use action buttons in dashboards
+    - Allow users to edit data directly in tables
+    
+    <Note>
+      Consider using a [writeable connection](./writeable-connection) (Pro/Enterprise) to separate read and write operations.
+    </Note>
+  </Tab>
+  
+  <Tab title="Setup">
+    ### Grant write privileges
+    
+    In addition to the [minimum database privileges](#minimum-database-privileges):
+    
+    ```sql
+    -- Create a role to bundle database privileges for Metabase writing
+    CREATE ROLE metabase_writer WITH LOGIN;
+    
+    -- Grant write privileges to specific tables
+    GRANT INSERT, UPDATE, DELETE ON "your_schema"."your_table" TO metabase_writer;
+    
+    -- Grant role to the metabase user (or writeable connection user)
+    GRANT metabase_writer TO metabase;
+    ```
+    
+    <Warning>
+      Only grant write access to tables that need to be editable. Never grant write access to tables containing sensitive data or critical business logic.
+    </Warning>
+  </Tab>
+</Tabs>
+
+## Privileges to enable model persistence
+
+[Model persistence](../data-modeling/model-persistence) saves query results to a dedicated schema in your database to improve performance.
+
+<Tabs>
+  <Tab title="Requirements">
+    ### What you need
+    
+    - **CREATE** privilege on the database (to set up the schema)
+    - **INSERT, UPDATE, DELETE** privileges on the persistence schema
+    - A dedicated schema for storing persisted models
+    
+    <Note>
+      If you prefer not to grant CREATE privileges, manually create the schema before enabling model persistence.
+    </Note>
+  </Tab>
+  
+  <Tab title="Setup">
+    ### Grant model persistence privileges
+    
+    In addition to the [minimum database privileges](#minimum-database-privileges):
+    
+    ```sql
+    -- Create a role to bundle database privileges for model persistence
+    CREATE ROLE metabase_model_persistence WITH LOGIN;
+    
+    -- Option 1: Grant CREATE to let Metabase create the schema
+    GRANT CREATE ON DATABASE "your_database" TO metabase_model_persistence;
+    
+    -- Option 2: Create the schema manually if you don't want to grant CREATE
+    -- CREATE SCHEMA metabase_cache;
+    
+    -- Grant write privileges to the schema used for model persistence
+    GRANT USAGE ON SCHEMA "metabase_cache" TO metabase_model_persistence;
+    GRANT CREATE ON SCHEMA "metabase_cache" TO metabase_model_persistence;
+    GRANT INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA "metabase_cache" TO metabase_model_persistence;
+    
+    -- Grant role to the metabase user (or writeable connection user)
+    GRANT metabase_model_persistence TO metabase;
+    ```
+  </Tab>
+  
+  <Tab title="Best practices">
+    ### Model persistence tips
+    
+    **Use a dedicated schema:**
+    - Create `metabase_cache` or similar schema
+    - Keep persisted models separate from source data
+    - Easier to manage and monitor storage usage
+    
+    **Consider storage:**
+    - Persisted models consume database storage
+    - Monitor schema size and set up cleanup policies
+    - Use model persistence for frequently-queried expensive models
+    
+    **Use writeable connections:**
+    - On Pro/Enterprise, use a separate writeable connection
+    - Isolate write operations from read operations
+    - Better security and auditing
+  </Tab>
+</Tabs>
+
+## Privileges to enable transforms
+
+[Transforms](../data-studio/transforms/transforms-overview) let Metabase write query results back to your database in dedicated tables.
+
+<Tabs>
+  <Tab title="Requirements">
+    ### What you need
+    
+    - **CREATE TABLE** privilege on the transforms schema
+    - **ALTER** privilege to modify transform tables
+    - **DROP** privilege to remove old transforms
+    - Optionally, **CREATE SCHEMA** privilege
+    
+    <Note>
+      We strongly recommend creating a dedicated schema for transforms, separate from your source data.
+    </Note>
+  </Tab>
+  
+  <Tab title="Setup">
+    ### Grant transform privileges
+    
+    In addition to the [minimum database privileges](#minimum-database-privileges):
+    
+    ```sql
+    -- Create a role to bundle database privileges for transforms
+    CREATE ROLE metabase_transforms WITH LOGIN;
+    
+    -- Create a dedicated schema for transforms
+    CREATE SCHEMA metabase_transforms_schema;
+    
+    -- Grant full access to the transforms schema
+    GRANT USAGE ON SCHEMA "metabase_transforms_schema" TO metabase_transforms;
+    GRANT CREATE, ALTER, DROP ON SCHEMA "metabase_transforms_schema" TO metabase_transforms;
+    GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA "metabase_transforms_schema" TO metabase_transforms;
+    
+    -- Optionally, grant CREATE SCHEMA for Metabase to create new schemas
+    -- GRANT CREATE ON DATABASE "your_database" TO metabase_transforms;
+    
+    -- Grant role to the metabase user (or writeable connection user)
+    GRANT metabase_transforms TO metabase;
+    ```
+    
+    <Warning>
+      For ClickHouse, use `CREATE DATABASE` instead of `CREATE SCHEMA`.
+    </Warning>
+  </Tab>
+</Tabs>
+
+## Privileges to enable uploads
+
+You can [upload CSVs](../databases/uploads) to supported databases for analysis in Metabase.
+
+<Tabs>
+  <Tab title="Requirements">
+    ### What you need
+    
+    - A schema to store uploaded data
+    - **INSERT, UPDATE, DELETE** privileges on the uploads schema
+    - Configure the schema in Metabase settings
+    
+    <Note>
+      Create or designate a schema for uploads before configuring this feature in Metabase.
+    </Note>
+  </Tab>
+  
+  <Tab title="Setup">
+    ### Grant upload privileges
+    
+    In addition to the [minimum database privileges](#minimum-database-privileges):
+    
+    ```sql
+    -- Create a role to bundle database privileges for uploads
+    CREATE ROLE metabase_uploads WITH LOGIN;
+    
+    -- Create a dedicated schema for uploads (or use existing schema)
+    CREATE SCHEMA uploads;
+    
+    -- Grant write privileges to the schema used for uploads
+    GRANT USAGE ON SCHEMA "uploads" TO metabase_uploads;
+    GRANT INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA "uploads" TO metabase_uploads;
+    
+    -- Automatically grant privileges on new tables
+    ALTER DEFAULT PRIVILEGES IN SCHEMA "uploads"
+      GRANT INSERT, UPDATE, DELETE ON TABLES TO metabase_uploads;
+    
+    -- Grant role to the metabase user (or writeable connection user)
+    GRANT metabase_uploads TO metabase;
+    ```
+  </Tab>
+  
+  <Tab title="Configure in Metabase">
+    ### Select uploads schema
+    
+    After granting privileges, configure the uploads schema in Metabase:
+    
+    1. Go to **Admin** > **Databases**
+    2. Select your database
+    3. Find the **Uploads** section
+    4. Select the schema where you want to store uploaded data
+    
+    See [Uploading data](./uploads#select-the-database-and-schema-that-you-want-to-store-the-data-in) for details.
+  </Tab>
+</Tabs>
+
+## Multi-tenant permissions
+
+For multi-tenant setups where customers need SQL access, create one database connection per customer.
+
+<Accordion title="Why multi-tenant connections?">
+  **Security benefits:**
+  - Each customer connects with their own database user
+  - Row-level security enforced at the database level
+  - Clear separation between customer data
+  
+  **Access control:**
+  - Grant access only to customer-specific schemas
+  - Different privilege levels per customer
+  - Easy to audit and revoke access
+  
+  See: [Granting customers native SQL access](../permissions/embedding#granting-customers-native-sql-access-to-their-schema)
+</Accordion>
+
+### Example: Multi-tenant setup
+
+Let's say you have two customers: Tangerine and Lemon.
+
+```sql
+-- Create one database user per customer
+CREATE USER metabase_tangerine WITH PASSWORD "orange";
+CREATE USER metabase_lemon WITH PASSWORD "yellow";
+
+-- Create a role to bundle privileges for all customers
+CREATE ROLE customer_facing_analytics;
+GRANT CONNECT ON DATABASE "citrus" TO customer_facing_analytics;
+GRANT customer_facing_analytics TO metabase_tangerine, metabase_lemon;
+
+-- Create a role to bundle analytics read access for customer Tangerine
+CREATE ROLE tangerine_queries;
+GRANT USAGE ON SCHEMA "tangerine" TO tangerine_queries;
+GRANT SELECT, EXECUTE ON ALL TABLES IN SCHEMA "tangerine" TO tangerine_queries;
+GRANT tangerine_queries TO metabase_tangerine;
+
+-- Create a role to bundle analytics read access for customer Lemon
+CREATE ROLE lemon_queries;
+GRANT USAGE ON SCHEMA "lemon" TO lemon_queries;
+GRANT SELECT ON ALL TABLES IN SCHEMA "lemon" TO lemon_queries;
+GRANT lemon_queries TO metabase_lemon;
+
+-- Create a role to bundle privileges for Metabase actions for customer Lemon
+CREATE ROLE lemon_actions;
+GRANT INSERT, UPDATE, DELETE ON TABLE "lemon"."lemonade" TO lemon_actions;
+GRANT lemon_actions TO metabase_lemon;
+```
+
+<Tabs>
+  <Tab title="Benefits">
+    ### Advantages of role-based multi-tenancy
+    
+    **Reusability:**
+    - Use `tangerine_queries` for other analytics tools
+    - Share common privileges across multiple connections
+    
+    **Granular control:**
+    - Revoke `lemon_actions` without affecting `lemon_queries`
+    - Easy to add or remove specific capabilities
+    
+    **Maintainability:**
+    - Add new customers by creating new users and roles
+    - Update privileges by modifying roles, not individual users
+    
+    **Security:**
+    - Each customer can only access their own schema
+    - Clear audit trail of who accessed what
+  </Tab>
+  
+  <Tab title="Best practices">
+    ### Multi-tenant tips
+    
+    **Role naming:**
+    - Use clear, consistent naming: `{customer}_{feature}`
+    - Document which roles are for which purposes
+    
+    **Privilege management:**
+    - Bundle common privileges in shared roles
+    - Use customer-specific roles for unique needs
+    - Regularly audit role membership
+    
+    **Schema isolation:**
+    - Each customer gets their own schema
+    - Never share tables between customer schemas
+    - Use database views for common reference data
+    
+    **Connection naming:**
+    - Name connections clearly in Metabase
+    - Example: "Customer: Tangerine" or "Lemon Analytics"
+  </Tab>
+</Tabs>
+
+## Database-specific considerations
+
+<AccordionGroup>
+  <Accordion title="PostgreSQL">
+    ### PostgreSQL-specific notes
+    
+    **Predefined roles (PostgreSQL 14+):**
+    - `pg_read_all_data`: Read access to all tables
+    - `pg_write_all_data`: Write access to all tables
+    
+    **Default privileges:**
+    ```sql
+    ALTER DEFAULT PRIVILEGES IN SCHEMA "your_schema"
+      GRANT SELECT ON TABLES TO analytics;
+    ```
+    
+    **Schema search path:**
+    Consider setting a default schema search path for the Metabase user.
+  </Accordion>
+  
+  <Accordion title="MySQL">
+    ### MySQL-specific notes
+    
+    **Grant syntax:**
+    ```sql
+    GRANT SELECT ON database.* TO 'metabase'@'%';
+    ```
+    
+    **Host specification:**
+    - Use `'%'` for any host
+    - Use specific IP for production: `'metabase'@'192.168.1.100'`
+    
+    **Flush privileges:**
+    ```sql
+    FLUSH PRIVILEGES;
+    ```
+    
+    **MySQL 8+ authentication:**
+    ```sql
+    ALTER USER 'metabase'@'%' IDENTIFIED WITH mysql_native_password BY 'password';
+    ```
+  </Accordion>
+  
+  <Accordion title="BigQuery">
+    ### BigQuery-specific notes
+    
+    BigQuery uses IAM roles instead of database users:
+    
+    **Required roles:**
+    - `BigQuery Data Viewer`
+    - `BigQuery Metadata Viewer`
+    - `BigQuery Job User`
+    
+    **Service account:**
+    - Create a service account in Google Cloud Console
+    - Download JSON key file
+    - Upload to Metabase
+    
+    See: [BigQuery connection guide](./connections/bigquery#google-cloud-platform-creating-a-service-account-and-json-file)
+  </Accordion>
+  
+  <Accordion title="Snowflake">
+    ### Snowflake-specific notes
+    
+    **Role hierarchy:**
+    ```sql
+    -- Create role
+    CREATE ROLE metabase_role;
+    
+    -- Grant privileges
+    GRANT USAGE ON WAREHOUSE "compute_wh" TO ROLE metabase_role;
+    GRANT USAGE ON DATABASE "your_db" TO ROLE metabase_role;
+    GRANT USAGE ON SCHEMA "your_schema" TO ROLE metabase_role;
+    GRANT SELECT ON ALL TABLES IN SCHEMA "your_schema" TO ROLE metabase_role;
+    
+    -- Create user and assign role
+    CREATE USER metabase PASSWORD='password';
+    GRANT ROLE metabase_role TO USER metabase;
+    ```
+    
+    **Warehouse access:**
+    Metabase needs USAGE privilege on at least one warehouse to run queries.
+  </Accordion>
+</AccordionGroup>
+
+## Verifying privileges
+
+After setting up privileges, verify the Metabase user has correct access:
+
+<Tabs>
+  <Tab title="PostgreSQL">
+    ```sql
+    -- Check role membership
+    SELECT r.rolname, m.rolname as member
+    FROM pg_roles r
+    JOIN pg_auth_members am ON r.oid = am.roleid
+    JOIN pg_roles m ON am.member = m.oid
+    WHERE m.rolname = 'metabase';
+    
+    -- Check table privileges
+    SELECT table_schema, table_name, privilege_type
+    FROM information_schema.table_privileges
+    WHERE grantee = 'analytics';
+    ```
+  </Tab>
+  
+  <Tab title="MySQL">
+    ```sql
+    -- Show user privileges
+    SHOW GRANTS FOR 'metabase'@'%';
+    
+    -- Check specific database access
+    SELECT * FROM mysql.db WHERE User = 'metabase';
+    ```
+  </Tab>
+  
+  <Tab title="Test connection">
+    ### Test from Metabase
+    
+    1. Go to **Admin** > **Databases**
+    2. Click **Add a database**
+    3. Enter connection details
+    4. Click **Save**
+    
+    If the connection succeeds, Metabase will show a success message and begin syncing.
+    
+    ### Test from command line
+    
+    Try connecting to the database using the Metabase user credentials:
+    
+    ```bash
+    # PostgreSQL
+    psql -h hostname -U metabase -d database_name
+    
+    # MySQL
+    mysql -h hostname -u metabase -p database_name
+    ```
+  </Tab>
+</Tabs>
+
+## Security best practices
+
+<CardGroup cols={2}>
+  <Card title="Use strong passwords" icon="key">
+    Generate long, random passwords for database users
+  </Card>
+  
+  <Card title="Principle of least privilege" icon="shield-halved">
+    Only grant the minimum necessary permissions
+  </Card>
+  
+  <Card title="Separate read and write" icon="split">
+    Use different users for read-only and write operations
+  </Card>
+  
+  <Card title="Regular audits" icon="clipboard-check">
+    Periodically review and update user privileges
+  </Card>
+  
+  <Card title="Use SSL connections" icon="lock">
+    Always encrypt database connections in production
+  </Card>
+  
+  <Card title="Restrict network access" icon="network-wired">
+    Use firewall rules to limit database access
+  </Card>
+  
+  <Card title="Monitor access" icon="eye">
+    Log and review database access patterns
+  </Card>
+  
+  <Card title="Rotate credentials" icon="rotate">
+    Regularly update passwords and service account keys
+  </Card>
+</CardGroup>
+
+## Further reading
+
+<CardGroup cols={2}>
+  <Card title="Writeable connections" icon="pen-to-square" href="./writeable-connection">
+    Separate write operations from read operations (Pro/Enterprise)
+  </Card>
+  
+  <Card title="Permissions strategies" icon="chess" href="https://www.metabase.com/learn/metabase-basics/administration/permissions/strategy">
+    Learn permission strategies for your organization
+  </Card>
+  
+  <Card title="Permissions introduction" icon="book" href="../permissions/introduction">
+    Overview of Metabase permissions
+  </Card>
+  
+  <Card title="People overview" icon="users" href="../people-and-groups/start">
+    Managing users and groups in Metabase
+  </Card>
+</CardGroup>

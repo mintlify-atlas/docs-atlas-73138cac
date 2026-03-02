@@ -1,0 +1,351 @@
+---
+title: Table metadata
+description: Customize how Metabase displays and interprets your data
+---
+
+Table metadata settings control how Metabase displays and interprets your database tables and columns. These settings only affect Metabase's interface—they never modify your actual database.
+
+<Info>
+Admin users can grant table metadata permissions to other groups, allowing them to customize how data appears in Metabase.
+</Info>
+
+## Accessing metadata settings
+
+Table metadata settings are available in the admin panel.
+
+<Steps>
+  <Step title="Open admin settings">
+    Click the **grid** icon in the upper right and select **Admin**
+  </Step>
+  <Step title="Go to Table Metadata">
+    Click the **Table Metadata** tab
+  </Step>
+  <Step title="Navigate to your table">
+    Use the search box or tree navigation to find your database and table
+  </Step>
+</Steps>
+
+## Table settings
+
+Customize how tables appear and behave in Metabase.
+
+### Table name and description
+
+<AccordionGroup>
+  <Accordion title="Display name">
+    Click the table name box to edit how it appears throughout Metabase. Use friendly names instead of technical database names (e.g., "Customers" instead of "dim_customer")
+  </Accordion>
+  <Accordion title="Description">
+    Add context about what data the table contains and when to use it. Descriptions appear in the data reference and tooltips, helping users find the right table
+  </Accordion>
+</AccordionGroup>
+
+### Table visibility
+
+Control whether tables appear in the query builder and data reference.
+
+**To hide a table:**
+1. Find the table in the left sidebar navigation
+2. Click the **eye** icon next to the table name
+
+**To hide all tables in a database:**
+1. Find the database in the left sidebar
+2. Click the **eye** icon next to the database name
+
+<Warning>
+Table visibility is not a security feature. Hidden tables don't appear in the query builder, but users with SQL access can still query them with statements like `SELECT * FROM hidden_table`. For true data access control, use [data permissions](../permissions/data).
+</Warning>
+
+### Table sorting
+
+Control the order of columns in your table:
+
+- **Automatically**: Metabase decides the best order
+- **Database order**: Matches the column order in your database
+- **Alphabetically**: Sorts columns A-Z
+- **Custom**: Drag and drop to arrange columns, then click "Done"
+
+### Sync and scan operations
+
+<CardGroup cols={2}>
+  <Card title="Sync table schema" icon="rotate">
+    Updates Metabase to reflect recent schema changes in your database
+  </Card>
+  <Card title="Scan field values" icon="magnifying-glass">
+    Refreshes the values used to populate filter dropdown menus
+  </Card>
+  <Card title="Discard cached values" icon="trash">
+    Clears cached values so Metabase fetches fresh data for filter widgets
+  </Card>
+</CardGroup>
+
+For more information about sync behavior, see [Syncs and scans](../databases/sync-scan).
+
+## Field settings
+
+Fields (also called columns) can be extensively customized to improve how they display and function in questions.
+
+### Field name and description
+
+<Steps>
+  <Step title="Edit display name">
+    Click on the field name to change its global display name in Metabase (e.g., "auth.user" → "User")
+  </Step>
+  <Step title="Add description">
+    Click the description box below the name to add helpful context
+  </Step>
+</Steps>
+
+<Tip>
+Add descriptions when columns contain abbreviations, codes, zeroes/nulls with special meaning, or placeholder values like "9999-99-99".
+</Tip>
+
+### Field preview
+
+Click the preview button to see sample data from a field in three views:
+
+- **Table preview**: How the field appears in table results
+- **Detail**: How the field displays in expanded record views
+- **Filtering**: How the filter widget will appear for this field
+
+### Field data properties
+
+<AccordionGroup>
+  <Accordion title="Field name (database)">
+    The actual column name in your database. This cannot be changed from Metabase
+  </Accordion>
+  <Accordion title="Data type">
+    The column's data type in your database (text, number, date, etc.). Cannot be changed directly, but you can cast to different types
+  </Accordion>
+  <Accordion title="Cast to specific type">
+    Convert fields to different data types for Metabase's use without changing your database:
+    
+    **Text to datetime:**
+    - ISO8601→Date
+    - ISO8601→Datetime
+    - ISO8601→Time
+    
+    **Numeric to datetime:**
+    - UNIXSeconds→DateTime
+    - UNIXMilliSeconds→DateTime
+    - UNIXMicroSeconds→DateTime
+    - UNIXNanoSeconds→DateTime
+    
+    **Text to numeric:**
+    - String→Integer
+    - String→Float
+    
+    **Other conversions:**
+    - Float→Integer
+    - Datetime→Date
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+Casting changes only affect how Metabase interprets the data. Your database remains unchanged. For unsupported casting options, create a SQL question or database view instead.
+</Note>
+
+### Semantic type
+
+Semantic types add meaning to your data, enabling special features and better visualizations.
+
+**Common semantic types:**
+
+- **Email**: Validates email format, enables mailto: links
+- **URL**: Displays as clickable links
+- **Image URL**: Shows images inline
+- **Currency**: Applies currency formatting
+- **Category**: Enables dropdown filters
+- **Entity Key/Foreign Key**: Defines relationships between tables
+- **Score/Rating**: Special formatting for numeric scales
+
+Available semantic types depend on the underlying data type. Set to "No semantic type" if none fit.
+
+For a complete reference, see [Semantic types](./semantic-types).
+
+## Field visibility
+
+Control where fields appear in Metabase:
+
+<Tabs>
+  <Tab title="Everywhere">
+    Default setting. Fields appear in all views and the query builder
+  </Tab>
+  <Tab title="Only in detail views">
+    Hides the field from table results but shows it when expanding individual records. Useful for long text fields like comments
+    
+    <Note>
+    Automatically applied to fields with average length over 50 characters
+    </Note>
+  </Tab>
+  <Tab title="Do not include">
+    Removes the field from the query builder and data reference. This is NOT a permissions feature—users can still access these fields via SQL
+    
+    <Warning>
+    Use this for convenience, not security. For true access control, use [data permissions](../permissions/data)
+    </Warning>
+  </Tab>
+</Tabs>
+
+## Filtering behavior
+
+Customize how fields behave in filter widgets.
+
+<CardGroup cols={3}>
+  <Card title="Search box" icon="magnifying-glass">
+    Shows a search input with autocomplete suggestions
+  </Card>
+  <Card title="List of all values" icon="list-check">
+    Displays a dropdown with checkboxes for all distinct values (up to 1,000)
+  </Card>
+  <Card title="Plain input box" icon="keyboard">
+    Simple text input without autocomplete
+  </Card>
+</CardGroup>
+
+### Enabling dropdown filters
+
+If you want a dropdown filter with all values:
+
+<Steps>
+  <Step title="Set semantic type">
+    Change the field's semantic type to "Category"
+  </Step>
+  <Step title="Change filtering option">
+    Set filtering to "A list of all values"
+  </Step>
+  <Step title="Wait for scan">
+    Metabase will scan the field and cache up to 1,000 distinct values
+  </Step>
+</Steps>
+
+<Warning>
+Dropdown filters work best for fields with fewer than 1,000 distinct values. For larger datasets, use "Search box" instead.
+</Warning>
+
+## Display values
+
+Map field values to more readable alternatives.
+
+### Foreign key mapping
+
+Display related information instead of IDs:
+
+**Example:** Show product names instead of `product_id` numbers
+
+1. Select the field containing IDs
+2. Choose "Display values"
+3. Select the related column to display (e.g., `products.name`)
+
+### Custom value mapping
+
+Map specific values to custom labels:
+
+**Example:** Map 1, 2, 3 to "Low", "Medium", "High"
+
+<Steps>
+  <Step title="Set filtering type">
+    Change filtering to "A list of all values"
+  </Step>
+  <Step title="Open display values">
+    Select "Custom mapping" from the display values dropdown
+  </Step>
+  <Step title="Map each value">
+    Enter display text for each value under "Mapped values"
+  </Step>
+</Steps>
+
+## Field scanning
+
+Manually trigger value scans for specific fields:
+
+1. Navigate to the field in Table Metadata
+2. Click the **Field values** button
+3. Choose to scan or discard cached values
+
+Metabase uses scanned values to populate dropdown filter menus. This doesn't affect your database—only Metabase's cache.
+
+## Field formatting
+
+Control how field values display in results and visualizations. Options include:
+
+- Number formatting (decimals, separators, units)
+- Date and time formats
+- Currency display
+- Link formatting
+
+For detailed formatting options, see [Field formatting](./formatting).
+
+## JSON unfolding
+
+Extract nested data from JSON columns into separate fields for easier querying.
+
+For information about working with JSON data, see [Working with JSON](./json-unfolding).
+
+## Metadata permissions
+
+By default, only admins can edit table metadata. You can grant metadata editing permissions to specific groups:
+
+1. Go to Admin > Permissions
+2. Select the group
+3. Navigate to Data Permissions
+4. Set "Manage table metadata" to "Yes" for specific databases
+
+For more details, see [Manage table metadata permissions](../permissions/data#manage-table-metadata-permissions).
+
+<Note>
+Metadata permissions allow users to change how data displays but don't grant access to data they couldn't already see.
+</Note>
+
+## Best practices
+
+<AccordionGroup>
+  <Accordion title="Use friendly display names">
+    Replace technical names with business-friendly terms ("Customer" instead of "dim_cust_base_v2")
+  </Accordion>
+  <Accordion title="Add descriptions liberally">
+    Document what each table and field contains, especially for ambiguous or calculated values
+  </Accordion>
+  <Accordion title="Set semantic types carefully">
+    Proper semantic types enable better visualizations, filtering, and data exploration
+  </Accordion>
+  <Accordion title="Hide unnecessary fields">
+    Reduce clutter by hiding technical IDs and fields users don't need for analysis
+  </Accordion>
+  <Accordion title="Organize with field ordering">
+    Put important fields first using custom sorting to make data exploration more intuitive
+  </Accordion>
+  <Accordion title="Test your changes">
+    After updating metadata, build a sample question to verify fields display and filter correctly
+  </Accordion>
+</AccordionGroup>
+
+## Metadata vs. permissions
+
+Understand the difference between these two concepts:
+
+| Feature | Purpose | What it controls |
+|---------|---------|------------------|
+| **Metadata settings** | Improve data display | How data appears in Metabase |
+| **Data permissions** | Control access | Who can view and query data |
+
+<Warning>
+Hiding tables or fields through metadata settings does not restrict access. Users with SQL privileges can still query hidden items. Use data permissions for true access control.
+</Warning>
+
+## Further reading
+
+<CardGroup cols={2}>
+  <Card title="Semantic types" icon="tags" href="./semantic-types">
+    Complete reference for all available semantic types
+  </Card>
+  <Card title="Field formatting" icon="paintbrush" href="./formatting">
+    Customize how values display in results
+  </Card>
+  <Card title="Data permissions" icon="shield" href="../permissions/data">
+    Control who can access and query your data
+  </Card>
+  <Card title="Syncs and scans" icon="rotate" href="../databases/sync-scan">
+    Understand how Metabase updates schema and values
+  </Card>
+</CardGroup>

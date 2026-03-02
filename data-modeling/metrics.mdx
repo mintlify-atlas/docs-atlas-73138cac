@@ -1,0 +1,230 @@
+---
+title: Metrics
+description: Define official calculations for important business numbers
+---
+
+Metrics are pre-defined calculations that standardize how your team measures key business values. Create your aggregations once, save them as metrics, and use them consistently across all questions.
+
+<Info>
+Metrics ensure everyone calculates important numbers like revenue, conversion rate, or active users the same way.
+</Info>
+
+## Why use metrics
+
+Metrics solve the problem of inconsistent calculations across your organization. Instead of five different people calculating revenue five different ways, you define it once as a metric that everyone can reference.
+
+### Where you can use metrics
+
+<CardGroup cols={2}>
+  <Card title="Collections" icon="folder">
+    Save metrics to collections for easy organization and access
+  </Card>
+  <Card title="Dashboards" icon="table-cells">
+    Add metrics directly to dashboards for at-a-glance insights
+  </Card>
+  <Card title="Database browser" icon="database">
+    View available metrics when browsing your databases
+  </Card>
+  <Card title="Query builder" icon="wand-magic-sparkles">
+    Select metrics as aggregation columns in the Summarize block
+  </Card>
+</CardGroup>
+
+## Using metrics in questions
+
+Metrics integrate seamlessly into the query builder workflow.
+
+### Common metrics in summarization
+
+When building questions, find your team's metrics in the summarization section under **Common metrics**. You can:
+
+- Select multiple metrics at once
+- Combine metrics with different dimensions
+- Use custom expressions to perform calculations on metrics
+
+### Metrics as data sources
+
+You can start a question directly from a metric. If the metric includes a time dimension, Metabase automatically groups by that dimension. You can change the grouping to analyze the metric by other dimensions.
+
+<Tip>
+Use custom expressions to combine multiple metrics or perform advanced calculations like growth rates or ratios.
+</Tip>
+
+## Creating a metric
+
+<Steps>
+  <Step title="Open the metric creation dialog">
+    Use the command palette (Cmd/Ctrl + K) and search for "New metric", or navigate to **Browse > Metrics** in the sidebar and click **+**
+  </Step>
+  <Step title="Select your starting data">
+    Choose a model, existing metric, table, or saved question as your data source
+  </Step>
+  <Step title="Define your formula">
+    Create the aggregation that calculates your metric value. This is the required core of your metric
+  </Step>
+  <Step title="Add optional settings">
+    Configure joins, filters, and a default time dimension as needed
+  </Step>
+  <Step title="Save your metric">
+    Give your metric a clear name and description, then save it to a collection
+  </Step>
+</Steps>
+
+## Metric components
+
+The metric editor resembles the regular query builder with key differences:
+
+<AccordionGroup>
+  <Accordion title="Formula (required)">
+    The formula is the heart of your metric—the aggregation you're calculating. You can build metrics on top of other metrics, creating layers of reusable calculations.
+    
+    Examples:
+    - Count of orders
+    - Sum of revenue
+    - Average order value
+    - (Total revenue - Total costs) / Total revenue
+  </Accordion>
+  <Accordion title="Default time dimension (optional)">
+    Set a default time dimension to control how the metric displays in collections and dashboards. Without a time dimension, metrics show as single numbers. With one, they display as line charts.
+    
+    <Note>
+    The default time dimension doesn't lock the metric. Users can still group by different time dimensions and granularities when using the metric in questions.
+    </Note>
+  </Accordion>
+  <Accordion title="Joins and filters (optional)">
+    Add joins to bring in data from related tables and filters to focus the metric on specific subsets of data before calculation
+  </Accordion>
+</AccordionGroup>
+
+## Building metrics on metrics
+
+You can create sophisticated calculations by building metrics that reference other metrics:
+
+```
+Metric: Conversion Rate
+Formula: [Completed Orders] / [Total Orders] * 100
+
+Where:
+- [Completed Orders] is a metric
+- [Total Orders] is a metric
+```
+
+This approach creates a single source of truth for each component calculation.
+
+## Editing metrics
+
+<Steps>
+  <Step title="Open the metric">
+    Navigate to the metric you want to edit
+  </Step>
+  <Step title="Access edit mode">
+    Click the three-dot menu (**...**) and select **Edit metric definition**
+  </Step>
+  <Step title="Make your changes">
+    Modify the formula, filters, or other settings
+  </Step>
+  <Step title="Save changes">
+    Save your updates. Editing a metric requires curate access to the metric's collection
+  </Step>
+</Steps>
+
+<Warning>
+When you click a metric, Metabase assumes you're using it as a starting point for a new question. Changes you make in this mode create new questions—they don't affect the metric's definition. Use **Edit metric definition** to modify the metric itself.
+</Warning>
+
+## Time dimension behavior
+
+The default time dimension affects how metrics display, but doesn't restrict how users can analyze them.
+
+**Example scenario:**
+- You create a "Revenue" metric
+- Set default time dimension to "Created At" by month
+- Metric displays as a monthly line chart in collections
+
+**But users can still:**
+- Group by quarter instead of month
+- Group by "Updated At" instead of "Created At"
+- Remove time grouping entirely
+
+<Tip>
+Avoid naming metrics with specific time granularities (like "Monthly Revenue") since users can change the grouping. Use generic names like "Revenue" instead.
+</Tip>
+
+## Pinned metrics display
+
+When you pin metrics to a collection, their display depends on the default time dimension:
+
+<CardGroup cols={2}>
+  <Card title="Without time dimension" icon="hashtag">
+    Displays as a single number card
+  </Card>
+  <Card title="With time dimension" icon="chart-line">
+    Displays as a line chart over time
+  </Card>
+</CardGroup>
+
+## Permissions
+
+Metric permissions work like questions, models, and dashboards through collection permissions.
+
+### Viewing metrics
+
+A group can view a metric if they have view access to the metric's collection. This allows them to:
+- See the metric in the collection
+- Select it when building queries
+- Use it in questions (question permissions depend on the question's collection, not the metric's)
+
+### Editing metrics
+
+Editing the metric's query definition requires curate access to the metric's collection.
+
+<Info>
+Collection permissions interact with data permissions. Users need both collection access to see the metric AND data permissions to query the underlying data source.
+</Info>
+
+## Verifying metrics
+
+<Info>
+Available on Pro and Enterprise plans
+</Info>
+
+Admins can mark metrics as verified to indicate they're trusted and ready for widespread use. Verified metrics display a checkmark badge, helping users identify official calculations.
+
+For more information, see [Content verification](../exploration-and-organization/content-verification).
+
+## Best practices
+
+<AccordionGroup>
+  <Accordion title="Use clear, business-focused names">
+    Name metrics after business concepts ("Monthly Recurring Revenue") rather than technical details ("sum_of_invoice_amount")
+  </Accordion>
+  <Accordion title="Add comprehensive descriptions">
+    Explain what the metric measures, how it's calculated, and any important caveats or filters applied
+  </Accordion>
+  <Accordion title="Build on models when possible">
+    Use models as the foundation for metrics to ensure clean, well-structured data
+  </Accordion>
+  <Accordion title="Layer metrics strategically">
+    Create simple building-block metrics first, then build more complex metrics on top of them
+  </Accordion>
+  <Accordion title="Document calculation changes">
+    When editing metrics, clearly document what changed and why to help users understand the impact
+  </Accordion>
+</AccordionGroup>
+
+## Further reading
+
+<CardGroup cols={2}>
+  <Card title="Models" icon="diagram-project" href="./models">
+    Learn how to create models as data sources for metrics
+  </Card>
+  <Card title="Segments" icon="filter" href="./segments">
+    Create reusable filters to focus your metrics on specific data subsets
+  </Card>
+  <Card title="Collection permissions" icon="lock" href="../permissions/collections">
+    Understand how to control access to metrics
+  </Card>
+  <Card title="Data permissions" icon="shield" href="../permissions/data">
+    Configure access to underlying data sources
+  </Card>
+</CardGroup>

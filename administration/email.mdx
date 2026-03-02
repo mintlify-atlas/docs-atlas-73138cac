@@ -1,0 +1,485 @@
+---
+title: Email configuration
+description: Set up email to enable password resets, user invitations, dashboard subscriptions, and alerts in Metabase.
+---
+
+Email configuration is essential for Metabase to send notifications, password resets, and onboard new users. Both admins and users with [settings access](https://docs.metabase.com/permissions/application.html#settings-access) can configure email.
+
+<Info>
+Metabase uses email for:
+- Password reset requests
+- New user invitations
+- [Dashboard subscriptions](https://docs.metabase.com/dashboards/subscriptions.html)
+- [Alerts](https://docs.metabase.com/questions/alerts.html)
+- Admin notifications
+</Info>
+
+## Accessing email settings
+
+Navigate to **Admin** > **Settings** > **Email** to configure your email setup.
+
+## Metabase Cloud email
+
+### Default SMTP server
+
+Metabase Cloud provides a managed email server by default—no configuration required.
+
+<Steps>
+  <Step title="Automatic setup">
+    Email works immediately on new Metabase Cloud instances
+  </Step>
+  <Step title="Optional customization">
+    You can optionally configure:
+    - Display name for emails ("from" name)
+    - Reply-to email address
+  </Step>
+</Steps>
+
+<Note>
+With the default server, emails are sent from a Metabase address. The from domain cannot be changed without using a custom SMTP server.
+</Note>
+
+### Custom SMTP server on Metabase Cloud
+
+<Info>
+Custom SMTP servers on Metabase Cloud are available on Pro and Enterprise plans.
+</Info>
+
+Bring your own SMTP server to gain more control over email delivery.
+
+**Benefits of custom SMTP:**
+- Customize the from domain (useful for white-labeling)
+- Avoid emails passing through third-party services
+- Own IP reputation and monitoring
+- Control auditing and logs
+- Full compliance with email policies
+
+<Steps>
+  <Step title="Navigate to email settings">
+    Go to **Admin** > **Settings** > **Email**
+  </Step>
+  <Step title="Select custom server">
+    Click **Set up a custom SMTP server**
+  </Step>
+  <Step title="Configure SMTP settings">
+    Enter your SMTP server details (see configuration below)
+  </Step>
+  <Step title="Test configuration">
+    Send a test email to verify setup
+  </Step>
+  <Step title="Save settings">
+    Apply the configuration
+  </Step>
+</Steps>
+
+<Note>
+You can toggle between the Metabase-managed server and your custom SMTP server at any time.
+</Note>
+
+## Self-hosted email configuration
+
+For self-hosted Metabase instances, you must configure an SMTP server for email functionality.
+
+### SMTP configuration fields
+
+<Steps>
+  <Step title="SMTP host">
+    The address of your SMTP server (e.g., `smtp.gmail.com`, `smtp.sendgrid.net`)
+  </Step>
+  <Step title="SMTP port">
+    The port for outgoing email:
+    - **465**: SSL (recommended)
+    - **587**: TLS (recommended)
+    - **2525**: STARTTLS (recommended)
+    - **25**: Unencrypted (not recommended)
+  </Step>
+  <Step title="SMTP security">
+    Select the encryption protocol:
+    - **SSL**: Secure Sockets Layer
+    - **TLS**: Transport Layer Security (recommended)
+    - **STARTTLS**: Opportunistic TLS
+    - **None**: Unencrypted (not recommended)
+  </Step>
+  <Step title="SMTP username">
+    Your SMTP account username (usually your email address)
+  </Step>
+  <Step title="SMTP password">
+    Your SMTP account password or API key
+  </Step>
+  <Step title="From address">
+    The email address shown as the sender
+  </Step>
+  <Step title="Reply-to address">
+    Where replies should go (can be different from the from address)
+  </Step>
+</Steps>
+
+<Warning>
+**Security recommendation**: Always use SSL or TLS encryption for email security and account protection.
+</Warning>
+
+### Whitelisting email addresses
+
+<Note>
+If your email service has a whitelist, add your from address to ensure emails are delivered successfully.
+</Note>
+
+## Email provider configurations
+
+### Google Apps / Gmail
+
+<Steps>
+  <Step title="SMTP host">
+    `smtp.gmail.com`
+  </Step>
+  <Step title="SMTP port">
+    `465`
+  </Step>
+  <Step title="SMTP security">
+    **SSL**
+  </Step>
+  <Step title="Username">
+    Your full Google Apps email (e.g., `hello@yourdomain.com`)
+  </Step>
+  <Step title="Password">
+    Your Google Apps password or app-specific password
+  </Step>
+  <Step title="From address">
+    Your Google Apps email address
+  </Step>
+</Steps>
+
+<Accordion title="Using app-specific passwords">
+  If you have 2-factor authentication enabled on your Google account:
+  
+  1. Go to [Google Account Settings](https://myaccount.google.com/)
+  2. Navigate to Security > 2-Step Verification > App passwords
+  3. Generate a new app password for Metabase
+  4. Use this generated password instead of your regular password
+</Accordion>
+
+### Amazon SES
+
+<Steps>
+  <Step title="Access AWS console">
+    Log in to [AWS SES Console](https://console.aws.amazon.com/ses)
+  </Step>
+  <Step title="Navigate to SMTP settings">
+    Click **SMTP Settings** in the navigation pane
+  </Step>
+  <Step title="Create SMTP credentials">
+    1. Select **Create My SMTP Credentials**
+    2. Create a user in the dialog
+    3. Click **Create**
+  </Step>
+  <Step title="View credentials">
+    Click **Show User SMTP Credentials** to view your credentials
+  </Step>
+  <Step title="Configure in Metabase">
+    Use the provided SMTP endpoint, port, username, and password
+  </Step>
+</Steps>
+
+<Warning>
+**Amazon SES quotas**: Check if [email quotas](https://docs.aws.amazon.com/ses/latest/dg/quotas.html) apply to your account. Consider managing recipients using groups to stay within limits.
+</Warning>
+
+**Typical Amazon SES settings:**
+- **Host**: `email-smtp.us-east-1.amazonaws.com` (varies by region)
+- **Port**: `587` (TLS) or `465` (SSL)
+- **Security**: TLS or SSL
+- **Username**: Your SMTP username from AWS
+- **Password**: Your SMTP password from AWS
+
+### Mandrill
+
+<Steps>
+  <Step title="Get credentials">
+    Log in to Mandrill and locate **SMTP & API Info**
+  </Step>
+  <Step title="SMTP host">
+    `smtp.mandrillapp.com`
+  </Step>
+  <Step title="SMTP port">
+    Any port [supported by Mandrill](https://mailchimp.com/developer/transactional/docs/smtp-integration/#the-basics): `587`, `2525`, or `465`
+  </Step>
+  <Step title="Username">
+    Your Mandrill account email
+  </Step>
+  <Step title="Password">
+    Any active API key (not your Mandrill password)
+  </Step>
+</Steps>
+
+<Note>
+**Important**: For Mandrill, use an active API key as the password, not your account password.
+</Note>
+
+### SendGrid
+
+<Steps>
+  <Step title="Create API key">
+    Generate an API key in SendGrid settings with full mail send access
+  </Step>
+  <Step title="SMTP host">
+    `smtp.sendgrid.net`
+  </Step>
+  <Step title="SMTP port">
+    `587` (TLS recommended) or `465` (SSL)
+  </Step>
+  <Step title="Security">
+    TLS or SSL
+  </Step>
+  <Step title="Username">
+    `apikey` (literally the string "apikey")
+  </Step>
+  <Step title="Password">
+    Your SendGrid API key
+  </Step>
+</Steps>
+
+### Office 365 / Microsoft 365
+
+<Steps>
+  <Step title="SMTP host">
+    `smtp.office365.com`
+  </Step>
+  <Step title="SMTP port">
+    `587`
+  </Step>
+  <Step title="Security">
+    STARTTLS
+  </Step>
+  <Step title="Username">
+    Your full Office 365 email address
+  </Step>
+  <Step title="Password">
+    Your Office 365 password
+  </Step>
+</Steps>
+
+## Advanced email settings
+
+### CC vs BCC recipients
+
+By default, Metabase uses BCC (Blind Carbon Copy) to hide email recipients from each other.
+
+<Accordion title="When to use CC instead of BCC">
+  Switch to CC (Carbon Copy) if:
+  - Your email provider blocks BCC emails
+  - You want recipients to see who else received the email
+  - Your organization requires visible recipient lists
+  
+  <Warning>
+  With CC enabled, all recipients can see each other's email addresses in subscriptions and alerts.
+  </Warning>
+</Accordion>
+
+Configure this in **Admin** > **Settings** > **Email** > **Recipient visibility**.
+
+### Approved domains for notifications
+
+<Info>
+Approved domains are available on Pro and Enterprise plans.
+</Info>
+
+Restrict which external email addresses can receive [alerts](https://docs.metabase.com/questions/alerts.html) and [dashboard subscriptions](https://docs.metabase.com/dashboards/subscriptions.html).
+
+<Steps>
+  <Step title="Navigate to email settings">
+    Go to **Admin** > **Settings** > **Email**
+  </Step>
+  <Step title="Configure approved domains">
+    Enter allowed domains in the **Approved domains** field
+  </Step>
+  <Step title="Save settings">
+    Apply the configuration
+  </Step>
+</Steps>
+
+**Configuration examples:**
+
+```text
+example.com
+```
+Allows any `@example.com` email address
+
+```text
+example.com,partner.com,vendor.com
+```
+Allows multiple domains (comma-separated, no spaces)
+
+```text
+
+```
+Empty field allows all domains (default)
+
+<Note>
+**Important behaviors:**
+- Restrictions only apply to external recipients (people without Metabase accounts)
+- Users with Metabase accounts can email each other regardless of domain
+- People with [row or column security](https://docs.metabase.com/permissions/row-and-column-security.html) cannot see email suggestions
+- Existing subscriptions and alerts are not affected
+</Note>
+
+Alternatively, set via environment variable:
+```bash
+MB_SUBSCRIPTION_ALLOWED_DOMAINS=example.com,partner.com
+```
+
+### Suggested recipients
+
+<Info>
+Configuring suggested recipients is available on Pro and Enterprise plans.
+</Info>
+
+Control which users are suggested when creating subscriptions and alerts.
+
+**Options:**
+
+<Accordion title="Suggest all users">
+  Show all Metabase users as potential recipients when creating subscriptions and alerts.
+  
+  **Best for**: Small teams with open collaboration
+</Accordion>
+
+<Accordion title="Only suggest users in the same groups">
+  Only show users who share at least one group with the person creating the subscription/alert.
+  
+  **Best for**: Organizations with department-based groups wanting to limit cross-department notifications
+</Accordion>
+
+<Accordion title="Don't show suggestions">
+  Recipients must manually enter email addresses—no suggestions appear.
+  
+  **Best for**: High-security environments or when working with external recipients
+</Accordion>
+
+<Note>
+Users with [row or column restrictions](https://docs.metabase.com/permissions/row-and-column-security.html) never see suggestions, regardless of this setting.
+</Note>
+
+## Testing email configuration
+
+After configuring email settings, always test before relying on email functionality.
+
+<Steps>
+  <Step title="Configure SMTP">
+    Enter all required SMTP settings
+  </Step>
+  <Step title="Send test email">
+    Click **Send test email** button at the bottom of the form
+  </Step>
+  <Step title="Check inbox">
+    Verify the test email arrives in your inbox
+  </Step>
+  <Step title="Check spam folder">
+    If not received, check spam/junk folders
+  </Step>
+  <Step title="Verify settings">
+    If test fails, review SMTP credentials and network connectivity
+  </Step>
+</Steps>
+
+<Accordion title="Common test email failures">
+  **Authentication errors:**
+  - Incorrect username or password
+  - 2FA enabled without app-specific password
+  - API key instead of password (or vice versa)
+  
+  **Connection errors:**
+  - Firewall blocking SMTP port
+  - Incorrect host or port
+  - Wrong security protocol selected
+  
+  **Authorization errors:**
+  - From address not authorized to send
+  - Account not verified with email provider
+  - Sending limits reached
+</Accordion>
+
+## Troubleshooting
+
+<Accordion title="Emails not being received">
+  **Check:**
+  1. Test email configuration works
+  2. Emails aren't in spam folders
+  3. From address is whitelisted
+  4. Recipient email addresses are correct
+  5. Email provider quotas haven't been exceeded
+  6. Email logs for error messages
+</Accordion>
+
+<Accordion title="Authentication failures">
+  **Verify:**
+  1. Username is correct format
+  2. Password/API key is current and accurate
+  3. For Gmail: App-specific password if using 2FA
+  4. For Mandrill: Using API key, not account password
+  5. For SendGrid: Username is literally "apikey"
+</Accordion>
+
+<Accordion title="Connection timeouts">
+  **Check:**
+  1. Firewall allows outbound connections on SMTP port
+  2. Network can reach SMTP server
+  3. Correct port selected (465 for SSL, 587 for TLS)
+  4. Security protocol matches port
+  5. SMTP server is operational
+</Accordion>
+
+<Accordion title="Subscriptions not sending">
+  **Verify:**
+  1. Email configuration is working
+  2. Subscription schedule is correct
+  3. Dashboard/question permissions are set correctly
+  4. Recipients have proper access
+  5. No email delivery errors in logs
+</Accordion>
+
+## Environment variables
+
+For self-hosted deployments, configure email via environment variables:
+
+```bash
+MB_EMAIL_SMTP_HOST=smtp.example.com
+MB_EMAIL_SMTP_PORT=587
+MB_EMAIL_SMTP_SECURITY=tls
+MB_EMAIL_SMTP_USERNAME=user@example.com
+MB_EMAIL_SMTP_PASSWORD=your-password
+MB_EMAIL_FROM_ADDRESS=metabase@example.com
+MB_EMAIL_REPLY_TO=support@example.com
+```
+
+See the [complete list of environment variables](https://docs.metabase.com/configuring-metabase/environment-variables.html).
+
+## Best practices
+
+<Steps>
+  <Step title="Use encrypted connections">
+    Always configure SSL or TLS encryption for security
+  </Step>
+  <Step title="Test thoroughly">
+    Verify email works with test emails and real subscriptions
+  </Step>
+  <Step title="Monitor deliverability">
+    Check email delivery rates and spam classifications
+  </Step>
+  <Step title="Configure reply-to">
+    Set a monitored reply-to address for user responses
+  </Step>
+  <Step title="Document configuration">
+    Maintain records of email setup for troubleshooting
+  </Step>
+  <Step title="Review approved domains">
+    Regularly audit approved domains for notifications
+  </Step>
+</Steps>
+
+## Related documentation
+
+- [Dashboard subscriptions](https://docs.metabase.com/dashboards/subscriptions.html)
+- [Alerts configuration](https://docs.metabase.com/questions/alerts.html)
+- [Notification permissions](https://docs.metabase.com/permissions/notifications.html)
+- [Slack setup](https://docs.metabase.com/configuring-metabase/slack.html)
+- [Environment variables](https://docs.metabase.com/configuring-metabase/environment-variables.html)

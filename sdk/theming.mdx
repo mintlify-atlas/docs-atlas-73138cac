@@ -1,0 +1,567 @@
+---
+title: Theming
+description: Customize the appearance of embedded Metabase components to match your brand
+---
+
+The Metabase Embedding SDK provides comprehensive theming capabilities to customize the appearance of embedded components.
+
+## Basic theming
+
+Use the `defineMetabaseTheme` helper to create type-safe theme configurations:
+
+```tsx
+import { MetabaseProvider, defineMetabaseTheme } from '@metabase/embedding-sdk-react';
+
+const theme = defineMetabaseTheme({
+  colors: {
+    brand: '#9333EA',
+    'text-primary': '#1F2937',
+  },
+  fontFamily: 'Inter, sans-serif',
+});
+
+function App() {
+  return (
+    <MetabaseProvider authConfig={authConfig} theme={theme}>
+      {/* Your app */}
+    </MetabaseProvider>
+  );
+}
+```
+
+## Theme presets
+
+Start with a built-in theme preset:
+
+<CodeGroup>
+
+```tsx Light theme
+const theme = defineMetabaseTheme({
+  preset: 'light',
+  colors: {
+    brand: '#9333EA',
+  },
+});
+```
+
+```tsx Dark theme
+const theme = defineMetabaseTheme({
+  preset: 'dark',
+  colors: {
+    brand: '#A78BFA',
+  },
+});
+```
+
+</CodeGroup>
+
+## Typography
+
+### Font family
+
+```tsx
+const theme = defineMetabaseTheme({
+  fontFamily: 'Inter, system-ui, sans-serif',
+});
+```
+
+The SDK supports common web fonts and Google Fonts:
+
+```tsx
+const theme = defineMetabaseTheme({
+  fontFamily: 'Roboto', // Google Font
+});
+```
+
+### Font size
+
+Set the base font size (supports px, em, and rem):
+
+```tsx
+const theme = defineMetabaseTheme({
+  fontSize: '16px',
+});
+```
+
+### Line height
+
+```tsx
+const theme = defineMetabaseTheme({
+  lineHeight: 1.6,
+});
+```
+
+## Color customization
+
+### Brand colors
+
+```tsx
+const theme = defineMetabaseTheme({
+  colors: {
+    brand: '#9333EA',
+    'brand-hover': '#7C3AED',
+    'brand-hover-light': '#A78BFA',
+  },
+});
+```
+
+### Text colors
+
+```tsx
+const theme = defineMetabaseTheme({
+  colors: {
+    'text-primary': '#1F2937',
+    'text-secondary': '#6B7280',
+    'text-tertiary': '#9CA3AF',
+    'text-white': '#FFFFFF',
+    'text-hover': '#111827',
+  },
+});
+```
+
+### Background colors
+
+```tsx
+const theme = defineMetabaseTheme({
+  colors: {
+    background: '#FFFFFF',
+    'background-secondary': '#F9FAFB',
+    'background-hover': '#F3F4F6',
+    'background-disabled': '#E5E7EB',
+    'background-light': '#F9FAFB',
+  },
+});
+```
+
+### Border and shadow
+
+```tsx
+const theme = defineMetabaseTheme({
+  colors: {
+    border: '#E5E7EB',
+    shadow: 'rgba(0, 0, 0, 0.1)',
+  },
+});
+```
+
+### Status colors
+
+```tsx
+const theme = defineMetabaseTheme({
+  colors: {
+    positive: '#10B981',
+    negative: '#EF4444',
+    error: '#DC2626',
+    'background-error': '#FEE2E2',
+  },
+});
+```
+
+### Query builder colors
+
+```tsx
+const theme = defineMetabaseTheme({
+  colors: {
+    filter: '#7C3AED',
+    summarize: '#2563EB',
+  },
+});
+```
+
+### Chart colors
+
+Customize the color palette used in visualizations:
+
+```tsx
+const theme = defineMetabaseTheme({
+  colors: {
+    charts: [
+      '#9333EA',
+      '#3B82F6',
+      '#10B981',
+      '#F59E0B',
+      '#EF4444',
+    ],
+  },
+});
+```
+
+### Advanced chart colors with tints and shades
+
+```tsx
+const theme = defineMetabaseTheme({
+  colors: {
+    charts: [
+      {
+        base: '#9333EA',
+        tint: '#C4B5FD',
+        shade: '#6B21A8',
+      },
+      {
+        base: '#3B82F6',
+        tint: '#93C5FD',
+        shade: '#1E40AF',
+      },
+    ],
+  },
+});
+```
+
+## Component theming
+
+### Dashboard
+
+```tsx
+const theme = defineMetabaseTheme({
+  components: {
+    dashboard: {
+      backgroundColor: '#F9FAFB',
+      gridBorderColor: '#E5E7EB',
+      card: {
+        backgroundColor: '#FFFFFF',
+        border: '1px solid #E5E7EB',
+      },
+    },
+  },
+});
+```
+
+### Question
+
+```tsx
+const theme = defineMetabaseTheme({
+  components: {
+    question: {
+      backgroundColor: '#FFFFFF',
+      toolbar: {
+        backgroundColor: '#F9FAFB',
+      },
+    },
+  },
+});
+```
+
+### Table visualization
+
+```tsx
+const theme = defineMetabaseTheme({
+  components: {
+    table: {
+      stickyBackgroundColor: '#FFFFFF',
+      cell: {
+        textColor: '#1F2937',
+        backgroundColor: '#FFFFFF',
+        fontSize: '14px',
+      },
+      idColumn: {
+        textColor: '#9333EA',
+        backgroundColor: '#F3E8FF',
+      },
+    },
+  },
+});
+```
+
+### Pivot table
+
+```tsx
+const theme = defineMetabaseTheme({
+  components: {
+    pivotTable: {
+      cell: {
+        fontSize: '13px',
+      },
+      rowToggle: {
+        textColor: '#1F2937',
+        backgroundColor: '#F3F4F6',
+      },
+    },
+  },
+});
+```
+
+### Number visualization
+
+```tsx
+const theme = defineMetabaseTheme({
+  components: {
+    number: {
+      value: {
+        fontSize: '3rem',
+        lineHeight: '1',
+      },
+    },
+  },
+});
+```
+
+### Cartesian charts
+
+```tsx
+const theme = defineMetabaseTheme({
+  components: {
+    cartesian: {
+      padding: '16px',
+      label: {
+        fontSize: '12px',
+      },
+      goalLine: {
+        label: {
+          fontSize: '12px',
+        },
+      },
+      splitLine: {
+        lineStyle: {
+          color: '#E5E7EB',
+        },
+      },
+    },
+  },
+});
+```
+
+### Tooltip
+
+```tsx
+const theme = defineMetabaseTheme({
+  components: {
+    tooltip: {
+      textColor: '#FFFFFF',
+      secondaryTextColor: '#D1D5DB',
+      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+      focusedBackgroundColor: 'rgba(0, 0, 0, 0.95)',
+    },
+  },
+});
+```
+
+### Popover z-index
+
+Useful for embedding components in a modal:
+
+```tsx
+const theme = defineMetabaseTheme({
+  components: {
+    popover: {
+      zIndex: 1000,
+    },
+  },
+});
+```
+
+### Collection browser
+
+```tsx
+const theme = defineMetabaseTheme({
+  components: {
+    collectionBrowser: {
+      breadcrumbs: {
+        expandButton: {
+          backgroundColor: '#F3F4F6',
+          hoverBackgroundColor: '#E5E7EB',
+          textColor: '#1F2937',
+          hoverTextColor: '#111827',
+        },
+      },
+      emptyContent: {
+        icon: {
+          width: '120px',
+          height: '120px',
+        },
+        title: {
+          fontSize: '1.5rem',
+        },
+        subtitle: {
+          fontSize: '1rem',
+        },
+      },
+    },
+  },
+});
+```
+
+## Complete theme example
+
+```tsx
+import { defineMetabaseTheme } from '@metabase/embedding-sdk-react';
+
+const theme = defineMetabaseTheme({
+  preset: 'light',
+  fontFamily: 'Inter, sans-serif',
+  fontSize: '14px',
+  lineHeight: 1.5,
+  colors: {
+    brand: '#9333EA',
+    'brand-hover': '#7C3AED',
+    'brand-hover-light': '#A78BFA',
+    'text-primary': '#1F2937',
+    'text-secondary': '#6B7280',
+    'text-tertiary': '#9CA3AF',
+    background: '#FFFFFF',
+    'background-secondary': '#F9FAFB',
+    border: '#E5E7EB',
+    positive: '#10B981',
+    negative: '#EF4444',
+    charts: [
+      '#9333EA',
+      '#3B82F6',
+      '#10B981',
+      '#F59E0B',
+      '#EF4444',
+    ],
+  },
+  components: {
+    dashboard: {
+      backgroundColor: '#F9FAFB',
+      card: {
+        backgroundColor: '#FFFFFF',
+        border: '1px solid #E5E7EB',
+      },
+    },
+    question: {
+      backgroundColor: '#FFFFFF',
+    },
+    table: {
+      cell: {
+        textColor: '#1F2937',
+        fontSize: '14px',
+      },
+      idColumn: {
+        textColor: '#9333EA',
+      },
+    },
+    cartesian: {
+      label: {
+        fontSize: '12px',
+      },
+    },
+  },
+});
+```
+
+## Dynamic theming
+
+Create theme switchers for your users:
+
+```tsx
+import { MetabaseProvider, defineMetabaseTheme } from '@metabase/embedding-sdk-react';
+import { useState } from 'react';
+
+const lightTheme = defineMetabaseTheme({
+  preset: 'light',
+  colors: {
+    brand: '#9333EA',
+  },
+});
+
+const darkTheme = defineMetabaseTheme({
+  preset: 'dark',
+  colors: {
+    brand: '#A78BFA',
+  },
+});
+
+function App() {
+  const [isDark, setIsDark] = useState(false);
+
+  return (
+    <>
+      <button onClick={() => setIsDark(!isDark)}>
+        Toggle {isDark ? 'Light' : 'Dark'} Mode
+      </button>
+      
+      <MetabaseProvider 
+        authConfig={authConfig} 
+        theme={isDark ? darkTheme : lightTheme}
+      >
+        {/* Your app */}
+      </MetabaseProvider>
+    </>
+  );
+}
+```
+
+## TypeScript types
+
+```typescript
+import type {
+  MetabaseTheme,
+  MetabaseThemePreset,
+  MetabaseColors,
+  MetabaseComponentTheme,
+  MetabaseFontFamily,
+  ChartColor,
+} from '@metabase/embedding-sdk-react';
+```
+
+## Theme reference
+
+### Color properties
+
+<ParamField path="colors.brand" type="string">
+  Primary brand color for buttons and links
+</ParamField>
+
+<ParamField path="colors.brand-hover" type="string">
+  Hover state for brand elements
+</ParamField>
+
+<ParamField path="colors.text-primary" type="string">
+  Main text color
+</ParamField>
+
+<ParamField path="colors.background" type="string">
+  Default background color
+</ParamField>
+
+<ParamField path="colors.charts" type="ChartColor[]">
+  Array of colors for chart series
+</ParamField>
+
+### Component properties
+
+<ParamField path="components.dashboard.card.border" type="string">
+  CSS border property for dashboard cards (e.g., `"1px solid #E5E7EB"`)
+</ParamField>
+
+<ParamField path="components.table.cell.fontSize" type="string">
+  Font size for table cells
+</ParamField>
+
+<ParamField path="components.popover.zIndex" type="number">
+  Z-index for popovers and overlays
+</ParamField>
+
+## Best practices
+
+### Use CSS variables
+
+For dynamic themes, consider using CSS variables:
+
+```tsx
+const theme = defineMetabaseTheme({
+  colors: {
+    brand: 'var(--primary-color)',
+    background: 'var(--bg-color)',
+  },
+});
+```
+
+### Maintain contrast
+
+Ensure sufficient color contrast for accessibility:
+- Text on backgrounds: minimum 4.5:1 ratio
+- Large text: minimum 3:1 ratio
+
+### Test with real data
+
+Always test your theme with:
+- Different chart types
+- Various data densities
+- Multiple dashboard layouts
+- Light and dark environments
+
+## Related
+
+- [Custom styling](/sdk/custom-styling) - Additional styling techniques
+- [Configuration](/sdk/configuration) - General SDK configuration

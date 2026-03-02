@@ -1,0 +1,223 @@
+---
+title: Adding and managing databases
+description: Connect Metabase to your data sources and manage database connections
+---
+
+# Adding and managing databases
+
+Connect Metabase to your data sources and start querying your data. Metabase supports a wide range of databases, from traditional relational databases to modern cloud data warehouses.
+
+## Adding a database connection
+
+To add a database connection:
+
+1. Click the **grid icon** in the top right corner of Metabase
+2. Navigate to **Admin** > **Databases**
+3. Click **Add a database**
+4. Fill out the connection fields for your database
+5. Click **Save changes** at the bottom
+
+<Note>
+  The connection settings differ from database to database. For specific connection settings, see the [supported databases](#connecting-to-supported-databases) section below.
+</Note>
+
+## Connecting to supported databases
+
+Metabase officially supports the following databases. These databases have drivers maintained by the Metabase team, and customers on [Pro and Enterprise plans](https://www.metabase.com/pricing/) receive official support.
+
+<Warning>
+  As of version 46.6.4, Metabase [no longer supports H2 connections](https://www.metabase.com/blog/vulnerability-post-mortem) for security reasons. Metabase still ships with an embedded H2 database for application data and sample data.
+</Warning>
+
+<CardGroup cols={2}>
+  <Card title="Amazon Athena" icon="aws" href="./connections/athena">
+    Query data in Amazon S3 using SQL
+  </Card>
+  
+  <Card title="BigQuery" icon="google" href="./connections/bigquery">
+    Google Cloud Platform's serverless data warehouse
+  </Card>
+  
+  <Card title="ClickHouse" icon="database" href="./connections/clickhouse">
+    High-performance columnar database
+  </Card>
+  
+  <Card title="Databricks" icon="database" href="./connections/databricks">
+    Unified analytics platform on Apache Spark
+  </Card>
+  
+  <Card title="Druid" icon="database" href="./connections/druid">
+    Real-time analytics database
+  </Card>
+  
+  <Card title="MongoDB" icon="leaf" href="./connections/mongodb">
+    Document-oriented NoSQL database
+  </Card>
+  
+  <Card title="MariaDB" icon="database" href="./connections/mariadb">
+    MySQL-compatible relational database
+  </Card>
+  
+  <Card title="MySQL" icon="database" href="./connections/mysql">
+    Popular open-source relational database
+  </Card>
+  
+  <Card title="Oracle" icon="database" href="./connections/oracle">
+    Enterprise relational database
+  </Card>
+  
+  <Card title="PostgreSQL" icon="elephant" href="./connections/postgresql">
+    Advanced open-source relational database
+  </Card>
+  
+  <Card title="Presto" icon="database" href="./connections/presto">
+    Distributed SQL query engine
+  </Card>
+  
+  <Card title="Amazon Redshift" icon="aws" href="./connections/redshift">
+    AWS cloud data warehouse
+  </Card>
+  
+  <Card title="Snowflake" icon="snowflake" href="./connections/snowflake">
+    Cloud-native data warehouse
+  </Card>
+  
+  <Card title="SparkSQL" icon="fire" href="./connections/sparksql">
+    SQL interface for Apache Spark
+  </Card>
+  
+  <Card title="SQL Server" icon="microsoft" href="./connections/sql-server">
+    Microsoft's enterprise database
+  </Card>
+  
+  <Card title="SQLite" icon="database" href="./connections/sqlite">
+    Lightweight embedded database
+  </Card>
+  
+  <Card title="Starburst" icon="star" href="./connections/starburst">
+    Enterprise Trino-based analytics
+  </Card>
+  
+  <Card title="Vertica" icon="database" href="./connections/vertica">
+    High-performance analytics database
+  </Card>
+</CardGroup>
+
+### Version support policy
+
+For each database, Metabase supports the oldest supported version through the latest stable version. Check your specific database documentation for details on supported versions.
+
+### Community drivers
+
+If you don't see your database listed here, check out the [Community drivers](../developers-guide/community-drivers) section for databases supported by the Metabase community.
+
+## Connecting to cloud-hosted databases
+
+For provider-specific connection details, such as connecting to a PostgreSQL data warehouse on AWS RDS:
+
+<Card title="AWS RDS" icon="aws" href="./connections/aws-rds">
+  Connect to databases hosted on Amazon's Relational Database Service
+</Card>
+
+## Setting up database privileges
+
+<Warning>
+  Before connecting Metabase to your database, you need to grant the appropriate privileges to a Metabase database user.
+</Warning>
+
+For Metabase to connect, query, or write to your database, you must provide a database user account with the correct privileges:
+
+- **Read-only access**: Required for all connections to query your data
+- **Write access**: Optional, needed for features like uploads, actions, and model persistence
+
+See [Database roles, users, and privileges](./users-roles-privileges) for detailed setup instructions.
+
+## Managing database connections
+
+### Connection and sync status
+
+After connecting a database, you can view its connection status and manage sync settings from **Admin** > **Databases** > select your database.
+
+This section shows:
+- Current connection status
+- Last sync time
+- Options to sync schema or rescan field values
+
+### Syncing and scanning databases
+
+Metabase periodically runs queries against your database to stay up to date with your schema and data. This includes:
+
+- **Schema sync**: Updates table and column information
+- **Field value scanning**: Populates filter dropdowns and identifies data types
+- **Fingerprinting**: Computes statistics to improve visualizations
+
+<Accordion title="When do syncs and scans happen?">
+  By default, Metabase performs:
+  - **Hourly sync**: Lightweight schema updates
+  - **Daily scan**: More intensive field value scanning
+  
+  You can customize these schedules in your database settings under **Choose when syncs and scans happen**.
+</Accordion>
+
+For complete details, see [Syncing and scanning databases](./sync-scan).
+
+## Deleting databases
+
+<Warning>
+  Deleting a database is **irreversible**. All saved questions and dashboard cards based on this database will be permanently deleted.
+</Warning>
+
+To delete a database:
+
+1. Go to **Admin** > **Databases**
+2. Select your database
+3. Scroll to the bottom and click **Remove this database**
+
+### Restoring the Sample Database
+
+If you've deleted the Metabase Sample Database, you can restore it:
+
+1. Go to **Admin** > **Databases**
+2. Click **Bring the Sample Database back**
+
+## Troubleshooting
+
+Having connection issues? Check out these resources:
+
+<CardGroup cols={2}>
+  <Card title="Database connection issues" href="../troubleshooting-guide/db-connection">
+    Common connection problems and solutions
+  </Card>
+  
+  <Card title="Sync and scan issues" href="../troubleshooting-guide/sync-fingerprint-scan">
+    Troubleshoot syncing and fingerprinting
+  </Card>
+  
+  <Card title="Known issues" href="../troubleshooting-guide/known-issues">
+    Check for known bugs or limitations
+  </Card>
+  
+  <Card title="Community forum" href="https://discourse.metabase.com/">
+    Search or ask the Metabase community
+  </Card>
+</CardGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Metadata editing" icon="pen" href="../data-modeling/metadata-editing">
+    Customize how your data appears in Metabase
+  </Card>
+  
+  <Card title="Data permissions" icon="lock" href="../permissions/data">
+    Control who can access which data
+  </Card>
+  
+  <Card title="Database privileges" icon="user-shield" href="./users-roles-privileges">
+    Set up proper database user permissions
+  </Card>
+  
+  <Card title="Metabase at scale" icon="chart-line" href="https://www.metabase.com/learn/metabase-basics/administration/administration-and-operation/metabase-at-scale">
+    Best practices for large deployments
+  </Card>
+</CardGroup>

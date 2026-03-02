@@ -1,0 +1,520 @@
+---
+title: 'Native queries'
+description: 'Understand how to write database-specific queries for MongoDB, PostgreSQL, MySQL, and other databases in Metabase.'
+---
+
+Native queries let you use your database's native query language instead of SQL. This is particularly useful for NoSQL databases like MongoDB, or when you need database-specific features.
+
+## What are native queries?
+
+Native queries are written in your database's native language:
+
+<CardGroup cols={3}>
+  <Card title="SQL databases" icon="database">
+    PostgreSQL, MySQL, SQL Server, Oracle, etc. use SQL
+  </Card>
+  
+  <Card title="MongoDB" icon="leaf">
+    Uses MongoDB query language (MQL) for aggregations and queries
+  </Card>
+  
+  <Card title="Other databases" icon="server">
+    Druid, Presto, BigQuery each have their own dialects and features
+  </Card>
+</CardGroup>
+
+## When to use native queries
+
+Choose native queries when you need:
+
+<AccordionGroup>
+  <Accordion title="Database-specific features">
+    Use features unique to your database:
+    - PostgreSQL: JSONB operations, array functions, window functions
+    - MongoDB: Aggregation pipeline, MapReduce
+    - BigQuery: ML functions, geography operations
+    - MySQL: Full-text search, spatial data
+  </Accordion>
+  
+  <Accordion title="Performance optimization">
+    Write queries optimized for your specific database:
+    - Use database-specific indexes
+    - Leverage query hints
+    - Optimize for your database's query planner
+  </Accordion>
+  
+  <Accordion title="Complex transformations">
+    Perform operations the query builder can't express:
+    - Recursive queries (CTEs)
+    - Complex conditional logic
+    - Advanced aggregations
+    - Custom functions
+  </Accordion>
+</AccordionGroup>
+
+## SQL databases
+
+For SQL databases (PostgreSQL, MySQL, SQL Server, Oracle, etc.), you write standard SQL with database-specific extensions.
+
+### Common SQL patterns
+
+<Tabs>
+  <Tab title="Basic query">
+    ```sql
+    SELECT 
+      customer_id,
+      order_date,
+      total_amount
+    FROM orders
+    WHERE order_date >= '2024-01-01'
+    ORDER BY order_date DESC
+    ```
+  </Tab>
+  
+  <Tab title="Aggregation">
+    ```sql
+    SELECT 
+      date_trunc('month', order_date) as month,
+      count(*) as order_count,
+      sum(total_amount) as revenue
+    FROM orders
+    GROUP BY month
+    ORDER BY month
+    ```
+  </Tab>
+  
+  <Tab title="Joins">
+    ```sql
+    SELECT 
+      c.name,
+      count(o.id) as order_count,
+      sum(o.total) as total_spent
+    FROM customers c
+    LEFT JOIN orders o ON c.id = o.customer_id
+    GROUP BY c.name
+    ORDER BY total_spent DESC
+    LIMIT 10
+    ```
+  </Tab>
+  
+  <Tab title="Window functions">
+    ```sql
+    SELECT 
+      order_date,
+      total_amount,
+      sum(total_amount) OVER (
+        ORDER BY order_date
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+      ) as running_total
+    FROM orders
+    ORDER BY order_date
+    ```
+  </Tab>
+</Tabs>
+
+### PostgreSQL-specific features
+
+<CodeGroup>
+
+```sql JSON operations
+SELECT 
+  id,
+  data->>'name' as name,
+  (data->>'age')::int as age
+FROM users
+WHERE data ?? 'premium'
+```
+
+```sql Array functions
+SELECT 
+  product_id,
+  unnest(tags) as tag
+FROM products
+WHERE 'featured' = ANY(tags)
+```
+
+```sql CTEs and recursive queries
+WITH RECURSIVE category_tree AS (
+  SELECT id, name, parent_id, 1 as level
+  FROM categories
+  WHERE parent_id IS NULL
+  
+  UNION ALL
+  
+  SELECT c.id, c.name, c.parent_id, ct.level + 1
+  FROM categories c
+  JOIN category_tree ct ON c.parent_id = ct.id
+)
+SELECT * FROM category_tree
+```
+
+</CodeGroup>
+
+<Warning>
+For PostgreSQL JSON operations, use `??` instead of `?` due to JDBC limitations. The single `?` is interpreted as a parameter placeholder.
+</Warning>
+
+### MySQL-specific features
+
+<CodeGroup>
+
+```sql Full-text search
+SELECT 
+  id,
+  title,
+  MATCH(title, content) AGAINST ('search term' IN BOOLEAN MODE) as relevance
+FROM articles
+WHERE MATCH(title, content) AGAINST ('search term' IN BOOLEAN MODE)
+ORDER BY relevance DESC
+```
+
+```sql JSON functions
+SELECT 
+  id,
+  JSON_EXTRACT(data, '$.name') as name,
+  JSON_EXTRACT(data, '$.address.city') as city
+FROM customers
+WHERE JSON_CONTAINS(data, '"premium"', '$.plan')
+```
+
+</CodeGroup>
+
+## MongoDB queries
+
+MongoDB uses its own query language based on JavaScript:
+
+### Aggregation pipeline
+
+<CodeGroup>
+
+```javascript Basic aggregation
+db.orders.aggregate([
+  {
+    $match: {
+      order_date: { $gte: ISODate("2024-01-01") }
+    }
+  },
+  {
+    $group: {
+      _id: "$status",
+      total: { $sum: 1 },
+      revenue: { $sum: "$total_amount" }
+    }
+  },
+  {
+    $sort: { revenue: -1 }
+  }
+])
+```
+
+```javascript Complex pipeline
+db.orders.aggregate([
+  {
+    $match: {
+      order_date: {
+        $gte: ISODate("2024-01-01"),
+        $lt: ISODate("2024-12-31")
+      }
+    }
+  },
+  {
+    $lookup: {
+      from: "customers",
+      localField: "customer_id",
+      foreignField: "_id",
+      as: "customer"
+    }
+  },
+  {
+    $unwind: "$customer"
+  },
+  {
+    $group: {
+      _id: {
+        month: { $month: "$order_date" },
+        customer_type: "$customer.type"
+      },
+      order_count: { $sum: 1 },
+      revenue: { $sum: "$total_amount" },
+      avg_order: { $avg: "$total_amount" }
+    }
+  },
+  {
+    $sort: { "_id.month": 1 }
+  }
+])
+```
+
+```javascript With variables
+db.orders.aggregate([
+  {
+    $match: {
+      status: {{status}},
+      total_amount: { $gte: {{min_amount}} }
+    }
+  },
+  {
+    $group: {
+      _id: "$customer_id",
+      total: { $sum: "$total_amount" }
+    }
+  }
+])
+```
+
+</CodeGroup>
+
+<Info>
+You can use Metabase variables in MongoDB queries just like in SQL. Wrap variable names in double curly braces: `{{variable_name}}`.
+</Info>
+
+## Adding variables to native queries
+
+Make your native queries interactive with variables:
+
+<Steps>
+  <Step title="Add variable syntax">
+    Include variables in your query using double curly braces:
+    
+    ```sql
+    WHERE status = {{status}}
+    ```
+  </Step>
+  
+  <Step title="Configure variable">
+    When you add a variable, Metabase shows the variables sidebar where you can set:
+    - Variable type (field filter, text, number, date)
+    - Display label
+    - Widget type (dropdown, search, input)
+    - Default value
+  </Step>
+  
+  <Step title="Test your variable">
+    Run the query with different values to ensure it works correctly.
+  </Step>
+</Steps>
+
+### Variable types
+
+<Tabs>
+  <Tab title="Field filters">
+    Smart filters that connect to database fields:
+    
+    ```sql
+    SELECT *
+    FROM orders
+    WHERE {{created_date}}
+      AND {{status}}
+    ```
+    
+    Benefits:
+    - Automatic filter UI based on field type
+    - Better performance with proper SQL generation
+    - Works with dashboard filters
+  </Tab>
+  
+  <Tab title="Basic variables">
+    Simple value substitution:
+    
+    ```sql
+    SELECT *
+    FROM orders
+    WHERE total > {{min_total}}
+    LIMIT {{row_limit}}
+    ```
+    
+    Good for:
+    - Query parameters
+    - Configurable limits
+    - Simple value filters
+  </Tab>
+  
+  <Tab title="Table variables">
+    Select which table to query:
+    
+    ```sql
+    SELECT *
+    FROM {{table_name}}
+    WHERE active = true
+    ```
+    
+    Useful for:
+    - Multi-tenant queries
+    - Similar tables with same schema
+    - Dynamic data sources
+  </Tab>
+</Tabs>
+
+## Optimizing native queries
+
+<CardGroup cols={2}>
+  <Card title="Use indexes" icon="bolt">
+    Ensure your WHERE clauses and JOIN conditions use indexed columns for better performance.
+  </Card>
+  
+  <Card title="Limit result sets" icon="filter">
+    Use LIMIT or TOP clauses to prevent accidentally returning millions of rows.
+  </Card>
+  
+  <Card title="Select specific columns" icon="table-columns">
+    Avoid SELECT * in production queries. List only the columns you need.
+  </Card>
+  
+  <Card title="Test with representative data" icon="flask">
+    Test queries against realistic data volumes to identify performance issues.
+  </Card>
+  
+  <Card title="Use EXPLAIN" icon="magnifying-glass">
+    Analyze query execution plans to understand and optimize performance.
+  </Card>
+  
+  <Card title="Cache expensive queries" icon="clock">
+    Enable result caching for queries that run frequently but data changes infrequently.
+  </Card>
+</CardGroup>
+
+## Database-specific considerations
+
+<AccordionGroup>
+  <Accordion title="BigQuery">
+    - Use Standard SQL syntax
+    - Be mindful of costs - queries scan entire columns
+    - Leverage partitioned tables for better performance
+    - Use approximate aggregation functions when exact counts aren't needed
+    
+    ```sql
+    SELECT 
+      DATE(timestamp) as date,
+      APPROX_COUNT_DISTINCT(user_id) as users
+    FROM events
+    WHERE _PARTITIONTIME >= TIMESTAMP('2024-01-01')
+    GROUP BY date
+    ```
+  </Accordion>
+  
+  <Accordion title="Snowflake">
+    - Queries are case-insensitive by default
+    - Use warehouse-appropriate query complexity
+    - Leverage result caching
+    - Consider clustering for large tables
+    
+    ```sql
+    SELECT 
+      date_trunc('month', order_date) as month,
+      count(*) as orders
+    FROM orders
+    WHERE order_date >= dateadd('month', -12, current_date())
+    GROUP BY month
+    ```
+  </Accordion>
+  
+  <Accordion title="Redshift">
+    - Optimize for columnar storage
+    - Use DISTKEY and SORTKEY in table design
+    - Avoid nested loops - use hash joins
+    - Vacuum and analyze tables regularly
+    
+    ```sql
+    SELECT 
+      c.name,
+      count(o.id) as orders
+    FROM customers c
+    LEFT JOIN orders o ON c.id = o.customer_id
+    WHERE c.created_at >= '2024-01-01'
+    GROUP BY c.name
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Limitations of native queries
+
+<Warning>
+Native queries have some limitations compared to query builder questions:
+
+- **Limited drill-through**: Can't drill down to underlying records or change groupings
+- **No pivot tables**: Pivot table visualization not available for native queries
+- **Manual visualization**: Must manually select chart type (not auto-selected)
+- **Harder to modify**: Requires SQL knowledge to make changes
+</Warning>
+
+## Best practices
+
+<Steps>
+  <Step title="Start with query builder">
+    Use the query builder first. Only switch to native queries when you hit limitations.
+  </Step>
+  
+  <Step title="Document your queries">
+    Add comments explaining:
+    - What the query does
+    - Why specific approaches were used
+    - Any gotchas or important notes
+  </Step>
+  
+  <Step title="Use descriptive aliases">
+    Name columns clearly so visualizations and results are self-explanatory.
+  </Step>
+  
+  <Step title="Test thoroughly">
+    Verify results with known test cases before sharing or adding to dashboards.
+  </Step>
+  
+  <Step title="Add variables for reusability">
+    Make queries flexible with variables so others can adjust parameters without editing SQL.
+  </Step>
+  
+  <Step title="Format for readability">
+    Use consistent formatting, indentation, and capitalization for maintainability.
+  </Step>
+</Steps>
+
+## Converting from query builder
+
+You can convert query builder questions to native SQL:
+
+<Steps>
+  <Step title="View the generated SQL">
+    Click **View SQL** in the top right to see what SQL the query builder generates.
+  </Step>
+  
+  <Step title="Convert to SQL">
+    Click the **Console** icon and select **Convert this question to SQL**.
+  </Step>
+  
+  <Step title="Modify as needed">
+    Edit the SQL to add features not available in the query builder.
+  </Step>
+</Steps>
+
+<Warning>
+Converting to SQL is one-way. You cannot convert a SQL question back to the query builder.
+</Warning>
+
+## Using native queries on dashboards
+
+To make native queries work with dashboard filters:
+
+1. Add variables to your query
+2. Add the question to your dashboard
+3. Create dashboard filters
+4. Map filters to your query variables
+
+<Info>
+Native queries require at least one variable to connect to dashboard filters. Without variables, the question will appear on the dashboard but won't respond to filters.
+</Info>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="SQL editor" icon="code" href="/questions/sql-editor">
+    Learn about the SQL editor interface and features
+  </Card>
+  
+  <Card title="Query builder" icon="wand-magic-sparkles" href="/questions/query-builder">
+    Understand when to use the query builder instead
+  </Card>
+  
+  <Card title="Dashboard filters" icon="filter" href="/dashboards/dashboard-filters">
+    Connect native queries to dashboard filters
+  </Card>
+</CardGroup>

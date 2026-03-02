@@ -1,0 +1,298 @@
+---
+title: Modular embedding SDK
+description: Embed individual Metabase components with React for maximum customization and control
+---
+
+<Note>
+  The Modular embedding SDK requires a **Pro or Enterprise plan** and is available for React 18+ applications.
+</Note>
+
+With the modular embedding SDK, you can embed individual Metabase components with React (like standalone charts, dashboards, the query builder, and more). You can manage access and interactivity per component, and you have advanced customization for seamless styling.
+
+## Why use the SDK?
+
+The React Embedding SDK provides the most powerful and flexible way to embed Metabase:
+
+<CardGroup cols={2}>
+  <Card title="Custom layouts" icon="grid">
+    Build your own layouts using individual React components
+  </Card>
+  <Card title="Advanced theming" icon="palette">
+    Deep customization with theme objects and CSS-in-JS
+  </Card>
+  <Card title="Plugins" icon="plug">
+    Customize behavior with plugins for click actions and more
+  </Card>
+  <Card title="Type safety" icon="shield-check">
+    Full TypeScript support with type definitions
+  </Card>
+</CardGroup>
+
+## Example apps built with the SDK
+
+To give you an idea of what's possible with the SDK, we've put together example sites at [metaba.se/sdk-demo](https://metaba.se/sdk-demo). Navigate between different shop websites and check out their products and analytics sections, as well as the New Question and New Dashboard options.
+
+<Frame>
+  <img src="https://www.metabase.com/docs/latest/images/pug-and-play.png" alt="Pug and Play example app built with modular embedding SDK" />
+</Frame>
+
+Here's the [Shoppy source code](https://github.com/metabase/shoppy) on GitHub.
+
+## Prerequisites
+
+Before you can use the SDK, make sure you have:
+
+<Steps>
+  <Step title="React application">
+    React 18 or React 19 application
+  </Step>
+  <Step title="Node.js version">
+    Node.js 20.x or higher
+  </Step>
+  <Step title="Metabase version">
+    Metabase version 1.52 or higher
+  </Step>
+  <Step title="Metabase plan">
+    Pro or Enterprise plan with valid license token
+  </Step>
+</Steps>
+
+## Quickstart guides
+
+The best way to get started with Modular embedding SDK depends on what you already have:
+
+<CardGroup cols={3}>
+  <Card title="Have app + Metabase" icon="rocket" href="https://www.metabase.com/docs/latest/embedding/sdk/quickstart">
+    Main quickstart for existing apps
+  </Card>
+  <Card title="Have app, no Metabase" icon="server" href="https://www.metabase.com/docs/latest/embedding/sdk/quickstart-cli">
+    Quickstart with Metabase CLI
+  </Card>
+  <Card title="No app yet" icon="code" href="https://www.metabase.com/docs/latest/embedding/sdk/quickstart-with-sample-app">
+    Quickstart with sample React app
+  </Card>
+</CardGroup>
+
+## Installation
+
+<Steps>
+  <Step title="Enable the SDK in Metabase">
+    1. Go to **Admin** > **Embedding**
+    2. Toggle on **Modular embedding SDK**
+    3. In **Cross-Origin Resource Sharing (CORS)**, enter the origins for your website or app where you want to allow SDK embedding, separated by a space (localhost is automatically included)
+  </Step>
+  
+  <Step title="Install the SDK in your React application">
+    Install the modular embedding SDK via npm or yarn. Make sure to use the dist-tag that corresponds to your Metabase version (e.g., `56-stable` for Metabase 56):
+
+    <CodeGroup>
+    ```bash npm
+    npm install @metabase/embedding-sdk-react@56-stable
+    ```
+
+    ```bash yarn
+    yarn add @metabase/embedding-sdk-react@56-stable
+    ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+<Warning>
+  Make sure the SDK version matches your Metabase version. For example, if you're running Metabase 56, use `@metabase/embedding-sdk-react@56-stable`.
+</Warning>
+
+## Resolving @types/react version mismatches
+
+In rare scenarios, the modular embedding SDK and your application may use different major versions of `@types/react`, causing TypeScript conflicts.
+
+To enforce a single `@types/react` version across all dependencies, add an override to your `package.json`:
+
+<Tabs>
+  <Tab title="npm">
+    ```json package.json
+    {
+      "overrides": {
+        "@types/react": "^18.0.0"
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Yarn">
+    ```json package.json
+    {
+      "resolutions": {
+        "@types/react": "^18.0.0"
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Architecture
+
+Starting with Metabase 57, the SDK consists of two parts:
+
+<Steps>
+  <Step title="SDK Package">
+    The `@metabase/embedding-sdk-react` npm package is a lightweight bootstrapper library. Its primary purpose is to load and run the main SDK Bundle code.
+  </Step>
+  <Step title="SDK Bundle">
+    The full SDK code, served directly from your self-hosted Metabase instance or Metabase Cloud. This is part of Metabase itself, ensuring that the SDK code is always compatible with your Metabase instance.
+  </Step>
+</Steps>
+
+<Note>
+  This architecture ensures version compatibility—the SDK bundle is always served from your Metabase instance, so you never have to worry about SDK and Metabase version mismatches.
+</Note>
+
+## Basic usage example
+
+Here's a simple example of embedding a dashboard with the SDK:
+
+```tsx App.tsx
+import { MetabaseProvider, StaticDashboard } from "@metabase/embedding-sdk-react";
+
+const config = {
+  metabaseInstanceUrl: "https://metabase.example.com",
+  authProviderUri: "/api/sso/metabase",
+};
+
+export default function App() {
+  return (
+    <MetabaseProvider config={config}>
+      <StaticDashboard dashboardId={1} />
+    </MetabaseProvider>
+  );
+}
+```
+
+## Key features
+
+### Components
+
+The SDK provides components for all major Metabase entities:
+
+- **Questions**: `StaticQuestion` and `InteractiveQuestion`
+- **Dashboards**: `StaticDashboard`, `InteractiveDashboard`, and `EditableDashboard`
+- **Collections**: Collection browser for navigating content
+- **AI Chat**: Natural language query interface (Metabot)
+
+[Learn more about SDK components](/embedding/sdk-components)
+
+### Authentication
+
+The SDK supports multiple authentication methods:
+
+- **JWT SSO**: For production use with multi-tenant applications
+- **SAML SSO**: Enterprise-grade SSO integration
+- **API Keys**: For local development and testing only
+
+[Learn more about authentication](https://www.metabase.com/docs/latest/embedding/authentication)
+
+### Theming
+
+Customize the appearance of embedded components with:
+
+- Theme objects for colors, fonts, and spacing
+- CSS-in-JS with emotion
+- Custom loader and error components
+- Full control over styling
+
+[Learn more about appearance](https://www.metabase.com/docs/latest/embedding/appearance)
+
+### Plugins
+
+Extend SDK functionality with plugins:
+
+- **mapQuestionClickActions**: Customize click behavior on charts
+- **dashboardCardMenu**: Add custom actions to dashboard cards
+- **handleLink**: Control navigation behavior
+
+[Learn more about plugins](https://www.metabase.com/docs/latest/embedding/sdk/plugins)
+
+## Developing with the SDK
+
+Start with one of the quickstarts, then explore these topics:
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="https://www.metabase.com/docs/latest/embedding/authentication">
+    Set up SSO with JWT or SAML
+  </Card>
+  <Card title="Components" icon="puzzle-piece" href="/embedding/sdk-components">
+    Explore available React components
+  </Card>
+  <Card title="Appearance" icon="palette" href="https://www.metabase.com/docs/latest/embedding/appearance">
+    Customize themes and styling
+  </Card>
+  <Card title="Plugins" icon="plug" href="https://www.metabase.com/docs/latest/embedding/sdk/plugins">
+    Add custom behavior with plugins
+  </Card>
+  <Card title="Configuration" icon="gear" href="https://www.metabase.com/docs/latest/embedding/sdk/config">
+    Configure the SDK provider
+  </Card>
+  <Card title="Versioning" icon="code-branch" href="https://www.metabase.com/docs/latest/embedding/sdk/version">
+    Understand SDK versioning
+  </Card>
+</CardGroup>
+
+## SDK limitations
+
+The SDK doesn't support:
+
+- Verified content
+- Official collections
+- Dashboard link cards
+- Server-side rendering (SSR)
+
+Other limitations:
+
+- Multiple interactive dashboards on the same application page. If you need to embed multiple dashboards on the same page, use static dashboards.
+- If you have Leaflet 1.x as a dependency in your app, you may run into compatibility issues. Try using Leaflet 2.x instead.
+
+## Source code and resources
+
+<CardGroup cols={2}>
+  <Card title="GitHub Repository" icon="github" href="https://github.com/metabase/metabase/tree/master/enterprise/frontend/src/embedding-sdk">
+    View the SDK source code
+  </Card>
+  <Card title="npm Package" icon="npm" href="https://metaba.se/sdk-npm">
+    Check out the SDK on npm
+  </Card>
+  <Card title="Example Apps" icon="code" href="https://metaba.se/sdk-demo">
+    See live examples built with the SDK
+  </Card>
+  <Card title="Shoppy Source" icon="github" href="https://github.com/metabase/shoppy">
+    Full example application code
+  </Card>
+</CardGroup>
+
+## Support and feedback
+
+- **Bugs**: [Report on GitHub](https://github.com/metabase/metabase/issues/?q=is%3Aissue%20state%3Aopen%20label%3AType%3ABug%20label%3AEmbedding%2FSDK)
+- **Feature requests**: [Submit on GitHub](https://github.com/metabase/metabase/issues/?q=is%3Aissue%20state%3Aopen%20label%3AEmbedding%2FSDK%20label%3A%22Type%3ANew%20Feature%22)
+- **Paid customers**: Contact success team through usual channels
+- **Open source users**: Post on [discussion forums](https://discourse.metabase.com/)
+
+<Note>
+  Before creating new issues, please search existing issues to avoid duplicates. You can upvote feature requests with a thumbs up emoji.
+</Note>
+
+## Next steps
+
+<Steps>
+  <Step title="Choose a quickstart">
+    Pick the quickstart that matches your situation
+  </Step>
+  <Step title="Set up authentication">
+    Configure JWT or SAML for production use
+  </Step>
+  <Step title="Embed your first component">
+    Start with a simple dashboard or question
+  </Step>
+  <Step title="Customize appearance">
+    Apply your brand's theme and styling
+  </Step>
+  <Step title="Add interactivity">
+    Use plugins to customize behavior
+  </Step>
+</Steps>

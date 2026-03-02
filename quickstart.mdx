@@ -1,80 +1,331 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: Get from zero to running Metabase and asking your first question in 5 minutes.
+keywords: ['quickstart', 'getting started', 'first question', 'setup']
 ---
 
-## Get started in three steps
+# Quickstart
 
-Get your documentation site running locally and make your first customization.
+This quickstart will get you from zero to running Metabase and asking your first question in about 5 minutes.
 
-### Step 1: Set up your local environment
+<Info>
+This guide uses Docker for the fastest setup. If you prefer a different installation method, see the [installation guide](/installation).
+</Info>
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+## Prerequisites
 
-### Step 2: Deploy your changes
+Before you begin, make sure you have:
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
+- [Docker](https://www.docker.com/) installed and running on your machine
+- A web browser
+- (Optional) A database you want to connect to
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+Don't have a database handy? No problem! Metabase comes with a sample database you can use to explore its features.
 </Note>
+
+## Step 1: Start Metabase
+
+Open your terminal and run:
+
+<CodeGroup>
+
+```bash Open Source edition
+docker pull metabase/metabase:latest
+docker run -d -p 3000:3000 --name metabase metabase/metabase
+```
+
+```bash Pro/Enterprise edition
+docker pull metabase/metabase-enterprise:latest
+docker run -d -p 3000:3000 --name metabase metabase/metabase-enterprise
+```
+
+</CodeGroup>
+
+<Steps>
+  <Step title="Wait for initialization">
+    Metabase takes about 30-60 seconds to start up. To watch the progress:
+
+    ```bash
+    docker logs -f metabase
+    ```
+
+    Wait until you see `Metabase Initialization COMPLETE` in the logs.
+  </Step>
+  <Step title="Open Metabase">
+    Once startup completes, open your browser and navigate to:
+
+    ```
+    http://localhost:3000
+    ```
+
+    You'll see the Metabase welcome screen.
+  </Step>
+</Steps>
+
+## Step 2: Create your admin account
+
+The first account you create becomes the admin account. This account can:
+
+- Add and manage users
+- Connect to databases
+- Configure settings
+- Create and organize content
+
+<Warning>
+If you're setting up Metabase for production use, choose a strong password. This account has full access to your Metabase instance.
+</Warning>
+
+Fill in your details:
+
+- **First name** and **Last name**
+- **Email** - Used for login and notifications
+- **Password** - Must be at least 6 characters
+
+Click **Next** to continue.
+
+## Step 3: Set your usage preference
+
+Tell Metabase how you plan to use it:
+
+- **Self-service analytics for my own company**
+- **Embedding analytics into my application**
+- **A bit of both**
+- **Not sure yet**
+
+<Note>
+Your choice helps Metabase customize your experience, but you can use any feature regardless of what you select here.
+</Note>
+
+## Step 4: Connect a database
+
+You have two options:
+
+<Tabs>
+  <Tab title="Use the sample database">
+    Click **I'll add my data later** to start with Metabase's sample database.
+
+    The sample database contains:
+    - Customer data
+    - Product information  
+    - Order history
+    - Review data
+
+    Perfect for exploring Metabase's features without connecting your own data.
+  </Tab>
+  <Tab title="Connect your database">
+    If you're ready to connect your database, you'll need:
+
+    - **Database type** (PostgreSQL, MySQL, etc.)
+    - **Hostname** of your database server
+    - **Port** number
+    - **Database name**
+    - **Username** and **password**
+
+    Enter your connection details and click **Connect database**.
+
+    <Info>
+    Metabase will test the connection and scan your database schema. This may take a minute for large databases.
+    </Info>
+  </Tab>
+</Tabs>
+
+## Step 5: Configure usage data
+
+Metabase asks if you'd like to share anonymous usage data:
+
+- Metabase never collects anything about your data or question results
+- All collection is completely anonymous
+- You can turn this off anytime in admin settings
+
+Make your choice and click **Next**.
+
+## Step 6: Ask your first question
+
+Now you're ready to explore your data!
+
+<Steps>
+  <Step title="Start a new question">
+    Click **+ New** in the top navigation, then select **Question**.
+  </Step>
+  <Step title="Choose your data">
+    Select either:
+    - The **Sample Database** (if you skipped database setup)
+    - **Your connected database**
+
+    Then pick a table to query.
+  </Step>
+  <Step title="Build your query">
+    Use the visual query builder to:
+
+    - **Filter** your data (e.g., "Orders where Total > 100")
+    - **Summarize** with metrics (e.g., "Count of orders")
+    - **Group by** dimensions (e.g., "by Created At: Month")
+    - **Sort** your results
+
+    <Tip>
+    Try this example with the Sample Database:
+    - Table: **Orders**
+    - Summarize: **Count of rows**
+    - Group by: **Created At: Month**
+    </Tip>
+  </Step>
+  <Step title="Visualize your results">
+    Click **Visualize** to see your data.
+
+    Try different visualization types:
+    - Line charts for trends over time
+    - Bar charts for comparisons
+    - Tables for detailed data
+    - Numbers for single metrics
+
+    <Info>
+    Click the **Visualization** button to switch between chart types and customize colors, labels, and formatting.
+    </Info>
+  </Step>
+  <Step title="Save your question">
+    Click **Save** in the top right.
+
+    Give your question a name and optionally add it to a collection to keep things organized.
+  </Step>
+</Steps>
+
+## Step 7: Create your first dashboard
+
+Dashboards combine multiple questions into a single view:
+
+<Steps>
+  <Step title="Create a dashboard">
+    Click **+ New** → **Dashboard**.
+
+    Give it a name like "My First Dashboard".
+  </Step>
+  <Step title="Add questions">
+    Click **Add a question** and select the question you just created.
+
+    Resize and position it however you like.
+  </Step>
+  <Step title="Add more questions">
+    Create and add more questions to build out your dashboard:
+
+    - Total revenue
+    - Recent orders
+    - Products by category
+    - Customer trends
+  </Step>
+  <Step title="Add filters">
+    Click **Add a filter** to let viewers filter the dashboard by:
+    - Date ranges
+    - Categories
+    - Locations
+    - Custom values
+  </Step>
+  <Step title="Save and share">
+    Click **Save** to finish.
+
+    Share your dashboard with your team or schedule it to be emailed automatically.
+  </Step>
+</Steps>
+
+## Writing SQL queries
+
+If you prefer SQL, you can write native queries:
+
+<Steps>
+  <Step title="Open the SQL editor">
+    Click **+ New** → **Question** → **Native query**.
+  </Step>
+  <Step title="Write your query">
+    ```sql
+    SELECT 
+      DATE_TRUNC('month', created_at) as month,
+      COUNT(*) as order_count,
+      SUM(total) as revenue
+    FROM orders
+    WHERE created_at >= CURRENT_DATE - INTERVAL '6 months'
+    GROUP BY 1
+    ORDER BY 1;
+    ```
+
+    <Tip>
+    Use `Ctrl+Enter` (or `Cmd+Enter` on Mac) to run your query.
+    </Tip>
+  </Step>
+  <Step title="Add variables">
+    Make your query dynamic with variables:
+
+    ```sql
+    SELECT *
+    FROM orders
+    WHERE created_at >= {{start_date}}
+      AND created_at <= {{end_date}}
+    ```
+
+    Metabase automatically creates filter widgets for your variables.
+  </Step>
+</Steps>
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Learn about models" icon="layer-group" href="https://www.metabase.com/learn/metabase-basics/getting-started/models">
+    Create reusable models that prepare your data for analysis
+  </Card>
+  <Card title="Set up email alerts" icon="bell" href="https://www.metabase.com/docs/latest/questions/alerts">
+    Get notified when your metrics cross a threshold
+  </Card>
+  <Card title="Schedule reports" icon="calendar" href="https://www.metabase.com/docs/latest/dashboards/subscriptions">
+    Deliver dashboards to Slack or email automatically
+  </Card>
+  <Card title="Invite your team" icon="users" href="https://www.metabase.com/docs/latest/people-and-groups/managing">
+    Add team members and set up permissions
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Metabase won't start">
+    Check the logs:
+
+    ```bash
+    docker logs metabase
+    ```
+
+    Common issues:
+    - **Port 3000 already in use** - Use a different port: `docker run -d -p 8080:3000 --name metabase metabase/metabase`
+    - **Out of memory** - Allocate more memory to Docker
+  </Accordion>
+  <Accordion title="Can't connect to database">
+    Verify:
+    - Database is running and accessible
+    - Hostname and port are correct
+    - Username and password are correct
+    - Firewall rules allow the connection
+    - Docker container can reach your database (use `host.docker.internal` for localhost on Mac/Windows)
+  </Accordion>
+  <Accordion title="Questions are slow">
+    For large databases:
+    - Add indexes to frequently queried columns
+    - Use models to pre-aggregate data
+    - Enable caching in Admin → Settings → Caching
+    - Consider syncing only specific schemas
+  </Accordion>
+</AccordionGroup>
+
+<Info>
+For more help, see the [troubleshooting guide](https://www.metabase.com/docs/latest/troubleshooting-guide/index) or ask on the [community forum](https://discourse.metabase.com/).
+</Info>
+
+## Production deployment
+
+<Warning>
+This quickstart uses the default H2 database, which stores data in the container. For production use, you need to:
+
+1. Use a [production database](/installation#production-installation) (PostgreSQL, MySQL, etc.)
+2. Set up proper backups
+3. Configure SSL/HTTPS
+4. Set up monitoring
+
+See the [installation guide](/installation) for production setup instructions.
+</Warning>

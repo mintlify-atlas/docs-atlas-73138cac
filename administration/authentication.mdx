@@ -1,0 +1,597 @@
+---
+title: Authentication
+description: Configure Single Sign-On (SSO) and authentication methods including SAML, JWT, LDAP, and Google Sign-In.
+---
+
+Metabase supports multiple authentication methods to integrate with your organization's identity provider. Configure authentication options from **Admin** > **Settings** > **Authentication**.
+
+<Info>
+All authentication methods can automatically create Metabase accounts when users sign in for the first time, eliminating manual account creation.
+</Info>
+
+## Authentication options overview
+
+| Method | Plans | Best for | Key features |
+|--------|-------|----------|-------------|
+| **Email & Password** | All | Basic auth | Built-in, no setup required |
+| **Google Sign-In** | All | Google Workspace users | Quick setup, 2FA support |
+| **LDAP** | All | On-premise directories | Active Directory integration |
+| **SAML** | Pro, Enterprise | Enterprise SSO | Full IdP integration, attribute sync |
+| **JWT** | Pro, Enterprise | Custom SSO | Flexible token-based auth |
+
+## Google Sign-In
+
+Enable one-click authentication using Google accounts.
+
+### When to use Google Sign-In
+
+- Your organization uses Google Workspace
+- You want Google's 2FA/MFA for Metabase security
+- You need simple SSO without enterprise IdP complexity
+
+### Setting up Google Sign-In
+
+<Steps>
+  <Step title="Create Google OAuth credentials">
+    1. Go to [Google Developer Console](https://console.developers.google.com/projectselector2/apis/library)
+    2. Create a new project or select existing
+    3. Enable Google+ API
+    4. Create OAuth 2.0 credentials
+  </Step>
+  <Step title="Configure authorized origins">
+    In "Authorized JavaScript origins", add your Metabase URL:
+    ```
+    https://metabase.example.com
+    ```
+    Leave "Authorized Redirect URIs" blank
+  </Step>
+  <Step title="Copy Client ID">
+    Copy the Client ID ending in `.apps.googleusercontent.com`
+  </Step>
+  <Step title="Configure Metabase">
+    1. Go to **Admin** > **Settings** > **Authentication**
+    2. Click **Set up** on the "Sign in with Google" card
+    3. Paste your Client ID
+    4. Optionally add domain to auto-create accounts
+  </Step>
+</Steps>
+
+<Accordion title="Auto-account creation with domain restriction">
+  Enter your organization's domain (e.g., `yourcompany.com`) to automatically create accounts for users with matching email domains.
+  
+  Users with `@yourcompany.com` emails can sign in and automatically get Metabase accounts.
+</Accordion>
+
+### Multiple domains
+
+<Note>
+Multiple domains for Google Sign-In are available on Pro and Enterprise plans.
+</Note>
+
+Support multiple email domains from the same Google Workspace:
+
+```
+mycompany.com,example.com.br,otherdomain.co.uk
+```
+
+Separate domains with commas, no spaces.
+
+<Info>
+**User attribute synchronization**: Google Sign-In cannot sync user attributes. For attribute sync, use [Google SAML](#saml-authentication) or [JWT](#jwt-authentication) instead.
+</Info>
+
+## LDAP authentication
+
+Integrate with Lightweight Directory Access Protocol directories like Active Directory.
+
+### Required LDAP attributes
+
+Your LDAP directory must have these attributes:
+
+| Attribute | Default LDAP field | Required? |
+|-----------|-------------------|----------|
+| Email | `mail` | Yes |
+| First name | `givenName` | No (defaults to "Unknown") |
+| Last name | `sn` | No (defaults to "Unknown") |
+
+<Warning>
+The email field must be populated for each LDAP entry. Without it, Metabase cannot create accounts or authenticate users.
+</Warning>
+
+### Configuring LDAP
+
+<Steps>
+  <Step title="Enable LDAP">
+    Go to **Admin** > **Settings** > **Authentication** > **LDAP** and toggle on
+  </Step>
+  <Step title="Server settings">
+    Configure your LDAP server connection:
+    - **Host**: e.g., `ldap.yourdomain.org`
+    - **Port**: Usually 389 (standard) or 636 (SSL)
+    - **Security**: None, SSL, or StartTLS
+    - **Admin username**: Distinguished name for binding
+    - **Admin password**: Credentials for admin user
+  </Step>
+  <Step title="User schema">
+    Define how Metabase finds users:
+    - **User search base**: Starting DN (e.g., `ou=People,dc=widgetco,dc=com`)
+    - **User filter**: Query to match users (default works for most)
+  </Step>
+  <Step title="Attributes">
+    Map LDAP attributes to Metabase fields if different from defaults
+  </Step>
+  <Step title="Test connection">
+    Save settings and test by logging in with LDAP credentials
+  </Step>
+</Steps>
+
+<Accordion title="Understanding user search base">
+  The user search base defines where in your LDAP tree Metabase starts looking for users.
+  
+  **Example**: If your organization is WidgetCo with base DN `dc=widgetco,dc=com`, and employees are under an organizational unit called "People", set:
+  
+  ```
+  ou=People,dc=widgetco,dc=com
+  ```
+</Accordion>
+
+<Accordion title="Default user filter explained">
+  The default filter:
+  ```
+  (&(objectClass=inetOrgPerson)(|(uid={login})(mail={login})))
+  ```
+  
+  This matches entries that:
+  - Have objectClass of `inetOrgPerson` AND
+  - Match the login in either the `uid` OR `mail` field
+  
+  Customize this if your LDAP uses different objectClass or attributes.
+</Accordion>
+
+### LDAP group mapping
+
+Automatically add users to Metabase groups based on LDAP group membership.
+
+<Steps>
+  <Step title="Enable group mapping">
+    In LDAP settings, scroll to **Group Schema** and toggle on
+  </Step>
+  <Step title="Configure mappings">
+    Click **Edit Mapping** to open the mapping modal
+  </Step>
+  <Step title="Add mapping">
+    For each LDAP group:
+    1. Enter the Distinguished Name (e.g., `cn=Accounting,ou=Groups,dc=widgetco,dc=com`)
+    2. Select corresponding Metabase group from dropdown
+    3. Click **Save**
+  </Step>
+</Steps>
+
+<Info>
+**Important notes:**
+- Administrator group can be mapped like any other group
+- Group membership updates only apply after users log in again
+- Only mapped groups are affected—other Metabase groups remain unchanged
+</Info>
+
+### Advanced LDAP features
+
+<Note>
+Advanced LDAP features including group membership filters and user attribute sync are available on Pro and Enterprise plans.
+</Note>
+
+<Accordion title="Group membership filter">
+  Customize how Metabase looks up group memberships with filter placeholders:
+  - `{dn}`: Replaced with user's Distinguished Name
+  - `{uid}`: Replaced with user's UID
+  
+  Useful for complex LDAP schemas with nested groups or custom membership attributes.
+</Accordion>
+
+<Accordion title="Syncing user attributes from LDAP">
+  Pass custom user attributes from LDAP to Metabase for:
+  - Row and column security
+  - Personalized data filtering
+  - Multi-tenant analytics
+  
+  Attributes sync automatically on each login.
+</Accordion>
+
+## SAML authentication
+
+<Note>
+SAML authentication is available on Pro and Enterprise plans.
+</Note>
+
+Security Assertion Markup Language (SAML) provides enterprise-grade single sign-on.
+
+### Benefits of SAML authentication
+
+- Automatic account provisioning on first login
+- User attribute synchronization for row-level security
+- Seamless access without re-authentication
+- Centralized identity management
+- Support for all major identity providers
+
+### Supported identity providers
+
+Metabase provides specific guides for:
+
+- [Auth0](https://docs.metabase.com/people-and-groups/saml-auth0.html)
+- [Microsoft Entra ID (Azure AD)](https://docs.metabase.com/people-and-groups/saml-azure.html)
+- [Google](https://docs.metabase.com/people-and-groups/saml-google.html)
+- [Keycloak](https://docs.metabase.com/people-and-groups/saml-keycloak.html)
+- [Okta](https://docs.metabase.com/people-and-groups/saml-okta.html)
+- OneLogin and other SAML 2.0 providers
+
+### Before setting up SAML
+
+<Warning>
+**Critical**: Confirm you know the password to your Metabase admin account before configuring SAML. If SAML setup fails, you can still log in via "Admin backup login" on the sign-in screen.
+</Warning>
+
+### SAML configuration overview
+
+The SAML setup form has three sections:
+
+<Steps>
+  <Step title="Metabase information for your IdP">
+    Copy these values to your identity provider's SAML configuration:
+    - **URL the IdP should redirect back to**: Your Metabase URL + `/auth/sso`
+    - **User attributes**: Email, first name, last name
+  </Step>
+  <Step title="IdP information for Metabase">
+    Enter these values from your identity provider:
+    - **SAML Identity Provider URL**: Where Metabase redirects login requests
+    - **SAML Identity Provider Issuer**: Unique IdP identifier (recommended)
+    - **SAML Identity Provider Certificate**: X.509 certificate for verification
+  </Step>
+  <Step title="SSO request signing (optional)">
+    Configure keystore settings if your IdP requires signed requests or encrypts responses
+  </Step>
+</Steps>
+
+<Accordion title="Understanding the redirect URL">
+  The redirect URL tells your IdP where to send users after authentication.
+  
+  **Format**: `[Your Metabase Site URL]/auth/sso`
+  
+  **Example**: If your Site URL is `https://metabase.yourcompany.com`, the redirect URL is:
+  ```
+  https://metabase.yourcompany.com/auth/sso
+  ```
+  
+  Different IdPs use different names:
+  - Auth0: "Application Callback URL"
+  - Okta: "Single Sign On URL"
+  - OneLogin: "ACS (Consumer) URL"
+</Accordion>
+
+<Accordion title="User attributes mapping">
+  SAML assertions must contain:
+  - Email address
+  - First name
+  - Last name
+  
+  Most IdPs include these by default. Some (like Okta) require explicit configuration.
+  
+  <Warning>
+  Keep email addresses synchronized between your IdP and Metabase. Mismatched emails can lock users out of their accounts.
+  </Warning>
+</Accordion>
+
+<Accordion title="Certificate configuration">
+  The SAML certificate is an encoded certificate for secure IdP communication.
+  
+  **Common formats**: `.cer` or `.pem` files
+  
+  **Include headers**: Copy the entire certificate including:
+  ```
+  -----BEGIN CERTIFICATE-----
+  [certificate content]
+  -----END CERTIFICATE-----
+  ```
+</Accordion>
+
+### SAML group synchronization
+
+Automatically assign Metabase groups based on IdP attributes.
+
+<Steps>
+  <Step title="Create IdP user attribute">
+    In your IdP, create a user attribute for Metabase groups (e.g., `metabaseGroups`)
+  </Step>
+  <Step title="Enable sync in Metabase">
+    In SAML settings, toggle on **Synchronize group memberships**
+  </Step>
+  <Step title="Create mappings">
+    Click **Edit mappings** and for each IdP group value:
+    1. Click **Create a mapping**
+    2. Enter the IdP group value
+    3. Select corresponding Metabase group(s)
+    4. Click **Save**
+  </Step>
+  <Step title="Specify attribute name">
+    Enter the attribute name from your IdP (e.g., `MetabaseGroupName`)
+  </Step>
+</Steps>
+
+### SAML Single Logout (SLO)
+
+Enable single logout to sign users out of both Metabase and your IdP.
+
+**SLO endpoint**: `/auth/sso/handle_slo`
+
+**Full URL example**:
+```
+https://metabase.example.com/auth/sso/handle_slo
+```
+
+<Note>
+SLO requires configuration via environment variables:
+- `MB_SAML_SLO_ENABLED=true`
+- `MB_SAML_IDENTITY_PROVIDER_URI` set to IdP's SLO endpoint
+- `MB_SESSION_COOKIE_SAMESITE=none`
+- HTTPS must be enabled
+</Note>
+
+### User provisioning with SAML
+
+By default, Metabase creates accounts automatically when users authenticate via SAML.
+
+If using [SCIM user provisioning](https://docs.metabase.com/people-and-groups/user-provisioning.html), disable automatic account creation to control who can access Metabase through SCIM instead.
+
+## JWT authentication
+
+<Note>
+JWT authentication is available on Pro and Enterprise plans.
+</Note>
+
+JSON Web Token (JWT) authentication enables integration with custom identity providers.
+
+### JWT authentication flow
+
+<Steps>
+  <Step title="User requests protected resource">
+    User attempts to view content (e.g., `/question/1-superb-question`)
+  </Step>
+  <Step title="Redirect to authentication">
+    Metabase redirects unauthenticated users to `/auth/sso`
+  </Step>
+  <Step title="External authentication">
+    User authenticates with your identity provider
+  </Step>
+  <Step title="Token generation">
+    Your IdP generates a JWT and redirects to Metabase
+  </Step>
+  <Step title="Token verification">
+    Metabase verifies the JWT signature and logs the user in
+  </Step>
+  <Step title="Original destination">
+    User is redirected to their original destination
+  </Step>
+</Steps>
+
+### Configuring JWT
+
+<Steps>
+  <Step title="Navigate to JWT settings">
+    Go to **Admin** > **Settings** > **Authentication** > **JWT**
+  </Step>
+  <Step title="JWT Identity Provider URI">
+    Enter the URL where users will authenticate
+  </Step>
+  <Step title="JWT Signing Key">
+    Enter the shared secret key for token verification (must match your IdP)
+  </Step>
+  <Step title="User attribute mapping (optional)">
+    Map JWT claims to Metabase attributes:
+    - Email attribute key
+    - First name attribute key
+    - Last name attribute key
+    - Group assignment attribute key
+    - Tenant attribute key (for multi-tenancy)
+  </Step>
+</Steps>
+
+<Info>
+User attributes sync automatically on every JWT login, keeping Metabase data current with your IdP.
+</Info>
+
+### JWT group mapping
+
+Automate group assignments based on JWT claims.
+
+<Accordion title="Configure in Metabase UI">
+  <Steps>
+    <Step title="Add groups to JWT">
+      In your IdP, include groups in JWT: `groups: ["group_name"]`
+    </Step>
+    <Step title="Enable sync">
+      Toggle on **Synchronize Group Memberships** in JWT settings
+    </Step>
+    <Step title="Automatic matching">
+      If JWT group names match Metabase group names exactly, they sync automatically
+    </Step>
+    <Step title="Manual mapping">
+      For different names:
+      1. Click **New mapping**
+      2. Enter JWT group name
+      3. Select Metabase group(s) from dropdown
+      4. Repeat for all groups
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Configure via environment variables">
+  Alternative to UI configuration:
+  
+  ```bash
+  MB_JWT_ATTRIBUTE_GROUPS=groups
+  MB_JWT_GROUP_SYNC=true
+  MB_JWT_GROUP_MAPPINGS='{"extHR":[7], "extSales":[3,4]}'
+  ```
+  
+  Where:
+  - `extHR`, `extSales` are JWT group names
+  - `7`, `3`, `4` are Metabase group IDs
+  
+  Find group IDs in URLs: `/admin/people/groups/<ID>`
+</Accordion>
+
+### Multi-tenant JWT configuration
+
+For multi-tenant applications, JWT can automatically assign users to tenants based on token claims. See [Tenants documentation](https://docs.metabase.com/embedding/tenants.html).
+
+## Password authentication
+
+### Disabling password login
+
+<Warning>
+**Critical warning**: Disabling password authentication affects ALL accounts, including administrators. Ensure SSO works for your admin account before disabling passwords.
+
+**Recommendation**: Keep password authentication enabled as a backup to prevent lockouts.
+</Warning>
+
+To require SSO for all users:
+
+<Steps>
+  <Step title="Verify SSO access">
+    Confirm you can log in with SSO using your admin account
+  </Step>
+  <Step title="Navigate to authentication">
+    Go to **Admin** > **Settings** > **Authentication**
+  </Step>
+  <Step title="Disable passwords">
+    Toggle off **Enable Password Authentication**
+  </Step>
+  <Step title="Test thoroughly">
+    Verify all users can authenticate via SSO
+  </Step>
+</Steps>
+
+<Info>
+When password authentication is disabled, users must use SSO. Accounts created via SSO never have passwords and must continue using SSO to log in.
+</Info>
+
+### Password complexity requirements
+
+Enforce stronger password policies from **Admin** > **Settings** > **Authentication**.
+
+Options include:
+- Minimum length
+- Required character types (uppercase, lowercase, numbers, symbols)
+- Common password prevention
+
+### Session expiration
+
+Control how long users stay logged in before re-authentication is required.
+
+Configure in **Admin** > **Settings** > **Authentication** > **Session expiration**.
+
+## Account provisioning
+
+### Automatic account creation
+
+All authentication methods can automatically create Metabase accounts on first login:
+
+<Note>
+**Paid plans**: Each active account counts toward your user limit and billing, even if created automatically.
+</Note>
+
+**What gets created:**
+- User account with email and name from IdP
+- Membership in mapped groups (if configured)
+- No password (must continue using SSO)
+
+### New account notifications
+
+Admins receive email notifications when SSO creates new accounts.
+
+To disable these notifications:
+1. Go to **Admin** > **Settings** > **Authentication** > **User provisioning**
+2. Toggle off **Notify admins of new users provisioned from SSO**
+
+### SCIM user provisioning
+
+<Note>
+SCIM provisioning is available on Enterprise plans.
+</Note>
+
+For programmatic account management, Metabase supports [SCIM (System for Cross-domain Identity Management)](https://docs.metabase.com/people-and-groups/user-provisioning.html).
+
+Benefits:
+- Centralized user lifecycle management
+- Automatic deprovisioning
+- Group membership sync
+- Integration with identity platforms
+
+## Best practices
+
+<Steps>
+  <Step title="Test SSO before disabling passwords">
+    Always verify SSO works completely before disabling password authentication
+  </Step>
+  <Step title="Keep admin backup access">
+    Know your admin password for "Admin backup login" access
+  </Step>
+  <Step title="Use group synchronization">
+    Leverage IdP group mappings to automate permission management
+  </Step>
+  <Step title="Enable user attribute sync">
+    Sync user attributes for row-level security and personalization
+  </Step>
+  <Step title="Document your configuration">
+    Maintain documentation of SSO setup for future admins
+  </Step>
+  <Step title="Regular access reviews">
+    Periodically audit accounts created via SSO
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+<Accordion title="Cannot log in after SSO setup">
+  **Solution**: Use "Admin backup login" link on sign-in page to access your account with password authentication.
+</Accordion>
+
+<Accordion title="SAML certificate errors">
+  **Check**:
+  - Certificate includes header and footer comments
+  - No extra spaces or line breaks
+  - Certificate hasn't expired
+  - Correct certificate was copied
+</Accordion>
+
+<Accordion title="User attributes not syncing">
+  **Verify**:
+  - Attribute names match exactly (case-sensitive)
+  - IdP is sending attributes in assertions
+  - User has logged in after attribute configuration
+  - Attribute values are correct format
+</Accordion>
+
+<Accordion title="Group mappings not working">
+  **Confirm**:
+  - Group names match exactly
+  - User has logged in after mapping setup
+  - IdP is sending group information
+  - Metabase groups exist before mapping
+</Accordion>
+
+<Accordion title="LDAP connection fails">
+  **Check**:
+  - Firewall allows connections to LDAP port
+  - Admin credentials are correct
+  - User search base DN is valid
+  - LDAP server is accessible from Metabase
+</Accordion>
+
+## Related documentation
+
+- [Users and groups management](/administration/users-and-groups)
+- [Permissions configuration](/administration/permissions)
+- [Email setup](/administration/email)
+- [SSO examples repository](https://github.com/metabase/sso-examples)
+- [Troubleshooting SAML](https://docs.metabase.com/troubleshooting-guide/saml.html)
+- [Troubleshooting LDAP](https://docs.metabase.com/troubleshooting-guide/ldap.html)

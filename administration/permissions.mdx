@@ -1,0 +1,486 @@
+---
+title: Permissions
+description: Control what data and features different groups can access in Metabase with granular permission settings.
+---
+
+Metabase provides a comprehensive permissions system to ensure people only see the data they're authorized to access. Permissions control both what data groups can view and what actions they can perform.
+
+<Info>
+For information about what data Metabase the company can access, see [data privacy and security](https://www.metabase.com/security).
+</Info>
+
+## Key principles
+
+Understanding these core concepts is essential for managing permissions effectively:
+
+<Accordion title="Permissions are granted to groups, not individuals">
+  You assign permissions to groups, then add people to those groups. This makes permission management scalable and maintainable.
+  
+  Exception: User attributes can apply person-specific filters for row and column security.
+</Accordion>
+
+<Accordion title="Users can belong to multiple groups">
+  A person can be a member of multiple groups simultaneously. Their effective permissions will be the most permissive across all groups.
+</Accordion>
+
+<Accordion title="Most permissive access wins">
+  If a user is in three groups, and any one group has Curate access to a collection, that user gets Curate access—even if the other groups have No access.
+</Accordion>
+
+<Accordion title="Block All Users group first">
+  Everyone belongs to the All Users group by default. Before granting specific permissions, block this group's access to prevent unintended data exposure.
+  
+  Metabase will warn you if All Users has more permissive access than the group you're restricting.
+</Accordion>
+
+## Accessing permissions settings
+
+<Steps>
+  <Step title="Open admin panel">
+    Click the **grid icon** in the upper right > **Admin**
+  </Step>
+  <Step title="Navigate to permissions">
+    Click **Permissions** tab (or use `Cmd/Ctrl + K` and search "Permissions")
+  </Step>
+  <Step title="Choose permission type">
+    Select the appropriate tab: Data, Collections, or Application
+  </Step>
+</Steps>
+
+## Permission types
+
+### Data permissions
+
+Control access to databases, schemas, and tables.
+
+<Note>
+Data permissions are available on Pro and Enterprise plans with granular controls. Open Source includes basic view permissions.
+</Note>
+
+#### View data permissions
+
+Determines what data people can see in questions, dashboards, models, and metrics.
+
+**Permission levels:**
+
+| Level | Description | Available at |
+|-------|-------------|-------------|
+| **Can view** | Full access to all data in the source | Database, Schema, Table |
+| **Granular** | Set permissions per schema or table | Database, Schema |
+| **Row and column security** | Restrict specific rows/columns | Table only |
+| **Impersonated** | Use database roles for permissions | Database only |
+| **Blocked** | No access to the data | Database, Schema, Table |
+
+<Accordion title="Can view data permission">
+  **Can view** grants unrestricted access to all data in the source. Users can:
+  - View questions and dashboards using that data
+  - See models and metrics built on that data
+  - Need additional "Create queries" permission to browse databases
+</Accordion>
+
+<Accordion title="Granular view data permission">
+  **Granular** lets you set different permissions for individual schemas or tables within a database or schema.
+  
+  Available only at database and schema levels. When selected, Metabase prompts you to set permissions for each child element.
+</Accordion>
+
+<Accordion title="Row and column security">
+  **Row and column security** (formerly "sandboxing") restricts data based on user attributes.
+  
+  Common use cases:
+  - Multi-tenant analytics: Each customer sees only their data
+  - Regional restrictions: Users see only their region's data
+  - Role-based filtering: Managers see their team's data only
+  
+  Requires:
+  - User attributes configured for each person
+  - Table-level permission configuration
+  
+  Can implement:
+  - Row filtering by column values
+  - Column hiding
+  - Custom SQL views of tables
+</Accordion>
+
+<Accordion title="Impersonated view data permission">
+  **Impersonated** delegates permissions to your database's role system.
+  
+  Benefits:
+  - Centralize permission management in your database
+  - Leverage existing database security policies
+  - Simplify permission administration
+  
+  Metabase uses database roles to determine what each user can access. Only available at the database level.
+</Accordion>
+
+<Accordion title="Blocked view data permission">
+  **Blocked** prevents all access to the data source.
+  
+  Important behaviors:
+  - Users cannot view questions using that data, regardless of collection permissions
+  - Blocks all native SQL queries from the entire database (even if only one table is blocked)
+  - Other groups with Can view access can override the block
+</Accordion>
+
+#### Create queries permissions
+
+Controls whether users can create new questions and use the database browser.
+
+**Permission levels:**
+
+<Accordion title="Query builder and native">
+  Users can create questions using both:
+  - Metabase's visual query builder
+  - Native SQL/NoSQL editor
+  
+  <Warning>
+  If any table in a database has "Blocked" or "Row and column security" permissions, native query access is disabled for the entire database. Metabase cannot parse SQL to verify table access.
+  </Warning>
+</Accordion>
+
+<Accordion title="Query builder only">
+  Users can:
+  - Create questions with the visual query builder
+  - Drill through existing questions
+  - Cannot write native SQL queries
+  
+  Useful for users who need to explore data without SQL access.
+</Accordion>
+
+<Accordion title="Granular">
+  Set different query permissions for individual schemas or tables.
+  
+  Allows fine-grained control over which parts of your database users can query.
+</Accordion>
+
+#### Download results permissions
+
+<Note>
+Download permissions are available on Pro and Enterprise plans.
+</Note>
+
+Control whether users can export query results and set row limits.
+
+**Options:**
+- **No**: Cannot download results
+- **Granular**: Set per-table or per-schema limits
+- **10 thousand rows**: Can download up to 10,000 rows
+- **1 million rows**: Can download up to 1 million rows
+
+<Warning>
+Native SQL downloads require database-level download permissions. Users with only table-specific download permissions cannot download SQL query results.
+</Warning>
+
+#### Manage table metadata permissions
+
+<Note>
+Available on Pro and Enterprise plans.
+</Note>
+
+Controls who can edit table and field metadata, including:
+- Descriptions
+- Display names
+- Field types
+- Visibility settings
+
+**Options:**
+- **Yes**: Can edit all metadata for the data source
+- **No**: Cannot edit any metadata
+- **Granular**: Set per-table permissions
+
+#### Manage database permissions
+
+<Note>
+Available on Pro and Enterprise plans.
+</Note>
+
+Grants access to database connection settings.
+
+Users with this permission can:
+- Edit connection options
+- Sync schemas manually
+- Scan field values
+- View database settings page
+
+<Info>
+Only administrators can delete database connections. Manage database permission does not include deletion rights.
+</Info>
+
+#### Transform permissions
+
+<Note>
+Transform permissions are available on Pro and Enterprise plans with Data Studio.
+</Note>
+
+Controls access to manage and run [transforms](https://docs.metabase.com/data-studio/transforms/transforms-overview.html).
+
+**Requirements:**
+- Can only be set at database level
+- Requires "Can view" and "Query builder and native" permissions for all tables
+
+### Collection permissions
+
+Control access to questions, dashboards, models, metrics, and other content.
+
+<Steps>
+  <Step title="Navigate to collections">
+    Go to **Admin** > **Permissions** > **Collections**
+  </Step>
+  <Step title="Select group">
+    Choose the group to configure
+  </Step>
+  <Step title="Set collection access">
+    For each collection, set the appropriate permission level
+  </Step>
+</Steps>
+
+**Permission levels:**
+
+| Level | Can view | Can edit | Can save new items | Can manage permissions |
+|-------|----------|----------|-------------------|------------------------|
+| **View** | ✅ | ❌ | ❌ | ❌ |
+| **Curate** | ✅ | ✅ | ✅ | ❌ |
+| **Manage** | ✅ | ✅ | ✅ | ✅ |
+| **No access** | ❌ | ❌ | ❌ | ❌ |
+
+### Application permissions
+
+<Note>
+Application permissions are available on Pro and Enterprise plans.
+</Note>
+
+Grant access to administrative features without making users full administrators.
+
+<Accordion title="Settings access">
+  Control access to **Admin** > **Settings** tab, including:
+  - General settings
+  - Email configuration
+  - Slack integration
+  - Webhooks
+  - Maps
+  - Localization
+  - Appearance
+  - Public sharing
+  - Embedding
+  - Caching
+</Accordion>
+
+<Accordion title="Monitoring access">
+  Grant access to:
+  - Performance tools
+  - Query logs
+  - Troubleshooting utilities
+  - Usage analytics
+</Accordion>
+
+<Accordion title="Subscriptions and alerts">
+  Control who can create:
+  - Dashboard subscriptions
+  - Question alerts
+  
+  Set to "No" to prevent users from creating new subscriptions and alerts.
+</Accordion>
+
+## Row and column security
+
+<Note>
+Row and column security (formerly "data sandboxing") is available on Pro and Enterprise plans.
+</Note>
+
+Restrict access to specific rows and columns based on user attributes.
+
+### How it works
+
+Row and column security creates a filtered version of a table that replaces the original table everywhere in Metabase for specific groups.
+
+<Steps>
+  <Step title="Set up user attributes">
+    Add attributes to users (e.g., Department: "Sales", Region: "EMEA")
+  </Step>
+  <Step title="Configure security policy">
+    Define which column to filter and which user attribute to use
+  </Step>
+  <Step title="Apply to group">
+    The filtered table replaces the original for that group
+  </Step>
+  <Step title="Dynamic filtering">
+    Each user sees rows matching their attribute value
+  </Step>
+</Steps>
+
+### Types of security
+
+<Accordion title="Row-level security">
+  Filter rows based on a single column matching a user attribute.
+  
+  **Example**: Filter Accounts table where `Region` column equals user's `region` attribute.
+  
+  Users with `region: "EMEA"` see only EMEA rows.
+  Users with `region: "Americas"` see only Americas rows.
+</Accordion>
+
+<Accordion title="Custom row and column security">
+  Use a saved SQL question to define a custom view with:
+  - Multiple row filters
+  - Hidden columns
+  - Edited/transformed columns
+  
+  **Example**: Create a "Restricted Accounts" question that:
+  - Hides the Email column
+  - Filters by multiple conditions
+  - Shows only specific date ranges
+</Accordion>
+
+### Setting up row and column security
+
+<Steps>
+  <Step title="Prepare prerequisites">
+    - Create user attributes for affected users
+    - Create a group for the secured users
+    - (For column security) Create a SQL question in an admin-only collection
+  </Step>
+  <Step title="Navigate to permissions">
+    Go to **Admin** > **Permissions** > **Data**
+  </Step>
+  <Step title="Select table">
+    Find the table to secure
+  </Step>
+  <Step title="Configure security">
+    For the target group, set **View data** to "Row and column security"
+  </Step>
+  <Step title="Choose security type">
+    Select either row-level filter or custom SQL question
+  </Step>
+  <Step title="Map attributes">
+    Connect user attributes to filter parameters
+  </Step>
+</Steps>
+
+<Warning>
+**Important limitations:**
+- Cannot secure SQL query results—use collection permissions
+- Doesn't apply to public links—consider disabling public sharing
+- Users in multiple sandboxes for the same table get permissions errors
+- Native query access unavailable for groups with row and column security
+</Warning>
+
+## Multi-tenant analytics tools
+
+### Database routing
+
+Build questions once and route queries to different databases based on the user.
+
+**Use case**: Each customer has their own database with identical schemas.
+
+### Connection impersonation
+
+Use database roles to manage permissions directly in your database.
+
+**Use case**: You prefer centralized permission management at the database level.
+
+## Best practices
+
+<Steps>
+  <Step title="Start with All Users blocked">
+    Block All Users group from all databases before granting specific permissions
+  </Step>
+  <Step title="Group by role or department">
+    Create groups that mirror your organizational structure
+  </Step>
+  <Step title="Use least privilege">
+    Grant the minimum permissions needed for each group's responsibilities
+  </Step>
+  <Step title="Document permission strategy">
+    Maintain documentation of your permission structure and reasoning
+  </Step>
+  <Step title="Regular audits">
+    Periodically review and adjust permissions as needs change
+  </Step>
+  <Step title="Test with non-admin accounts">
+    Verify permissions work as intended by testing with regular user accounts
+  </Step>
+</Steps>
+
+## Common permission patterns
+
+<Accordion title="Executive dashboard access">
+  **Scenario**: Executives need view-only access to key dashboards
+  
+  **Setup:**
+  - Create "Executives" group
+  - Grant "Can view" data permissions
+  - Grant "View" collection permissions to Executive Dashboards collection
+  - Block "Create queries" to prevent ad-hoc analysis
+</Accordion>
+
+<Accordion title="Data analyst full access">
+  **Scenario**: Analysts need to explore and create content
+  
+  **Setup:**
+  - Create "Analysts" group (or use Data Analysts group on Pro/Enterprise)
+  - Grant "Can view" data permissions
+  - Grant "Query builder and native" create permissions
+  - Grant "Curate" collection permissions
+  - Grant "1 million rows" download permissions
+</Accordion>
+
+<Accordion title="Regional sales teams">
+  **Scenario**: Sales reps see only their region's data
+  
+  **Setup:**
+  - Add `region` user attribute to each rep
+  - Create "Sales" group
+  - Configure row-level security filtering Sales data by region
+  - Grant "Query builder only" create permissions
+  - Grant "View" collection permissions to Sales collection
+</Accordion>
+
+<Accordion title="Multi-tenant customer portals">
+  **Scenario**: Each customer sees only their own data
+  
+  **Setup:**
+  - Add `customer_id` user attribute
+  - Create per-customer groups or use single group with attributes
+  - Configure row and column security filtering by customer_id
+  - Grant "View" collection permissions to shared dashboards
+  - Block "Create queries" to prevent custom analysis
+</Accordion>
+
+## Troubleshooting permissions
+
+<Accordion title="User can't see expected data">
+  **Check:**
+  1. User's group memberships
+  2. All Users group permissions (might be blocking)
+  3. Both data and collection permissions
+  4. Whether data permissions are "Blocked" somewhere
+  5. Row and column security filters
+</Accordion>
+
+<Accordion title="User has more access than expected">
+  **Check:**
+  1. All groups the user belongs to
+  2. All Users group permissions (most permissive wins)
+  3. Whether user is in Administrators group
+  4. Collection inheritance from parent collections
+</Accordion>
+
+<Accordion title="Native SQL disabled unexpectedly">
+  **Cause**: Any table in the database has "Blocked" or "Row and column security" permissions.
+  
+  **Solution**: Remove row restrictions or use impersonation instead if users need SQL access.
+</Accordion>
+
+<Accordion title="Permission conflicts with row and column security">
+  **Cause**: User is in multiple groups with different row and column security on the same table.
+  
+  **Solution**: Remove user from all but one group, or set other groups' permissions to "Blocked" for that table.
+</Accordion>
+
+## Related documentation
+
+- [Users and groups management](/administration/users-and-groups)
+- [Authentication and SSO](/administration/authentication)
+- [Row and column security examples](https://docs.metabase.com/permissions/row-and-column-security-examples.html)
+- [Permissions strategies](https://www.metabase.com/learn/metabase-basics/administration/permissions/strategy)
+- [Troubleshooting permissions](https://docs.metabase.com/troubleshooting-guide/permissions.html)

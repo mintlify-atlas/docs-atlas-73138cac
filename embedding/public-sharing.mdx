@@ -1,0 +1,493 @@
+---
+title: Public sharing
+description: Share charts and dashboards publicly via links or embeds without authentication
+---
+
+<Note>
+  Only admins can create and manage public links and embeds.
+</Note>
+
+Public sharing lets admins create and share public links (URLs) for questions, dashboards, and documents. People can view them as standalone destinations or as embedded iframes in another page or app. Public items display view-only results, so visitors won't be able to drill down into the underlying data.
+
+## When to use public sharing
+
+Public sharing is ideal for:
+
+- **One-off charts and dashboards** you want to share broadly
+- **Marketing pages** showcasing analytics or metrics
+- **Public reports** for stakeholders without Metabase access
+- **Blog posts** or documentation with embedded charts
+- **External websites** that need to display your data
+
+<Warning>
+  Public links are accessible to anyone with the URL. Don't use public sharing for sensitive or private data.
+</Warning>
+
+## Feature comparison
+
+<CardGroup cols={3}>
+  <Card title="Public sharing" icon="globe">
+    - No authentication required
+    - Simple iframe embeds
+    - All Metabase plans
+    - Limited interactivity
+  </Card>
+  <Card title="Guest embeds" icon="user" href="https://www.metabase.com/docs/latest/embedding/guest-embedding">
+    - Signed, secure embeds
+    - Filter with locked parameters
+    - All Metabase plans
+    - More control than public
+  </Card>
+  <Card title="SSO embeds" icon="key" href="/embedding/modular-embedding">
+    - Full authentication
+    - Drill-through and exploration
+    - Pro/Enterprise plans
+    - Maximum functionality
+  </Card>
+</CardGroup>
+
+## Create a public link for a question
+
+<Steps>
+  <Step title="Open sharing menu">
+    Click the **Sharing** icon at the top right of the question
+
+    <Frame>
+      <img src="https://www.metabase.com/docs/latest/embedding/images/create-a-public-link.png" alt="Create a public link for a question" />
+    </Frame>
+  </Step>
+  <Step title="Create public link">
+    Select **Create a public link**
+  </Step>
+  <Step title="Copy and test">
+    Copy the link and test it in a private/incognito browser session
+  </Step>
+</Steps>
+
+### Export question results via public link
+
+<Note>
+  Export options are only available for questions, not dashboards.
+</Note>
+
+To create a public link that downloads question results:
+
+<Steps>
+  <Step title="Create public link">
+    Click the **Sharing** icon and select **Create a public link**
+  </Step>
+  <Step title="Choose export format">
+    Below the **Public link** URL, click the file format you want:
+    - **CSV** - Comma-separated values
+    - **XLSX** - Excel spreadsheet
+    - **JSON** - JavaScript Object Notation
+
+    <Frame>
+      <img src="https://www.metabase.com/docs/latest/embedding/images/public-export.png" alt="Public export options" />
+    </Frame>
+  </Step>
+  <Step title="Test the link">
+    Open the public link in a new tab to test the download
+  </Step>
+</Steps>
+
+#### Exporting raw, unformatted results
+
+By default, Metabase exports formatted results (e.g., 0.42 → 42%). To export raw values, append `?format_rows=false` to the URL:
+
+```html
+https://www.example.com/public/question/cf347ce0-90bb-4669-b73b-56c73edd10cb.csv?format_rows=false
+```
+
+See the [export format endpoint documentation](https://www.metabase.com/docs/latest/api#tag/public/GET/public/card/{uuid}/query/{export-format}) for more details.
+
+## Create a public link for a dashboard
+
+<Steps>
+  <Step title="Open sharing menu">
+    Click the **Sharing** button in the top right menu
+
+    <Frame>
+      <img src="https://www.metabase.com/docs/latest/embedding/images/dashboard-sharing.png" alt="Sharing a dashboard" />
+    </Frame>
+  </Step>
+  <Step title="Create public link">
+    Select **Create a public link**
+  </Step>
+  <Step title="Copy the URL">
+    Copy the generated URL to share with others
+  </Step>
+</Steps>
+
+<Note>
+  For more advanced dashboard embedding with parameters, see [guest embedding](https://www.metabase.com/docs/latest/embedding/guest-embedding).
+</Note>
+
+## Create a public link for a document
+
+<Steps>
+  <Step title="Open sharing menu">
+    Click the **Sharing** button in the top right menu
+  </Step>
+  <Step title="Create public link">
+    Select **Create a public link**
+  </Step>
+</Steps>
+
+Public documents are read-only:
+- Viewers cannot edit content or add comments
+- Charts in the document allow downloads (CSV, XLSX, JSON)
+- Use the **Download results** option in the chart menu
+
+## Public embeds
+
+Embed questions or dashboards as iframes in your website or app:
+
+<Frame>
+  <img src="https://www.metabase.com/docs/latest/embedding/images/public-embed.png" alt="Public embed interface" />
+</Frame>
+
+<Steps>
+  <Step title="Open embed menu">
+    Click the **Sharing** icon for your question or dashboard
+  </Step>
+  <Step title="Access embed code">
+    Click **Embed**, then **Get embedding code** at the bottom of the popup
+  </Step>
+  <Step title="Copy iframe snippet">
+    Copy the generated iframe code
+  </Step>
+  <Step title="Paste in your website">
+    Add the iframe snippet to your HTML
+  </Step>
+</Steps>
+
+### Example public embed code
+
+```html
+<iframe
+  src="https://metabase.example.com/public/question/abc123"
+  frameborder="0"
+  width="800"
+  height="600"
+  allowtransparency
+></iframe>
+```
+
+## Customizing public embeds
+
+You can customize the appearance and filters of public embeds using URL parameters.
+
+<Warning>
+  Public link URLs can be discovered from iframe `src` attributes. Anyone with the URL can remove parameters to view the original content. For secure embeds with locked parameters, use [guest embedding](https://www.metabase.com/docs/latest/embedding/guest-embedding).
+</Warning>
+
+### Appearance parameters
+
+Add hash parameters to customize the look:
+
+<Tabs>
+  <Tab title="Hide title">
+    ```
+    /public/dashboard/abc123#titled=false
+    ```
+  </Tab>
+  <Tab title="Hide borders">
+    ```
+    /public/dashboard/abc123#bordered=false
+    ```
+  </Tab>
+  <Tab title="Dark theme">
+    ```
+    /public/question/abc123#theme=night
+    ```
+  </Tab>
+  <Tab title="Multiple options">
+    ```
+    /public/dashboard/abc123#titled=false&bordered=false&theme=transparent
+    ```
+  </Tab>
+</Tabs>
+
+See [appearance parameters](https://www.metabase.com/docs/latest/embedding/static-embedding-parameters#customizing-the-appearance-of-a-static-embed) for all available options.
+
+### Filter parameters
+
+Apply filters to public embeds by adding query parameters. Make sure you've set up [question filters](https://www.metabase.com/docs/latest/questions/query-builder/filters) or [dashboard filters](https://www.metabase.com/docs/latest/dashboards/filters) first.
+
+#### Basic filter syntax
+
+```
+/dashboard/42?filter_name=value
+```
+
+<Note>
+  Filter names in URLs should be lowercase with underscores instead of spaces. For example, "Filter for User ZIP Code" becomes `filter_for_user_zip_code`.
+</Note>
+
+#### Examples
+
+<CodeGroup>
+```text Single filter
+/dashboard/42?id=7
+```
+
+```text Multiple filters
+/dashboard/42?id=7&name=janet
+```
+
+```text Filter and hide parameter
+/dashboard/42?id=7#hide_parameters=id
+```
+
+```text Hide multiple parameters
+/dashboard/42#hide_parameters=id,customer_name
+```
+</CodeGroup>
+
+## Simulating drill-through on public dashboards
+
+Metabase's automatic drill-through doesn't work on public dashboards because it requires access to raw data. However, you can simulate drill-through using custom click behaviors:
+
+<Steps>
+  <Step title="Create destination dashboard">
+    Create a second dashboard to act as the drill-through destination
+  </Step>
+  <Step title="Create public link for destination">
+    Generate a public link for the destination dashboard and copy the URL
+  </Step>
+  <Step title="Set up custom click behavior">
+    On your primary dashboard:
+    1. Create a [custom destination](https://www.metabase.com/docs/latest/dashboards/interactive#custom-destinations) with type "URL"
+    2. Set it to the destination dashboard's public link
+  </Step>
+  <Step title="Pass filter values (optional)">
+    Pass a filter value from the primary dashboard by adding a query parameter:
+
+    ```
+    /public/dashboard/?child_filter_name={{parent_column_name}}
+    ```
+  </Step>
+</Steps>
+
+### Example: Invoice to Accounts drill-through
+
+Pass the **Plan** value from an Invoices dashboard to an Accounts dashboard:
+
+<Frame>
+  <img src="https://www.metabase.com/docs/latest/embedding/images/public-link-custom-destination.png" alt="Public link with custom destination" />
+</Frame>
+
+```
+/public/dashboard/accounts-dashboard-uuid?plan={{plan}}
+```
+
+## Managing public sharing
+
+### Disable public sharing globally
+
+<Steps>
+  <Step title="Go to Admin settings">
+    Click the **grid** icon in the upper right, select **Admin**
+  </Step>
+  <Step title="Navigate to Public sharing">
+    In the **Settings** tab, select **Public sharing**
+  </Step>
+  <Step title="Toggle off">
+    Toggle off **Public sharing**
+  </Step>
+</Steps>
+
+<Frame>
+  <img src="https://www.metabase.com/docs/latest/embedding/images/enable-public-sharing.png" alt="Enable public sharing toggle" />
+</Frame>
+
+<Note>
+  If you disable and then re-enable public sharing, all previously generated public links will still work (unless you deactivated them individually).
+</Note>
+
+### View all publicly shared content
+
+Admins can see all publicly shared questions, dashboards, documents, and actions:
+
+**Admin** > **Settings** > **Public sharing**
+
+<Frame>
+  <img src="https://www.metabase.com/docs/latest/embedding/images/see-shared-content.png" alt="See all shared content" />
+</Frame>
+
+### Deactivate individual public links
+
+<Tabs>
+  <Tab title="Single item">
+    <Steps>
+      <Step>Visit the question or dashboard</Step>
+      <Step>Click the **Sharing** icon</Step>
+      <Step>Select **Public link** or **Embed**</Step>
+      <Step>Click **Remove public link**</Step>
+    </Steps>
+  </Tab>
+  <Tab title="Multiple items">
+    <Steps>
+      <Step>Go to **Admin** > **Settings** > **Public sharing**</Step>
+      <Step>For each item to deactivate, click the **X** to revoke its public link</Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## Security considerations
+
+<Warning>
+  Public links are accessible to anyone on the internet. Consider these security implications:
+</Warning>
+
+<AccordionGroup>
+  <Accordion title="Anyone with the link can access it">
+    Public links don't require authentication. Treat them like passwords—anyone who has the URL can view the content.
+  </Accordion>
+  
+  <Accordion title="Links are stable and don't expire">
+    Public links remain active until you manually deactivate them. They don't expire automatically.
+  </Accordion>
+  
+  <Accordion title="Data is visible to search engines">
+    Public links may be indexed by search engines unless you add robots.txt rules or deactivate the link.
+  </Accordion>
+  
+  <Accordion title="Parameters can be modified">
+    Users can modify URL parameters to see different filtered views of your data (unless using guest embeds with locked parameters).
+  </Accordion>
+  
+  <Accordion title="No audit trail for viewers">
+    You can't see who accessed a public link or when they viewed it.
+  </Accordion>
+</AccordionGroup>
+
+### When to use alternatives
+
+<CardGroup cols={2}>
+  <Card title="Use guest embeds if..." icon="lock" href="https://www.metabase.com/docs/latest/embedding/guest-embedding">
+    - You need locked filter parameters
+    - You want to control data visibility per embed
+    - You need slightly more security than public links
+  </Card>
+  <Card title="Use SSO embeds if..." icon="shield" href="/embedding/modular-embedding">
+    - You need per-user authentication
+    - You want drill-through and exploration
+    - You need audit trails and usage analytics
+  </Card>
+</CardGroup>
+
+## Download permissions
+
+<Note>
+  Data downloads are enabled by default for public embeds. Only Pro and Enterprise plans can disable downloads.
+</Note>
+
+To control whether people can download data from public embeds:
+
+1. Go to **Admin** > **Settings** > **Public sharing**
+2. Configure download permissions for your plan level
+
+## Best practices
+
+<Steps>
+  <Step title="Use descriptive names">
+    Give questions and dashboards clear names—the name appears in public links and helps people understand what they're viewing.
+  </Step>
+  <Step title="Test in private browsing">
+    Always test public links in an incognito/private browser window to ensure they work correctly.
+  </Step>
+  <Step title="Monitor shared content">
+    Regularly review public links in **Admin** > **Public sharing** and deactivate any that are no longer needed.
+  </Step>
+  <Step title="Consider data sensitivity">
+    Before creating a public link, verify that the data is appropriate for public viewing.
+  </Step>
+  <Step title="Use guest embeds for sensitive data">
+    If you need any level of data control or security, use [guest embeds](https://www.metabase.com/docs/latest/embedding/guest-embedding) instead.
+  </Step>
+  <Step title="Document your public links">
+    Keep track of where public embeds are used (which websites, pages, etc.) for easier maintenance.
+  </Step>
+</Steps>
+
+## Common use cases
+
+<AccordionGroup>
+  <Accordion title="Marketing website metrics">
+    Embed public dashboards on your marketing site to showcase product metrics or customer success stories.
+  </Accordion>
+  
+  <Accordion title="Blog post visualizations">
+    Include public question embeds in blog posts to illustrate data points or research findings.
+  </Accordion>
+  
+  <Accordion title="Stakeholder reports">
+    Share public dashboard links with external stakeholders who don't need Metabase accounts.
+  </Accordion>
+  
+  <Accordion title="Data journalism">
+    Publish public charts and dashboards as part of data-driven stories or reports.
+  </Accordion>
+  
+  <Accordion title="Public data portals">
+    Create public dashboards for open data initiatives or government transparency.
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Public link not working">
+    - Verify that public sharing is enabled in **Admin** > **Settings** > **Public sharing**
+    - Check that the link hasn't been deactivated
+    - Ensure the question or dashboard still exists
+    - Try accessing in a private/incognito browser window
+  </Accordion>
+  
+  <Accordion title="Iframe not displaying">
+    - Check browser console for errors
+    - Verify the iframe `src` URL is correct
+    - Ensure your website's Content Security Policy allows iframes from your Metabase domain
+    - Test the public link directly in a browser first
+  </Accordion>
+  
+  <Accordion title="Filters not applying">
+    - Verify filter names match (lowercase, underscores instead of spaces)
+    - Check that filters are set up on the question/dashboard
+    - Ensure filter values are URL-encoded
+    - Test the filter by manually adding it to the URL
+  </Accordion>
+  
+  <Accordion title="Export links not downloading">
+    - Verify you're using a question export link (not dashboard)
+    - Check that the file format extension is correct (.csv, .xlsx, .json)
+    - Ensure pop-up blockers aren't preventing the download
+    - Try the link in a different browser
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Guest embeds" icon="user" href="https://www.metabase.com/docs/latest/embedding/guest-embedding">
+    Secure embeds with locked parameters
+  </Card>
+  <Card title="Modular embedding" icon="puzzle-piece" href="/embedding/modular-embedding">
+    Authenticated embeds with full functionality
+  </Card>
+  <Card title="Appearance settings" icon="palette" href="https://www.metabase.com/docs/latest/configuring-metabase/appearance">
+    Customize Metabase's look and feel
+  </Card>
+  <Card title="Dashboard filters" icon="filter" href="https://www.metabase.com/docs/latest/dashboards/filters">
+    Set up filters for dashboards
+  </Card>
+</CardGroup>
+
+## Further reading
+
+- [Publishing data visualizations to the web](https://www.metabase.com/learn/metabase-basics/embedding/charts-and-dashboards)
+- [Customizing Metabase's appearance](https://www.metabase.com/docs/latest/configuring-metabase/appearance)
+- [Embedding introduction](/embedding/introduction)
+- [Interactive dashboards](https://www.metabase.com/docs/latest/dashboards/interactive)

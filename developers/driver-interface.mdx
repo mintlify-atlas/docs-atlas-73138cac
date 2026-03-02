@@ -1,0 +1,469 @@
+---
+title: Driver interface
+description: Understanding the Metabase driver interface and multimethods
+---
+
+The driver interface defines how Metabase communicates with different databases. Understanding this interface is essential for building new drivers or customizing existing ones.
+
+## What is a driver?
+
+In Metabase, a driver is simply a keyword (like `:postgres`, `:mysql`, `:mongodb`) plus implementations of driver multimethods. There are no classes or objects—just a keyword and functions that dispatch on that keyword.
+
+```clojure
+;; A driver is just this:
+(driver/register! :mydriver)
+
+;; Plus method implementations:
+(defmethod driver/display-name :mydriver [_]
+  "My Database")
+```
+
+## Driver architecture
+
+A Metabase driver provides four main capabilities:
+
+<Steps>
+  <Step title="Database information">
+    Provides metadata like display name, connection properties, and capabilities.
+  </Step>
+  
+  <Step title="Schema introspection">
+    Discovers and reports database schema (tables, columns, foreign keys).
+  </Step>
+  
+  <Step title="Query compilation">
+    Converts MBQL (Metabase Query Language) queries into native database queries.
+  </Step>
+  
+  <Step title="Query execution">
+    Executes native queries and returns formatted results.
+  </Step>
+</Steps>
+
+## Driver multimethods
+
+Multimethods are Clojure's polymorphism mechanism. They dispatch on the driver keyword:
+
+```clojure
+(ns metabase.driver.mydriver
+  (:require [metabase.driver :as driver]))
+
+;; Register the driver
+(driver/register! :mydriver, :parent :sql-jdbc)
+
+;; Implement multimethods
+(defmethod driver/display-name :mydriver [_]
+  "My Database")
+
+(defmethod driver/supports? [:mydriver :foreign-keys] [_ _]
+  true)
+```
+
+### Listing available methods
+
+To see all available driver methods:
+
+```bash
+# List method names
+clojure -M:run driver-methods
+
+# List with documentation
+clojure -M:run driver-methods docs
+```
+
+## Essential driver methods
+
+### Display and metadata
+
+<CodeGroup>
+```clojure Display name
+(defmethod driver/display-name :mydriver [_]
+  "My Database")
+```
+
+```clojure Humanize connection errors
+(defmethod driver/humanize-connection-error-message :mydriver
+  [_ message]
+  (cond
+    (str/includes? message "authentication failed")
+    "Invalid username or password."
+    
+    (str/includes? message "connection refused")
+    "Unable to connect. Check your host and port."
+    
+    :else
+    message))
+```
+</CodeGroup>
+
+### Connection management
+
+<CodeGroup>
+```clojure JDBC connection spec
+(defmethod sql-jdbc.conn/connection-details->spec :mydriver
+  [_ {:keys [host port dbname user password]}]
+  {:classname "com.mydb.Driver"
+   :subprotocol "mydb"
+   :subname (str "//" host ":" port "/" dbname)
+   :user user
+   :password password})
+```
+
+```clojure Test connection
+(defmethod driver/can-connect? :mydriver
+  [driver details]
+  (try
+    (let [spec (sql-jdbc.conn/connection-details->spec driver details)]
+      (with-open [conn (jdbc/get-connection spec)]
+        (boolean conn)))
+    (catch Exception _
+      false)))
+```
+</CodeGroup>
+
+### Database capabilities
+
+```clojure
+;; Declare what features the database supports
+(defmethod driver/database-supports? [:mydriver :foreign-keys]
+  [_ _ _]
+  true)
+
+(defmethod driver/database-supports? [:mydriver :nested-queries]
+  [_ _ _]
+  true)
+
+(defmethod driver/database-supports? [:mydriver :set-timezone]
+  [_ _ _]
+  false)
+
+(defmethod driver/database-supports? [:mydriver :left-join]
+  [_ _ _]
+  true)
+
+(defmethod driver/database-supports? [:mydriver :expressions]
+  [_ _ _]
+  true)
+```
+
+### SQL generation
+
+<CodeGroup>
+```clojure Quote style
+(defmethod sql.qp/quote-style :mydriver [_]
+  :ansi)  ; or :mysql, :sqlserver, etc.
+```
+
+```clojure Current datetime
+(defmethod sql.qp/current-datetime-honeysql-form :mydriver [_]
+  :%now)  ; or [:raw "CURRENT_TIMESTAMP"], etc.
+```
+
+```clojure Add limit clause
+(defmethod sql.qp/add-interval-honeysql-form :mydriver
+  [_ hsql-form amount unit]
+  [:date_add hsql-form [:interval amount unit]])
+```
+</CodeGroup>
+
+### Type mapping
+
+```clojure
+(defmethod sql-jdbc.sync/database-type->base-type :mydriver
+  [_ database-type]
+  (case (keyword database-type)
+    :varchar    :type/Text
+    :text       :type/Text
+    :integer    :type/Integer
+    :bigint     :type/BigInteger
+    :float      :type/Float
+    :double     :type/Float
+    :decimal    :type/Decimal
+    :date       :type/Date
+    :datetime   :type/DateTime
+    :timestamp  :type/DateTimeWithLocalTZ
+    :boolean    :type/Boolean
+    :json       :type/JSON
+    :type/*))   ; Default fallback
+```
+
+## Parent drivers
+
+Parent drivers provide shared functionality, similar to inheritance:
+
+### Common parent drivers
+
+<Accordion title=":sql-jdbc - SQL databases with JDBC">
+  The most common parent for SQL databases with JDBC support:
+  
+  ```clojure
+  (driver/register! :mydriver, :parent :sql-jdbc)
+  ```
+  
+  Provides:
+  - Connection pooling
+  - Query execution
+  - Transaction management
+  - Basic schema sync
+  - Result set processing
+</Accordion>
+
+<Accordion title=":sql - SQL databases without JDBC">
+  For SQL databases without JDBC (like BigQuery):
+  
+  ```clojure
+  (driver/register! :bigquery, :parent :sql)
+  ```
+  
+  Provides:
+  - SQL query compilation
+  - Query preprocessing
+  - Some schema sync functionality
+  
+  You implement:
+  - Connection management
+  - Query execution
+</Accordion>
+
+<Accordion title="Concrete drivers as parents">
+  Some drivers inherit from other concrete drivers:
+  
+  ```clojure
+  (driver/register! :redshift, :parent :postgres)
+  ```
+  
+  Only override methods where behavior differs.
+</Accordion>
+
+### Multiple parents
+
+Drivers can have multiple parents:
+
+```clojure
+(driver/register! :bigquery, :parent #{:sql :google})
+```
+
+This combines functionality from both parents.
+
+### Calling parent implementations
+
+Call parent methods using `get-method`:
+
+```clojure
+(defmethod driver/mbql->native :mydriver
+  [driver query]
+  ;; Do some custom preprocessing
+  (let [query (preprocess-query query)]
+    ;; Then call parent implementation
+    ((get-method driver/mbql->native :sql-jdbc) driver query)))
+```
+
+<Warning>
+Always pass the `driver` argument as-is to parent implementations. Don't replace it with a keyword.
+</Warning>
+
+```clojure
+;; ✅ CORRECT
+((get-method driver/mbql->native :sql) driver query)
+
+;; ❌ WRONG - breaks method dispatch
+((get-method driver/mbql->native :sql) :sql query)
+((get-method driver/mbql->native :sql) :mydriver query)
+```
+
+## Driver namespaces
+
+Driver code can be organized across multiple namespaces:
+
+```
+metabase/driver/mydriver/
+├── core.clj             # Main driver registration
+├── query_processor.clj  # MBQL compilation
+├── sync.clj            # Schema introspection
+└── execute.clj         # Query execution
+```
+
+Example structure:
+
+```clojure
+;; metabase.driver.mydriver.core
+(ns metabase.driver.mydriver.core
+  (:require [metabase.driver :as driver]
+            [metabase.driver.mydriver.query-processor]
+            [metabase.driver.mydriver.sync]))
+
+(driver/register! :mydriver, :parent :sql-jdbc)
+
+(defmethod driver/display-name :mydriver [_]
+  "My Database")
+```
+
+## Driver initialization
+
+Drivers can run initialization code once using `driver/initialize!`:
+
+```clojure
+(driver/initialize! :mydriver
+  (fn []
+    ;; Run once when driver loads
+    (setup-connection-pool)
+    (register-type-handlers)
+    (log/info "MyDriver initialized")))
+```
+
+<Note>
+Use `initialize!` only for one-time setup like resource allocation or system property configuration.
+</Note>
+
+## JDBC-specific methods
+
+For JDBC-based drivers, implement these SQL-JDBC methods:
+
+### Connection
+
+```clojure
+(defmethod sql-jdbc.conn/connection-details->spec :mydriver
+  [_ {:keys [host port dbname user password ssl]}]
+  (merge
+    {:classname "com.mydb.Driver"
+     :subprotocol "mydb"
+     :subname (str "//" host ":" port "/" dbname)
+     :user user
+     :password password}
+    (when ssl
+      {:ssl true
+       :sslfactory "org.postgresql.ssl.NonValidatingFactory"})))
+```
+
+### Timezone handling
+
+```clojure
+(defmethod sql-jdbc.execute/set-timezone-sql :mydriver [_]
+  "SET TIME ZONE %s;")
+```
+
+### Result processing
+
+```clojure
+(defmethod sql-jdbc.execute/read-column-thunk [:mydriver Types/TIMESTAMP]
+  [_ ^ResultSet rs ^Integer i]
+  (fn []
+    (.getTimestamp rs i)))
+```
+
+## Non-JDBC drivers
+
+For databases without JDBC, implement query execution:
+
+```clojure
+(defmethod driver/execute-reducible-query :mydriver
+  [driver query context respond]
+  (let [native-query (qp/compile driver query)
+        conn (get-connection (:database query))]
+    (try
+      (let [results (execute-query conn native-query)]
+        (respond {:cols (result-columns results)
+                  :rows (result-rows results)}))
+      (finally
+        (close-connection conn)))))
+```
+
+## Schema introspection
+
+Implement sync methods for database schema discovery:
+
+```clojure
+(defmethod driver/describe-database :mydriver
+  [_ database]
+  {:tables (get-tables database)})
+
+(defmethod driver/describe-table :mydriver
+  [_ database table]
+  {:name   (:name table)
+   :schema (:schema table)
+   :fields (get-fields database table)})
+
+(defmethod driver/describe-table-fks :mydriver
+  [_ database table]
+  (get-foreign-keys database table))
+```
+
+## Testing driver methods
+
+Test your driver implementations:
+
+```clojure
+(ns metabase.driver.mydriver-test
+  (:require
+   [clojure.test :refer :all]
+   [metabase.driver :as driver]
+   [metabase.test :as mt]))
+
+(deftest display-name-test
+  (is (= "My Database"
+         (driver/display-name :mydriver))))
+
+(deftest supports-foreign-keys-test
+  (is (driver/database-supports? :mydriver :foreign-keys nil)))
+
+(deftest connection-test
+  (testing "Can connect with valid credentials"
+    (is (driver/can-connect? :mydriver
+                             {:host "localhost"
+                              :port 5432
+                              :dbname "test"}))))
+```
+
+## Working from the REPL
+
+Develop and test drivers interactively:
+
+```bash
+# Start REPL with driver dependencies
+clojure -A:dev:drivers:drivers-dev
+```
+
+In the REPL:
+
+```clojure
+;; Load your driver
+(require 'metabase.driver.mydriver :reload)
+
+;; Test methods
+(driver/display-name :mydriver)
+(driver/database-supports? :mydriver :foreign-keys nil)
+
+;; Test connection
+(driver/can-connect? :mydriver {:host "localhost" :port 5432})
+
+;; Run a query
+(require 'metabase.test :as mt)
+(mt/dataset test-data
+  (mt/run-mbql-query venues {:limit 10}))
+```
+
+## Reference
+
+### Key namespaces
+
+- **metabase.driver** - Core driver interface
+- **metabase.driver.sql** - SQL driver abstractions
+- **metabase.driver.sql-jdbc** - JDBC driver abstractions
+- **metabase.driver.sql.query-processor** - SQL query compilation
+- **metabase.driver.sql-jdbc.connection** - JDBC connections
+- **metabase.driver.sql-jdbc.sync** - JDBC schema sync
+- **metabase.driver.sql-jdbc.execute** - JDBC query execution
+
+### Example drivers to study
+
+- **PostgreSQL** - Full-featured JDBC driver
+- **SQLite** - Simple JDBC driver
+- **MongoDB** - Non-SQL driver
+- **BigQuery** - SQL non-JDBC driver
+- **Redshift** - Driver with parent override
+
+## Next steps
+
+- Build a driver following the [building drivers guide](/developers/building-drivers)
+- Review [community drivers](/developers/community-drivers) for examples
+- Check the [Driver Interface Changelog](https://github.com/metabase/metabase/blob/master/docs/developers-guide/driver-changelog.md) for updates

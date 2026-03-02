@@ -1,0 +1,391 @@
+---
+title: Session
+description: Manage authentication sessions and handle password resets
+---
+
+The Session API handles user authentication, session management, and password reset flows. This API includes 7 endpoints.
+
+<Note>
+For general authentication information, see the [Authentication guide](/api/authentication).
+</Note>
+
+## Create session
+
+Authenticate with email and password to create a new session.
+
+```bash
+POST /api/session
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/session \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "username": "user@example.com",
+    "password": "your-password"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://your-metabase.com/api/session', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    username: 'user@example.com',
+    password: 'your-password'
+  })
+});
+
+const { id: sessionToken } = await response.json();
+```
+
+```python Python
+response = requests.post(
+    'https://your-metabase.com/api/session',
+    json={
+        'username': 'user@example.com',
+        'password': 'your-password'
+    }
+)
+
+session_token = response.json()['id']
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="username" type="string" required>
+  User email address
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  User password
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="string">
+  Session token (UUID) to use for authentication
+</ResponseField>
+
+```json
+{
+  "id": "38f4939c-ad7f-4cbe-ae54-30946daf8593"
+}
+```
+
+<Tip>
+Store the session token securely and include it in the `X-Metabase-Session` header for all subsequent API requests.
+</Tip>
+
+## Delete session
+
+Log out and invalidate the current session.
+
+```bash
+DELETE /api/session
+```
+
+<CodeGroup>
+```bash curl
+curl -X DELETE \
+  https://your-metabase.com/api/session \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+
+```javascript JavaScript
+await fetch('https://your-metabase.com/api/session', {
+  method: 'DELETE',
+  headers: { 'X-Metabase-Session': sessionToken }
+});
+```
+
+```python Python
+requests.delete(
+    'https://your-metabase.com/api/session',
+    headers={'X-Metabase-Session': session_token}
+)
+```
+</CodeGroup>
+
+### Response
+
+Returns `204 No Content` on success.
+
+<Note>
+After logout, the session token is invalidated and cannot be reused.
+</Note>
+
+## Get session properties
+
+Get configuration and properties for the current session.
+
+```bash
+GET /api/session/properties
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/session/properties \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Response
+
+Returns session configuration including:
+
+<ResponseField name="engines" type="object">
+  Available database engines and drivers
+</ResponseField>
+
+<ResponseField name="version" type="object">
+  Metabase version information
+</ResponseField>
+
+<ResponseField name="settings" type="object">
+  Instance-level settings
+</ResponseField>
+
+<ResponseField name="has-user-setup" type="boolean">
+  Whether initial setup is complete
+</ResponseField>
+
+<ResponseField name="setup-token" type="string">
+  Setup token if setup is incomplete
+</ResponseField>
+
+## Google OAuth
+
+Authenticate using Google OAuth.
+
+```bash
+POST /api/session/google_auth
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/session/google_auth \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "token": "google-oauth-token"
+  }'
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="token" type="string" required>
+  Google OAuth ID token
+</ParamField>
+
+### Response
+
+Returns a session token on successful authentication:
+
+```json
+{
+  "id": "38f4939c-ad7f-4cbe-ae54-30946daf8593"
+}
+```
+
+<Note>
+Google OAuth must be configured in instance settings for this endpoint to work.
+</Note>
+
+## Password verification
+
+Verify a password without creating a new session.
+
+```bash
+POST /api/session/password-check
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/session/password-check \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "password": "current-password"
+  }'
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="password" type="string" required>
+  Password to verify for the current user
+</ParamField>
+
+### Response
+
+<ResponseField name="valid" type="boolean">
+  Whether the password is correct
+</ResponseField>
+
+```json
+{
+  "valid": true
+}
+```
+
+<Note>
+Requires an active session. Used to confirm user identity before sensitive operations like changing email or password.
+</Note>
+
+## Request password reset
+
+Send a password reset email to a user.
+
+```bash
+POST /api/session/forgot_password
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/session/forgot_password \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "email": "user@example.com"
+  }'
+```
+
+```javascript JavaScript
+await fetch('https://your-metabase.com/api/session/forgot_password', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    email: 'user@example.com'
+  })
+});
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="email" type="string" required>
+  Email address of the user requesting password reset
+</ParamField>
+
+### Response
+
+Returns `200 OK` on success (even if email doesn't exist, for security).
+
+<Tip>
+The endpoint always returns success to prevent email enumeration attacks. The user will receive an email with reset instructions if the account exists.
+</Tip>
+
+## Validate reset token
+
+Check if a password reset token is valid.
+
+```bash
+GET /api/session/password_reset_token_valid
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  'https://your-metabase.com/api/session/password_reset_token_valid?token=RESET_TOKEN'
+```
+</CodeGroup>
+
+### Query parameters
+
+<ParamField query="token" type="string" required>
+  Password reset token from the email
+</ParamField>
+
+### Response
+
+<ResponseField name="valid" type="boolean">
+  Whether the token is valid and not expired
+</ResponseField>
+
+```json
+{
+  "valid": true
+}
+```
+
+## Reset password
+
+Reset a user's password using a valid reset token.
+
+```bash
+POST /api/session/reset_password
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/session/reset_password \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "token": "reset-token-from-email",
+    "password": "NewSecurePassword123!"
+  }'
+```
+
+```javascript JavaScript
+await fetch('https://your-metabase.com/api/session/reset_password', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    token: 'reset-token-from-email',
+    password: 'NewSecurePassword123!'
+  })
+});
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="token" type="string" required>
+  Password reset token from the email
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  New password (must meet password requirements)
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean">
+  Whether the password was successfully reset
+</ResponseField>
+
+```json
+{
+  "success": true
+}
+```
+
+<Note>
+After successfully resetting the password, the user can log in with their new credentials.
+</Note>
+
+## Error codes
+
+<ResponseField name="400 Bad Request" type="error">
+  Invalid credentials, expired token, or password doesn't meet requirements
+</ResponseField>
+
+<ResponseField name="401 Unauthorized" type="error">
+  Invalid username or password
+</ResponseField>
+
+<ResponseField name="403 Forbidden" type="error">
+  Account is deactivated or suspended
+</ResponseField>
+
+<ResponseField name="429 Too Many Requests" type="error">
+  Too many login attempts. Please wait before trying again.
+</ResponseField>

@@ -1,0 +1,244 @@
+---
+title: 'Asking questions'
+description: 'Learn how to create and save questions in Metabase to analyze your data using the query builder or SQL editor.'
+---
+
+Questions in Metabase are queries, their results, and their visualization. Questions are the basic analytical unit in Metabase - you can think of them as saved queries that you can display as tables or charts.
+
+## What is a question?
+
+A question is composed of three parts:
+
+- **The query**: The data you want to retrieve from your database
+- **The results**: The data returned by your query
+- **The visualization**: How you choose to display those results (table, chart, etc.)
+
+You can organize questions into collections and dashboards, embed them, share links to them, export their results, and set up alerts when results are interesting.
+
+## Creating a new question
+
+There are several ways to create a question in Metabase:
+
+<Tabs>
+  <Tab title="From scratch">
+    Click **+ New** in the main navigation and choose how you want to query your data:
+    
+    - **Question**: Opens the graphical query builder
+    - **SQL query**: Opens the native SQL editor
+    
+    The query builder is great for most questions and doesn't require SQL knowledge. The SQL editor gives you full control for complex queries.
+  </Tab>
+  
+  <Tab title="From existing question">
+    You can build on top of any existing question without modifying the original:
+    
+    1. Open the question you want to build from
+    2. Click the three-dot menu
+    3. Select **Duplicate** or use it as a data source for a new question
+    
+    <Note>Some question types can't be used as source data, including Druid questions, MongoDB questions, and questions using cumulative aggregations.</Note>
+  </Tab>
+  
+  <Tab title="With Metabot">
+    Use natural language to create questions with AI assistance:
+    
+    1. Click **+ New** > **Question**
+    2. Select **Ask Metabot**
+    3. Describe what you want to know about your data
+    
+    Metabot can generate both query builder questions and SQL queries based on your request.
+  </Tab>
+</Tabs>
+
+## Choosing your data source
+
+When creating a question, you'll first select where your data comes from:
+
+<CardGroup cols={2}>
+  <Card title="Tables" icon="table">
+    Query data directly from database tables. Select your database, then choose the specific table you want to analyze.
+  </Card>
+  
+  <Card title="Models" icon="diagram-project">
+    Start from a curated dataset. Models are specially prepared questions that serve as good starting points, similar to views in SQL.
+  </Card>
+  
+  <Card title="Saved questions" icon="bookmark">
+    Build on existing questions. Use any saved question's results as the foundation for a new analysis.
+  </Card>
+  
+  <Card title="Metrics" icon="chart-line">
+    Begin with pre-defined calculations. Metrics are standardized measures like revenue or active users defined by your team.
+  </Card>
+</CardGroup>
+
+## Building your question
+
+<Steps>
+  <Step title="Select your data source">
+    Choose a table, model, saved question, or metric as your starting point.
+  </Step>
+  
+  <Step title="Filter your data">
+    Narrow down the data by adding filters. You can filter by date ranges, categories, numeric values, and more.
+  </Step>
+  
+  <Step title="Summarize and group">
+    Calculate metrics like counts, sums, and averages. Group by dimensions like time, location, or category to break down your metrics.
+  </Step>
+  
+  <Step title="Visualize your results">
+    Choose the best chart type for your data. Metabase will suggest appropriate visualizations, but you can customize them.
+  </Step>
+</Steps>
+
+## Saving your question
+
+Once you've built your query and visualized the results, you can save your question in two ways:
+
+<Tabs>
+  <Tab title="Save to collection">
+    **Best for reusable questions**
+    
+    Questions saved to collections can be:
+    - Added to multiple dashboards
+    - Found through search
+    - Shared with team members
+    - Used as data sources for other questions
+    
+    To save to a collection, you'll need curate access to that collection.
+  </Tab>
+  
+  <Tab title="Save to dashboard">
+    **Best for dashboard-specific questions**
+    
+    Questions saved directly to dashboards:
+    - Only appear in that specific dashboard
+    - Can't be reused in other dashboards
+    - Are arranged and saved when you save the dashboard
+    
+    This is useful for questions that are highly specific to one dashboard's context.
+  </Tab>
+</Tabs>
+
+<Info>
+When saving a question, you can add a name and description. The description supports Markdown formatting, which is helpful for documenting what the question shows and why it matters.
+</Info>
+
+## Question metadata and information
+
+Click the **info** icon in the upper right to view details about your question:
+
+### Overview tab
+
+- **Description**: Add context about what the question shows (supports Markdown)
+- **Created by**: Who originally created the question
+- **Last edited by**: Who made the most recent changes
+- **Saved in**: The collection or dashboard containing the question
+- **Based on**: The underlying database and table
+- **Entity ID**: Unique identifier used for serialization across Metabase instances
+
+### History tab
+
+Metabase automatically tracks the last 15 versions of each question. You can:
+- View what changed in each version
+- See who made the changes and when
+- Revert to a previous version if needed
+
+## Working with questions
+
+<AccordionGroup>
+  <Accordion title="Preview results while building">
+    As you build your question, click the **Preview** button (play icon) next to each step to see the first 10 rows of results. This helps you validate your query before running the full query.
+  </Accordion>
+  
+  <Accordion title="Explore with drill-through">
+    Click on data points in your visualizations to drill deeper:
+    - See underlying records
+    - Filter by clicked values
+    - Break out by different dimensions
+    - View related data
+    
+    Drill-through options vary based on your chart type and data.
+  </Accordion>
+  
+  <Accordion title="Convert between query builder and SQL">
+    You can view the SQL that Metabase generates for query builder questions by clicking **View SQL** in the top right. You can also convert a query builder question to SQL (this is one-way - you can't convert SQL back to query builder).
+  </Accordion>
+  
+  <Accordion title="Turn questions into models">
+    Questions saved to collections can be promoted to models to signal they're good starting points for analysis. Models can have additional metadata and serve as curated data sources.
+  </Accordion>
+</AccordionGroup>
+
+## Question permissions
+
+<Warning>
+Your ability to create, edit, and save questions depends on your permissions:
+- **View access**: See the question and its results
+- **Curate access**: Edit and move questions in a collection
+- **Data access**: Query specific databases and tables
+</Warning>
+
+To save questions to a collection, you need curate access. To create questions using the SQL editor, you need both query builder and native query permissions for that database.
+
+## Checking for breaking changes
+
+<Info>
+This feature is available on paid plans.
+</Info>
+
+When saving changes to a question, Metabase checks if your changes would break dependent entities. For example:
+- Removing a column that other questions reference
+- Renaming fields used in downstream questions
+- Changing data types in ways that break filters
+
+Metabase will warn you before saving changes that could break other questions, dashboards, or metrics.
+
+## Moving questions between collections and dashboards
+
+You can move a question from a collection to a dashboard if:
+- No other dashboards use that question, OR
+- You have curate access to all dashboards using that question
+
+When moving a question from a collection to a dashboard, Metabase will warn you if the question is used elsewhere and ask you to confirm the removal.
+
+## Best practices
+
+<CardGroup cols={2}>
+  <Card title="Name questions clearly" icon="tag">
+    Use descriptive names that explain what the question shows. "Monthly revenue by region" is better than "Revenue question".
+  </Card>
+  
+  <Card title="Add descriptions" icon="file-lines">
+    Document the purpose, methodology, and any important caveats. Future you (and your teammates) will thank you.
+  </Card>
+  
+  <Card title="Start simple" icon="seedling">
+    Build questions incrementally. Start with a simple query, verify the results, then add complexity.
+  </Card>
+  
+  <Card title="Preview as you build" icon="eye">
+    Use the preview button to check results after each step. Catch issues early before running expensive queries.
+  </Card>
+</CardGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Query builder" icon="wand-magic-sparkles" href="/questions/query-builder">
+    Learn how to use the graphical query builder to create questions without SQL
+  </Card>
+  
+  <Card title="SQL editor" icon="code" href="/questions/sql-editor">
+    Explore the native SQL editor for advanced queries and complex analysis
+  </Card>
+  
+  <Card title="Creating dashboards" icon="table-columns" href="/dashboards/creating-dashboards">
+    Organize your questions into dashboards for monitoring and reporting
+  </Card>
+  
+  <Card title="Alerts" icon="bell" href="/dashboards/alerts">
+    Set up alerts to get notified when your data changes
+  </Card>
+</CardGroup>

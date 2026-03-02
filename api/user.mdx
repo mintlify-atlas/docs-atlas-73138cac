@@ -1,0 +1,416 @@
+---
+title: User
+description: Manage user accounts and profiles through the Metabase API
+---
+
+The User API manages user accounts, profiles, and preferences. This API includes 7 endpoints for user management.
+
+## List users
+
+Get all users in the Metabase instance.
+
+```bash
+GET /api/user
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/user \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+
+```javascript JavaScript
+const users = await fetch('https://your-metabase.com/api/user', {
+  headers: { 'X-Metabase-Session': sessionToken }
+}).then(r => r.json());
+```
+
+```python Python
+response = requests.get(
+    'https://your-metabase.com/api/user',
+    headers={'X-Metabase-Session': session_token}
+)
+users = response.json()
+```
+</CodeGroup>
+
+<Note>
+Requires admin permissions to see all users. Non-admins can only see themselves.
+</Note>
+
+### Response
+
+```json
+[
+  {
+    "id": 1,
+    "email": "user@example.com",
+    "first_name": "John",
+    "last_name": "Doe",
+    "common_name": "John Doe",
+    "is_superuser": false,
+    "is_qbnewb": false,
+    "last_login": "2024-03-01T10:00:00Z"
+  }
+]
+```
+
+<ResponseField name="is_qbnewb" type="boolean">
+  Whether user has completed onboarding
+</ResponseField>
+
+## Get current user
+
+Get details about the currently authenticated user.
+
+```bash
+GET /api/user/current
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/user/current \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+
+```javascript JavaScript
+const currentUser = await fetch('https://your-metabase.com/api/user/current', {
+  headers: { 'X-Metabase-Session': sessionToken }
+}).then(r => r.json());
+```
+</CodeGroup>
+
+### Response
+
+<ResponseField name="id" type="integer">
+  User ID
+</ResponseField>
+
+<ResponseField name="email" type="string">
+  User email address
+</ResponseField>
+
+<ResponseField name="first_name" type="string">
+  First name
+</ResponseField>
+
+<ResponseField name="last_name" type="string">
+  Last name
+</ResponseField>
+
+<ResponseField name="common_name" type="string">
+  Full name (first + last)
+</ResponseField>
+
+<ResponseField name="is_superuser" type="boolean">
+  Whether user has admin privileges
+</ResponseField>
+
+<ResponseField name="permissions" type="object">
+  User's permissions across the instance
+</ResponseField>
+
+<ResponseField name="user_group_memberships" type="array">
+  Groups the user belongs to
+</ResponseField>
+
+## Get user
+
+Get details about a specific user.
+
+```bash
+GET /api/user/{id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/user/1 \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="id" type="integer" required>
+  User ID (minimum: 1)
+</ParamField>
+
+<Note>
+Requires admin permissions or must be the user themselves.
+</Note>
+
+## Create user
+
+Create a new user account.
+
+```bash
+POST /api/user
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/user \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "email": "newuser@example.com",
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "password": "SecurePassword123!"
+  }'
+```
+
+```javascript JavaScript
+const user = await fetch('https://your-metabase.com/api/user', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Metabase-Session': sessionToken
+  },
+  body: JSON.stringify({
+    email: 'newuser@example.com',
+    first_name: 'Jane',
+    last_name: 'Smith',
+    password: 'SecurePassword123!'
+  })
+}).then(r => r.json());
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="email" type="string" required>
+  User email address (must be unique)
+</ParamField>
+
+<ParamField body="first_name" type="string" required>
+  First name
+</ParamField>
+
+<ParamField body="last_name" type="string" required>
+  Last name
+</ParamField>
+
+<ParamField body="password" type="string">
+  Password (required unless using SSO)
+</ParamField>
+
+<ParamField body="group_ids" type="array">
+  Array of group IDs to add user to
+</ParamField>
+
+<Note>
+Requires admin permissions to create users.
+</Note>
+
+## Update user
+
+Update user details.
+
+```bash
+PUT /api/user/{id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X PUT \
+  https://your-metabase.com/api/user/1 \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "first_name": "Updated",
+    "last_name": "Name"
+  }'
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="id" type="integer" required>
+  User ID
+</ParamField>
+
+### Request body
+
+All fields are optional.
+
+<ParamField body="email" type="string">
+  Updated email address
+</ParamField>
+
+<ParamField body="first_name" type="string">
+  Updated first name
+</ParamField>
+
+<ParamField body="last_name" type="string">
+  Updated last name
+</ParamField>
+
+<ParamField body="is_superuser" type="boolean">
+  Update admin status (admin only)
+</ParamField>
+
+<ParamField body="locale" type="string">
+  User's preferred locale
+</ParamField>
+
+<Warning>
+Only admins can modify other users. Users can modify their own profile.
+</Warning>
+
+## Update password
+
+Change a user's password.
+
+```bash
+PUT /api/user/{id}/password
+```
+
+<CodeGroup>
+```bash curl
+curl -X PUT \
+  https://your-metabase.com/api/user/1/password \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "password": "CurrentPassword123!",
+    "new_password": "NewPassword456!"
+  }'
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="password" type="string" required>
+  Current password (required when changing own password)
+</ParamField>
+
+<ParamField body="new_password" type="string" required>
+  New password
+</ParamField>
+
+<Note>
+Admins can reset passwords without providing the current password.
+</Note>
+
+## Delete user
+
+Deactivate a user account.
+
+```bash
+DELETE /api/user/{id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X DELETE \
+  https://your-metabase.com/api/user/1 \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+<Warning>
+This deactivates the user account. Use reactivate endpoint to restore access.
+</Warning>
+
+## Reactivate user
+
+Reactivate a deactivated user account.
+
+```bash
+PUT /api/user/{id}/reactivate
+```
+
+<CodeGroup>
+```bash curl
+curl -X PUT \
+  https://your-metabase.com/api/user/1/reactivate \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+<Note>
+Requires admin permissions.
+</Note>
+
+## Update user modal
+
+Update which onboarding modals a user has seen.
+
+```bash
+PUT /api/user/{id}/modal/{modal}
+```
+
+<CodeGroup>
+```bash curl
+curl -X PUT \
+  https://your-metabase.com/api/user/1/modal/qbnewb \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="id" type="integer" required>
+  User ID
+</ParamField>
+
+<ParamField path="modal" type="string" required>
+  Modal identifier (e.g., "qbnewb" for onboarding)
+</ParamField>
+
+## Get recipients
+
+Get a list of users who can receive subscriptions and alerts.
+
+```bash
+GET /api/user/recipients
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/user/recipients \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Response
+
+Returns active users who can receive email notifications:
+
+```json
+[
+  {
+    "id": 1,
+    "email": "user@example.com",
+    "common_name": "John Doe"
+  }
+]
+```
+
+## Error codes
+
+<ResponseField name="400 Bad Request" type="error">
+  Invalid user data or validation error
+</ResponseField>
+
+<ResponseField name="401 Unauthorized" type="error">
+  Not authenticated
+</ResponseField>
+
+<ResponseField name="403 Forbidden" type="error">
+  Insufficient permissions to manage users
+</ResponseField>
+
+<ResponseField name="404 Not Found" type="error">
+  User not found
+</ResponseField>
+
+<ResponseField name="409 Conflict" type="error">
+  Email already exists
+</ResponseField>

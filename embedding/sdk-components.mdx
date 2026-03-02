@@ -1,0 +1,515 @@
+---
+title: SDK components
+description: React components for embedding questions, dashboards, collections, and AI chat
+---
+
+The Metabase React Embedding SDK provides pre-built components for embedding different types of Metabase content. Each component comes with multiple variants for different levels of interactivity.
+
+## Questions
+
+Questions (also called charts or visualizations) can be embedded in two ways:
+
+### StaticQuestion
+
+A lightweight question component that displays results without interactivity. Use this when you want to show data without letting people explore it.
+
+<Frame>
+  <img src="https://www.metabase.com/docs/latest/embedding/images/static-question.png" alt="Static question component" />
+</Frame>
+
+**Best for:**
+- Displaying charts in dashboards or reports
+- Read-only analytics views
+- When you don't need drill-through or exploration
+
+```tsx
+import { StaticQuestion } from "@metabase/embedding-sdk-react";
+
+export default function Analytics() {
+  return (
+    <StaticQuestion
+      questionId={42}
+      showVisualizationSelector={false}
+      height={400}
+    />
+  );
+}
+```
+
+#### Key props
+
+<ResponseField name="questionId" type="number | 'new' | 'new-native'" required>
+  The ID of the question to display, or `'new'` for visual query builder, or `'new-native'` for SQL editor
+</ResponseField>
+
+<ResponseField name="height" type="number | string">
+  Height of the component (default: 400)
+</ResponseField>
+
+<ResponseField name="withAlerts" type="boolean">
+  Allow users to set up alerts on this question
+</ResponseField>
+
+<ResponseField name="initialSqlParameters" type="object">
+  Pass parameter values to SQL questions in the format `{parameter_name: parameter_value}`
+</ResponseField>
+
+### InteractiveQuestion
+
+A fully interactive question component with drill-through, filtering, and editing capabilities. Use this when you want to allow data exploration.
+
+<Frame>
+  <img src="https://www.metabase.com/docs/latest/embedding/images/interactive-question.png" alt="Interactive question component" />
+</Frame>
+
+**Best for:**
+- Self-service analytics
+- Ad-hoc exploration
+- Query builder access
+- When you need full Metabase functionality
+
+```tsx
+import { InteractiveQuestion } from "@metabase/embedding-sdk-react";
+
+export default function Explore() {
+  return (
+    <InteractiveQuestion
+      questionId={42}
+      isSaveEnabled={true}
+    />
+  );
+}
+```
+
+#### Customizing interactive questions
+
+You can customize the layout using namespaced components:
+
+```tsx
+import { InteractiveQuestion } from "@metabase/embedding-sdk-react";
+
+export default function CustomQuestion() {
+  return (
+    <InteractiveQuestion questionId={42}>
+      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <div style={{ display: "flex", gap: "1rem", padding: "1rem" }}>
+          <InteractiveQuestion.BackButton />
+          <InteractiveQuestion.FilterDropdown />
+          <InteractiveQuestion.SummarizeDropdown />
+          <InteractiveQuestion.SaveButton />
+        </div>
+        <div style={{ flex: 1 }}>
+          <InteractiveQuestion.QuestionVisualization />
+        </div>
+      </div>
+    </InteractiveQuestion>
+  );
+}
+```
+
+#### Available sub-components
+
+<CardGroup cols={2}>
+  <Card title="BackButton" icon="arrow-left">
+    Navigate back to previous view
+  </Card>
+  <Card title="Filter" icon="filter">
+    Filter panel component
+  </Card>
+  <Card title="FilterDropdown" icon="filter">
+    Filter dropdown button
+  </Card>
+  <Card title="Summarize" icon="chart-bar">
+    Summarize panel component
+  </Card>
+  <Card title="SummarizeDropdown" icon="chart-bar">
+    Summarize dropdown button
+  </Card>
+  <Card title="Breakout" icon="layer-group">
+    Breakout panel component
+  </Card>
+  <Card title="BreakoutDropdown" icon="layer-group">
+    Breakout dropdown button
+  </Card>
+  <Card title="SaveButton" icon="save">
+    Save question button
+  </Card>
+  <Card title="QuestionVisualization" icon="chart-line">
+    The main visualization component
+  </Card>
+  <Card title="Editor" icon="code">
+    Full query editor panel
+  </Card>
+  <Card title="EditorButton" icon="code">
+    Button to open editor
+  </Card>
+  <Card title="ChartTypeSelector" icon="chart-pie">
+    Chart type selection panel
+  </Card>
+  <Card title="ChartTypeDropdown" icon="chart-pie">
+    Chart type dropdown button
+  </Card>
+  <Card title="DownloadWidget" icon="download">
+    Download results widget
+  </Card>
+  <Card title="Title" icon="heading">
+    Question title component
+  </Card>
+</CardGroup>
+
+### Creating new questions
+
+The `InteractiveQuestion` component supports creating new questions:
+
+<Tabs>
+  <Tab title="Visual query builder">
+    ```tsx
+    <InteractiveQuestion questionId="new" />
+    ```
+
+    Opens the visual query builder for creating questions without writing SQL.
+  </Tab>
+  <Tab title="SQL editor">
+    ```tsx
+    <InteractiveQuestion questionId="new-native" />
+    ```
+
+    Opens the SQL editor for writing custom queries.
+  </Tab>
+</Tabs>
+
+### Passing SQL parameters
+
+For SQL questions with parameters, use the `initialSqlParameters` prop:
+
+```tsx
+<StaticQuestion
+  questionId={42}
+  initialSqlParameters={{
+    user_id: 123,
+    date_range: "2024-01-01"
+  }}
+/>
+```
+
+<Note>
+  `initialSqlParameters` only works with native SQL questions, not query builder questions.
+</Note>
+
+### Enabling alerts
+
+Allow users to set up email alerts on questions:
+
+```tsx
+<StaticQuestion questionId={42} withAlerts />
+```
+
+<Warning>
+  Alerts require email configuration in Metabase and only work on saved questions.
+</Warning>
+
+## Dashboards
+
+Dashboards can be embedded with three levels of interactivity:
+
+### StaticDashboard
+
+A lightweight dashboard component for displaying results without interactivity.
+
+```tsx
+import { StaticDashboard } from "@metabase/embedding-sdk-react";
+
+export default function Report() {
+  return (
+    <StaticDashboard
+      dashboardId={1}
+      initialParameterValues={{ status: "active" }}
+    />
+  );
+}
+```
+
+**Best for:**
+- Read-only reports
+- Executive dashboards
+- Public-facing analytics
+
+### InteractiveDashboard
+
+A dashboard with drill-downs, click behaviors, and the ability to view questions.
+
+```tsx
+import { InteractiveDashboard } from "@metabase/embedding-sdk-react";
+
+export default function Analytics() {
+  return (
+    <InteractiveDashboard
+      dashboardId={1}
+      withTitle
+      withDownloads
+    />
+  );
+}
+```
+
+**Best for:**
+- Self-service analytics
+- Data exploration
+- When you need drill-through
+
+### EditableDashboard
+
+A fully editable dashboard that allows users to modify layout, add questions, and update content.
+
+```tsx
+import { EditableDashboard } from "@metabase/embedding-sdk-react";
+
+export default function AdminPanel() {
+  return (
+    <EditableDashboard
+      dashboardId={1}
+    />
+  );
+}
+```
+
+**Best for:**
+- Admin panels
+- Dashboard builders
+- When users need to create/modify dashboards
+
+### Dashboard props
+
+<ResponseField name="dashboardId" type="number" required>
+  The ID of the dashboard to display
+</ResponseField>
+
+<ResponseField name="initialParameterValues" type="object">
+  Set initial values for dashboard filters
+</ResponseField>
+
+<ResponseField name="withTitle" type="boolean">
+  Show or hide the dashboard title
+</ResponseField>
+
+<ResponseField name="withDownloads" type="boolean">
+  Allow downloading dashboard data
+</ResponseField>
+
+<ResponseField name="hiddenParameters" type="string[]">
+  Array of parameter names to hide from view
+</ResponseField>
+
+### Customizing dashboard height
+
+By default, dashboards take full page height (100vh). Override with custom styles:
+
+```tsx
+<InteractiveDashboard
+  dashboardId={1}
+  style={{ height: "600px" }}
+/>
+
+// Or with className
+<InteractiveDashboard
+  dashboardId={1}
+  className="my-dashboard"
+/>
+```
+
+### Customizing drill-through layout
+
+When users drill through or click on a dashboard card, customize the question view:
+
+```tsx
+<InteractiveDashboard
+  dashboardId={1}
+  renderDrillThroughQuestion={(questionView) => (
+    <div className="custom-drill-through">
+      <div className="toolbar">
+        <InteractiveQuestion.BackButton />
+        <InteractiveQuestion.FilterDropdown />
+        <InteractiveQuestion.SaveButton />
+      </div>
+      <div className="visualization">
+        {questionView}
+      </div>
+    </div>
+  )}
+/>
+```
+
+### Creating dashboards
+
+Use the `useCreateDashboardApi` hook or `CreateDashboardModal` component:
+
+<Tabs>
+  <Tab title="Hook">
+    ```tsx
+    import { useCreateDashboardApi } from "@metabase/embedding-sdk-react";
+
+    function DashboardCreator() {
+      const createDashboard = useCreateDashboardApi();
+
+      const handleCreate = async () => {
+        const dashboard = await createDashboard({
+          name: "My Dashboard",
+          description: "A new dashboard",
+          collectionId: 1
+        });
+        console.log("Created:", dashboard);
+      };
+
+      return <button onClick={handleCreate}>Create Dashboard</button>;
+    }
+    ```
+  </Tab>
+  <Tab title="Modal component">
+    ```tsx
+    import { CreateDashboardModal } from "@metabase/embedding-sdk-react";
+    import { useState } from "react";
+
+    function App() {
+      const [isOpen, setIsOpen] = useState(false);
+
+      return (
+        <>
+          <button onClick={() => setIsOpen(true)}>New Dashboard</button>
+          <CreateDashboardModal
+            isOpen={isOpen}
+            onClose={() => setIsOpen(false)}
+            onCreate={(dashboard) => console.log("Created:", dashboard)}
+          />
+        </>
+      );
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Collections
+
+The collection browser component allows users to navigate collections and open dashboards or questions.
+
+<Note>
+  The browser component is only available for authenticated modular embeds (SSO), not guest embeds.
+</Note>
+
+```tsx
+import { CollectionBrowser } from "@metabase/embedding-sdk-react";
+
+export default function Explorer() {
+  return (
+    <CollectionBrowser
+      initialCollection={14}
+      readOnly={false}
+      collectionEntityTypes={["collection", "dashboard", "question"]}
+    />
+  );
+}
+```
+
+### Collection props
+
+<ResponseField name="initialCollection" type="number">
+  The ID of the collection to show initially
+</ResponseField>
+
+<ResponseField name="readOnly" type="boolean">
+  Whether to allow editing collections
+</ResponseField>
+
+<ResponseField name="collectionEntityTypes" type="array">
+  Types of entities to show: `'collection'`, `'dashboard'`, `'question'`, `'model'`
+</ResponseField>
+
+## AI chat
+
+Embed the AI chat interface (Metabot) for natural language queries.
+
+<Note>
+  AI chat is only available for authenticated modular embeds (SSO) on Pro and Enterprise plans.
+</Note>
+
+```tsx
+import { Metabot } from "@metabase/embedding-sdk-react";
+
+export default function AIAssistant() {
+  return (
+    <Metabot />
+  );
+}
+```
+
+The Metabot component provides a chat interface where users can ask questions in natural language and get visualizations as responses.
+
+## Customizing loader and error states
+
+Provide custom components for loading and error states:
+
+```tsx
+import { MetabaseProvider } from "@metabase/embedding-sdk-react";
+
+const CustomLoader = () => (
+  <div className="custom-loader">
+    <Spinner />
+    <p>Loading analytics...</p>
+  </div>
+);
+
+const CustomError = ({ error }) => (
+  <div className="custom-error">
+    <h3>Oops! Something went wrong</h3>
+    <p>{error.message}</p>
+  </div>
+);
+
+export default function App() {
+  return (
+    <MetabaseProvider
+      config={config}
+      loaderComponent={CustomLoader}
+      errorComponent={CustomError}
+    >
+      {/* Your embedded components */}
+    </MetabaseProvider>
+  );
+}
+```
+
+## Best practices
+
+<Steps>
+  <Step title="Choose the right component variant">
+    Use static components for read-only views and interactive components when you need exploration capabilities.
+  </Step>
+  <Step title="Customize layouts thoughtfully">
+    When using custom layouts with `InteractiveQuestion` or drill-through customization, ensure all necessary controls are accessible.
+  </Step>
+  <Step title="Handle loading states">
+    Provide custom loader components that match your app's design system.
+  </Step>
+  <Step title="Consider permissions">
+    Remember that UI controls don't replace proper permissions—users can still access data through the API if they have the session token.
+  </Step>
+  <Step title="Test interactivity">
+    If using interactive components, test drill-through, filtering, and other interactive features thoroughly.
+  </Step>
+</Steps>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Question plugins" icon="plug" href="https://www.metabase.com/docs/latest/embedding/sdk/questions">
+    Customize click actions on questions
+  </Card>
+  <Card title="Dashboard plugins" icon="plug" href="https://www.metabase.com/docs/latest/embedding/sdk/dashboards">
+    Add custom actions to dashboard cards
+  </Card>
+  <Card title="Theming" icon="palette" href="https://www.metabase.com/docs/latest/embedding/appearance">
+    Customize component appearance
+  </Card>
+  <Card title="Authentication" icon="key" href="https://www.metabase.com/docs/latest/embedding/authentication">
+    Set up SSO for production
+  </Card>
+</CardGroup>

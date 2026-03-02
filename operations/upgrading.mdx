@@ -1,0 +1,360 @@
+---
+title: Upgrading Metabase
+description: Learn how to safely upgrade your Metabase instance to newer versions with minimal downtime.
+---
+
+This guide covers how to upgrade to a new Metabase release, whether you're running in the cloud or self-hosting.
+
+<Note>
+Before upgrading, review the [release notes](https://github.com/metabase/metabase/releases) and [changelog](https://www.metabase.com/changelog) for breaking changes and new features.
+</Note>
+
+## Metabase Cloud upgrades
+
+If you're on a [Metabase Cloud](https://www.metabase.com/pricing/) plan, upgrades are handled automatically. No action is needed on your end.
+
+### Upgrade timeline
+
+How quickly your Cloud instance is upgraded depends on the release type:
+
+- **Minor releases** (e.g., v54.4 to v54.5): Usually within about one week
+- **Major releases** (e.g., v53.x to v54.x): Usually several months to ensure stability
+
+### Request an early upgrade
+
+Cloud customers can request an early upgrade by emailing [help@metabase.com](mailto:help@metabase.com) with your Metabase URL.
+
+<Warning>
+**Embedding SDK users**: If you're using the [modular embedding SDK](https://www.metabase.com/docs/latest/embedding/sdk/introduction) on Metabase Cloud, your version is pinned to prevent automatic upgrades. You must request an upgrade after testing compatibility.
+</Warning>
+
+## Self-hosted upgrade process
+
+<Steps>
+  <Step title="Back up your application database">
+    The application database stores all your Metabase content (questions, dashboards, users, settings). Always create a backup before upgrading.
+
+    ```bash
+    # PostgreSQL backup
+    pg_dump -h localhost -U username -d metabase -F c -b -v -f metabase_backup.dump
+
+    # MySQL backup  
+    mysqldump -u username -p metabase > metabase_backup.sql
+    ```
+
+    [Learn more about backing up Metabase](/operations/backing-up)
+  </Step>
+
+  <Step title="Stop your current Metabase">
+    <Tabs>
+      <Tab title="Docker">
+        ```bash
+        docker stop metabase
+        ```
+      </Tab>
+      
+      <Tab title="JAR (systemd)">
+        ```bash
+        sudo systemctl stop metabase.service
+        ```
+      </Tab>
+      
+      <Tab title="JAR (manual)">
+        Stop the Java process (Ctrl+C if running in terminal)
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Get the new version">
+    <Tabs>
+      <Tab title="Docker">
+        Pull the latest image (or a specific version tag):
+
+        ```bash
+        # Open Source
+        docker pull metabase/metabase:v0.54.1
+
+        # Pro/Enterprise
+        docker pull metabase/metabase-enterprise:v0.54.1
+        ```
+
+        <Note>
+        Always use specific version tags (like `v0.54.1`) instead of `latest` for production deployments.
+        </Note>
+      </Tab>
+      
+      <Tab title="JAR">
+        Download the new JAR file:
+
+        **Open Source:**
+        ```bash
+        wget https://downloads.metabase.com/v0.54.1/metabase.jar
+        ```
+
+        **Pro/Enterprise:**
+        ```bash
+        wget https://downloads.metabase.com/enterprise/v0.54.1/metabase.jar
+        ```
+
+        Replace your old JAR with the new one.
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Start the new version">
+    <Tabs>
+      <Tab title="Docker">
+        Start the new container with the same configuration:
+
+        ```bash
+        docker run -d -p 3000:3000 \
+          -e "MB_DB_TYPE=postgres" \
+          -e "MB_DB_DBNAME=metabase" \
+          -e "MB_DB_PORT=5432" \
+          -e "MB_DB_USER=username" \
+          -e "MB_DB_PASS=password" \
+          -e "MB_DB_HOST=postgres-host" \
+          --name metabase \
+          metabase/metabase:v0.54.1
+        ```
+      </Tab>
+      
+      <Tab title="JAR (systemd)">
+        ```bash
+        sudo systemctl start metabase.service
+        ```
+      </Tab>
+      
+      <Tab title="JAR (manual)">
+        ```bash
+        java --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar
+        ```
+      </Tab>
+    </Tabs>
+
+    Metabase will automatically perform database migrations on startup.
+  </Step>
+
+  <Step title="Verify the upgrade">
+    - Check the logs for successful startup
+    - Visit your Metabase URL
+    - Verify the version number in the admin panel
+    - Test a few dashboards and queries
+  </Step>
+</Steps>
+
+## Upgrade paths for older versions
+
+<Warning>
+If you're running Metabase older than version 40, you must upgrade incrementally through each major version.
+</Warning>
+
+### Required upgrade path
+
+For versions older than Metabase 40:
+
+<Steps>
+  <Step title="Upgrade to latest v39">
+    First upgrade to the latest v1.39.x release
+  </Step>
+  
+  <Step title="Upgrade to latest v40">
+    Then upgrade to the latest v1.40.x release
+  </Step>
+  
+  <Step title="Upgrade to current version">
+    Now you can upgrade directly to the latest version
+  </Step>
+</Steps>
+
+**Example upgrade path from v38:**
+- v1.38.x → v1.39.4 → v1.40.7 → v0.54.1 (latest)
+
+### Best practices for major version upgrades
+
+When upgrading between major versions (e.g., v53 to v54):
+
+- Use the **latest minor version** of each major release
+- Test the upgrade in a staging environment first
+- Review the changelog for breaking changes
+- Allow extra time for database migrations
+
+## Understanding migrations
+
+During an upgrade, Metabase may need to modify its application database schema:
+
+### Major version upgrades
+
+Major version upgrades (e.g., v53.x to v54.x) typically:
+- Perform automatic database schema migrations
+- May take several minutes depending on data volume
+- Cannot be easily downgraded (restore from backup instead)
+- Keep all metadata and content intact
+
+### Minor version upgrades
+
+Minor version upgrades (e.g., v54.1 to v54.2):
+- Usually require no migrations
+- Start up immediately
+- Can be downgraded more easily (but still back up first)
+
+<Warning>
+Never interrupt Metabase during database migrations. This can corrupt your application database, requiring a restore from backup.
+</Warning>
+
+## Rolling back an upgrade
+
+### Restore from backup (recommended)
+
+The safest way to roll back is to restore your application database from the backup you created before upgrading:
+
+<CodeGroup>
+
+```bash PostgreSQL
+pg_restore -h localhost -U username -d metabase -v metabase_backup.dump
+```
+
+```bash MySQL
+mysql -u username -p metabase < metabase_backup.sql
+```
+
+</CodeGroup>
+
+Then start your previous Metabase version.
+
+### Using migrate down (advanced)
+
+<Warning>
+The `migrate down` command must be run using the **newer version's JAR**, not the version you're rolling back to.
+</Warning>
+
+If you need to keep changes made after upgrading:
+
+<Tabs>
+  <Tab title="JAR">
+    ```bash
+    export MB_DB_TYPE=postgres
+    export MB_DB_DBNAME=metabase
+    export MB_DB_PORT=5432
+    export MB_DB_USER=username
+    export MB_DB_PASS=password
+    export MB_DB_HOST=localhost
+    java --add-opens java.base/java.nio=ALL-UNNAMED -jar metabase.jar migrate down
+    ```
+  </Tab>
+  
+  <Tab title="Docker">
+    ```bash
+    docker run \
+      -e "MB_DB_TYPE=postgres" \
+      -e "MB_DB_DBNAME=metabase" \
+      -e "MB_DB_PORT=5432" \
+      -e "MB_DB_USER=username" \
+      -e "MB_DB_PASS=password" \
+      -e "MB_DB_HOST=postgres-host" \
+      --rm metabase/metabase:v0.54.1 "migrate down"
+    ```
+    
+    Note the quotes around `"migrate down"`.
+  </Tab>
+</Tabs>
+
+After the migration completes, start the older version.
+
+## Upgrading a cluster
+
+If you're running Metabase in a cluster with multiple nodes:
+
+<Steps>
+  <Step title="Scale down to single node">
+    Reduce your cluster to just one node. Multiple nodes during upgrade can cause schema conflicts.
+  </Step>
+  
+  <Step title="Perform the upgrade">
+    Upgrade the single node following the standard process above.
+  </Step>
+  
+  <Step title="Scale back up">
+    Once the upgrade is complete and verified, scale back to your original number of nodes.
+  </Step>
+</Steps>
+
+<Warning>
+Ensure your orchestrator doesn't kill the Metabase process during migrations, or you may corrupt the application database.
+</Warning>
+
+## Platform-specific upgrade guides
+
+<CardGroup cols={2}>
+  <Card title="Azure Web Apps" icon="microsoft" href="https://www.metabase.com/docs/latest/installation-and-operation/running-metabase-on-azure#additional-configurations">
+    Special instructions for Azure deployments
+  </Card>
+  
+  <Card title="AWS Elastic Beanstalk" icon="aws">
+    Update your application version in EB console
+  </Card>
+</CardGroup>
+
+## Upgrade checklist
+
+Before upgrading:
+
+- [ ] Read the release notes and changelog
+- [ ] Back up your application database
+- [ ] Test the upgrade in a staging environment (if available)
+- [ ] Schedule the upgrade during a maintenance window
+- [ ] Notify users of planned downtime
+- [ ] Verify you have the correct database connection details
+
+After upgrading:
+
+- [ ] Verify Metabase starts successfully
+- [ ] Check logs for errors
+- [ ] Test critical dashboards and queries
+- [ ] Verify integrations still work
+- [ ] Monitor performance for the first few hours
+
+## Troubleshooting
+
+### Upgrade fails to start
+
+1. Check the logs for error messages
+2. Verify database connection settings
+3. Ensure the application database is accessible
+4. Check for disk space issues
+
+### Migration takes too long
+
+Some upgrades with large databases may take 10-30 minutes:
+
+- Don't interrupt the process
+- Monitor logs for progress
+- Check database CPU and disk I/O
+
+### Version mismatch errors
+
+If you see version mismatch errors:
+
+1. Ensure all cluster nodes are the same version
+2. Clear browser cache
+3. Verify you're using the correct JAR/image
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Backing up Metabase" icon="server" href="/operations/backing-up">
+    Set up automated backup procedures
+  </Card>
+  
+  <Card title="Environment variables" icon="code" href="/operations/environment-variables">
+    Configure your Metabase installation
+  </Card>
+  
+  <Card title="Release notes" icon="file-lines" href="https://github.com/metabase/metabase/releases">
+    View detailed release notes on GitHub
+  </Card>
+  
+  <Card title="Changelog" icon="clock-rotate-left" href="https://www.metabase.com/changelog">
+    Browse all Metabase changes
+  </Card>
+</CardGroup>

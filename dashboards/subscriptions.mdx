@@ -1,0 +1,446 @@
+---
+title: 'Dashboard subscriptions'
+description: 'Automatically send dashboard results via email or Slack to keep your team informed with scheduled updates.'
+---
+
+Dashboard subscriptions deliver question results to people on a schedule - via email or Slack. Recipients don't need a Metabase account to receive subscription updates.
+
+## What are dashboard subscriptions?
+
+Subscriptions automatically send dashboard data to stakeholders:
+
+<CardGroup cols={2}>
+  <Card title="Email subscriptions" icon="envelope">
+    Send dashboard charts and data tables to email addresses on a schedule
+  </Card>
+  
+  <Card title="Slack subscriptions" icon="slack">
+    Post dashboard results to Slack channels or direct messages
+  </Card>
+</CardGroup>
+
+Whenever you update the dashboard, subscriptions automatically reflect those changes in the next delivery.
+
+<Info>
+You can create multiple subscriptions for the same dashboard - for example, one daily email to executives and one weekly Slack message to the team.
+</Info>
+
+## Prerequisites
+
+Before you can use subscriptions, an administrator must configure:
+
+- **For email**: [Email server settings](/configuration/email)
+- **For Slack**: [Slack integration](/configuration/slack)
+
+## Creating an email subscription
+
+<Steps>
+  <Step title="Open the subscriptions panel">
+    1. Navigate to your dashboard
+    2. Click the **Sharing** icon in the top right
+    3. Select **Subscriptions**
+    4. Click **Email it**
+  </Step>
+  
+  <Step title="Add subscribers">
+    Enter email addresses for recipients. Press Enter or comma after each address.
+    
+    <Note>On paid plans, admins can restrict recipients to approved email domains and configure suggested recipients.</Note>
+  </Step>
+  
+  <Step title="Set the schedule">
+    Choose when to send:
+    
+    - **Hourly**: Every hour, on the hour
+    - **Daily**: Once per day at a specific time
+    - **Weekly**: Specific day(s) of the week at a set time
+    - **Monthly**: Specific day of the month at a set time
+    
+    Select the time zone for delivery timing.
+  </Step>
+  
+  <Step title="Configure options">
+    Additional settings:
+    
+    - **Don't send if there aren't results**: Skip sending if no data is returned
+    - **Attach results**: Include data files with the email
+    - **Filter values**: Set specific filter values for this subscription (paid plans)
+  </Step>
+  
+  <Step title="Save the subscription">
+    Click **Done** to activate the subscription.
+  </Step>
+</Steps>
+
+### Email subscription options
+
+<Tabs>
+  <Tab title="Frequency and timing">
+    Set how often the subscription sends:
+    
+    **Hourly**
+    - Every hour on the hour
+    - Useful for real-time monitoring
+    
+    **Daily**  
+    - Once per day at your chosen time
+    - Most common for regular reports
+    
+    **Weekly**
+    - Select specific days (Monday, Friday, etc.)
+    - Set the time of day
+    - Good for weekly reviews
+    
+    **Monthly**
+    - Choose day of month (1st, 15th, last day, etc.)
+    - Set the time
+    - Perfect for monthly reports
+  </Tab>
+  
+  <Tab title="Attachments">
+    Include data files with the email:
+    
+    **File format:**
+    - CSV (comma-separated values)
+    - XLSX (Excel format)
+    
+    **Questions to attach:**
+    - Select which cards to include as attachments
+    - Can choose all, some, or none
+    - Each question becomes a separate file
+    
+    **Options:**
+    - **Use unformatted values**: Strip visualization formatting, send raw data
+    - **Send only attachments**: Skip embedded charts, only send files
+    
+    <Note>Attachments include up to 1,048,575 rows by default (Excel's limit). Self-hosted instances can adjust this with the `MB_ATTACHMENT_ROW_LIMIT` environment variable.</Note>
+  </Tab>
+  
+  <Tab title="Skip if empty">
+    Control whether to send when there's no data:
+    
+    Toggle **Don't send if there aren't results** to:
+    - Avoid sending empty reports
+    - Only notify when data exists
+    - Reduce inbox clutter
+    
+    Useful for:
+    - Alert-style subscriptions (only send when something happens)
+    - Data that doesn't always exist
+    - Exception-based monitoring
+  </Tab>
+  
+  <Tab title="Filter values">
+    <Info>This feature is available on paid plans.</Info>
+    
+    Set specific filter values that apply when this subscription runs:
+    
+    - Override dashboard default filters
+    - Send different data to different recipients
+    - One dashboard, multiple perspectives
+    
+    Example: Send the same sales dashboard to each regional manager, but filter to their specific region for each subscription.
+  </Tab>
+</Tabs>
+
+### Send now button
+
+Test your subscription or send an immediate update:
+
+1. Open the subscription in edit mode
+2. Click **Send now**
+3. Email is sent immediately to all subscribers
+
+Use this to:
+- Test before the scheduled time
+- Send urgent updates
+- Verify recipients and formatting
+
+## Creating a Slack subscription
+
+<Steps>
+  <Step title="Open the subscriptions panel">
+    1. Navigate to your dashboard
+    2. Click the **Sharing** icon  
+    3. Select **Subscriptions**
+    4. Click **Send it to Slack**
+  </Step>
+  
+  <Step title="Choose destination">
+    Select where to send:
+    
+    - **Channel**: Public or private Slack channels (e.g., #general, #analytics)
+    - **Person**: Direct message to a Slack user
+    
+    <Warning>Use the Slack username, not the display name. These can be different.</Warning>
+  </Step>
+  
+  <Step title="Set the schedule">
+    Choose frequency:
+    - Hourly
+    - Daily
+    - Weekly  
+    - Monthly
+    
+    Select the time and time zone.
+  </Step>
+  
+  <Step title="Configure options">
+    - **Don't send if there aren't results**: Skip posting if no data
+    - **Set filter values**: Apply specific filters (paid plans)
+  </Step>
+  
+  <Step title="Save the subscription">
+    Click **Done** to activate.
+  </Step>
+</Steps>
+
+### Slack subscription details
+
+<Tabs>
+  <Tab title="Public channels">
+    Send to any public channel:
+    
+    1. Type the channel name (including #)
+    2. Select from the dropdown
+    3. Metabase will post as a bot
+    
+    Channel members will see:
+    - Dashboard name and link
+    - Chart images
+    - Filter values applied
+  </Tab>
+  
+  <Tab title="Private channels">
+    To send to private channels:
+    
+    1. Invite the Metabase bot to the private channel in Slack
+    2. Use the channel name in Metabase
+    3. If the bot isn't in the channel, the subscription will fail
+    
+    See [Slack configuration docs](/configuration/slack#private-channels) for details.
+  </Tab>
+  
+  <Tab title="Direct messages">
+    Send to individual users:
+    
+    1. Enter the Slack username (not display name)
+    2. User receives a DM from Metabase bot
+    
+    Good for:
+    - Personal reports
+    - Manager-specific metrics
+    - Individual alerts
+  </Tab>
+</Tabs>
+
+<Warning>
+If you rename a Slack channel after creating a subscription, update the subscription in Metabase to point to the new channel name. Otherwise, it will fail to deliver.
+</Warning>
+
+## Managing subscriptions
+
+### Viewing all subscriptions
+
+See all subscriptions for a dashboard:
+
+1. Open the dashboard
+2. Click the **Sharing** icon
+3. Select **Subscriptions**
+4. All subscriptions are listed in the sidebar
+
+### Editing a subscription
+
+1. Open the subscriptions panel
+2. Click on the subscription you want to edit  
+3. Modify settings
+4. Click **Done** to save changes
+
+### Deleting a subscription
+
+<Steps>
+  <Step title="Open the subscription">
+    Click on the subscription in the subscriptions panel.
+  </Step>
+  
+  <Step title="Delete">
+    Scroll to the bottom and click **Delete this subscription**.
+  </Step>
+  
+  <Step title="Confirm">
+    Confirm deletion in the modal that appears.
+  </Step>
+</Steps>
+
+<Warning>
+Deleting a subscription is permanent and cannot be undone. All scheduled deliveries will stop immediately.
+</Warning>
+
+## Subscription permissions
+
+<Info>
+See [Notification permissions](/permissions/notifications) for complete details on who can create and receive subscriptions.
+</Info>
+
+Key permission concepts:
+
+- **Creating subscriptions**: Need curate access to the dashboard's collection
+- **Receiving subscriptions**: Can receive dashboards you have permission to view
+- **Managing others' subscriptions**: Admins can edit/delete any subscription
+- **Data access**: Recipients only see data they have permission to view in Metabase
+
+<Warning>
+Be careful when sending subscriptions to people without Metabase accounts. They'll receive all data in the dashboard without any data access restrictions applied.
+</Warning>
+
+## Customizing filter values per subscription
+
+<Info>This feature is available on Pro and Enterprise plans.</Info>
+
+Send the same dashboard to different audiences with different filters:
+
+<Steps>
+  <Step title="Create or edit a subscription">
+    Open the subscription in edit mode.
+  </Step>
+  
+  <Step title="Set filter values">
+    Find the **Set filter values for when this gets sent** section.
+  </Step>
+  
+  <Step title="Choose values for each filter">
+    - Set specific values for dashboard filters
+    - Leave filters unset to use default values
+    - Override defaults as needed
+  </Step>
+  
+  <Step title="Save the subscription">
+    The subscription will apply these filters every time it runs.
+  </Step>
+</Steps>
+
+### Example use case
+
+Sales performance dashboard with a Region filter:
+
+- **Subscription 1**: Daily email to East Coast manager, filter = "East"
+- **Subscription 2**: Daily email to West Coast manager, filter = "West"  
+- **Subscription 3**: Weekly email to executives, filter = "All Regions"
+
+One dashboard maintains three different perspectives automatically.
+
+## Viewing all subscriptions across Metabase
+
+<Info>This feature requires Pro or Enterprise plans with usage analytics enabled.</Info>
+
+Admins can view all dashboard subscriptions and alerts:
+
+1. Navigate to the **Usage analytics** collection
+2. Look for subscription and alert reports
+3. See who created what, when it runs, and who receives it
+
+Useful for:
+- Auditing notification setup
+- Finding unused subscriptions
+- Understanding notification patterns
+- Cleanup and optimization
+
+## Embedded dashboard subscriptions
+
+Subscriptions from embedded dashboards work differently:
+
+- **No Metabase links**: Since recipients may not have access to Metabase, links to Metabase items are excluded
+- **Same functionality**: Otherwise works identically to regular subscriptions
+- **Permission handling**: Recipients receive all data visible in the embed
+
+See [Embedded dashboards](/embedding/components) for more details.
+
+## Removing Metabase branding
+
+<Info>Available on Pro and Enterprise plans.</Info>
+
+You can remove Metabase branding from subscription emails to match your company's identity.
+
+See [Remove Metabase branding from exports](/questions/exporting#remove-branding) for configuration details.
+
+## Troubleshooting subscriptions
+
+<AccordionGroup>
+  <Accordion title="Subscription not sending">
+    Check:
+    - Email/Slack is properly configured in admin settings
+    - For Slack: Bot is invited to the channel
+    - For Slack: Channel name hasn't changed
+    - Subscription schedule is set correctly
+    - Dashboard hasn't been deleted or moved
+    - Questions on dashboard don't have errors
+  </Accordion>
+  
+  <Accordion title="Empty subscriptions">
+    If you're receiving emails but they're empty:
+    - Verify dashboard filters have correct default values
+    - Check that questions return data with current filters
+    - Ensure "Don't send if there aren't results" is off
+    - Test queries manually to confirm they return data
+  </Accordion>
+  
+  <Accordion title="Wrong data in subscriptions">
+    If the data doesn't match expectations:
+    - Review filter values set on the subscription
+    - Check dashboard default filters
+    - Verify questions are using the correct data sources
+    - Test the subscription with "Send now" to see immediate results
+  </Accordion>
+  
+  <Accordion title="Can't create subscription">
+    Possible reasons:
+    - Email/Slack not configured by admin
+    - Don't have curate access to dashboard's collection
+    - Dashboard is in your personal collection (some restrictions apply)
+    - Browser extensions blocking the form
+  </Accordion>
+</AccordionGroup>
+
+## Best practices
+
+<CardGroup cols={2}>
+  <Card title="Test before scheduling" icon="flask">
+    Use "Send now" to verify formatting, data, and recipients before setting up a schedule.
+  </Card>
+  
+  <Card title="Choose appropriate frequency" icon="clock">
+    Match delivery frequency to how often data updates and how often people need to see it.
+  </Card>
+  
+  <Card title="Use clear subject lines" icon="envelope">
+    Name subscriptions descriptively so recipients know what they're receiving.
+  </Card>
+  
+  <Card title="Set meaningful defaults" icon="filter">
+    Use filter values that provide useful data immediately. Avoid empty or meaningless defaults.
+  </Card>
+  
+  <Card title="Consider time zones" icon="earth-americas">
+    Schedule deliveries for appropriate times in recipients' time zones.
+  </Card>
+  
+  <Card title="Monitor subscription list" icon="list">
+    Periodically review and clean up unused subscriptions to reduce system load.
+  </Card>
+</CardGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Dashboard filters" icon="filter" href="/dashboards/dashboard-filters">
+    Learn how to add filters to dashboards for more flexible subscriptions
+  </Card>
+  
+  <Card title="Alerts" icon="bell" href="/dashboards/alerts">
+    Set up alerts to get notified when metrics reach important thresholds
+  </Card>
+  
+  <Card title="Creating dashboards" icon="table-columns" href="/dashboards/creating-dashboards">
+    Build better dashboards for subscriptions
+  </Card>
+</CardGroup>

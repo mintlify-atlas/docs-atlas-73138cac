@@ -1,0 +1,226 @@
+---
+title: Metabot
+description: Metabot is Metabase's AI assistant that helps you analyze data, create charts, write SQL, fix errors, and answer questions from documentation.
+---
+
+<Info>
+Metabot is only available as an add-on on Metabase Cloud.
+</Info>
+
+Metabot helps you analyze your data by creating charts from natural language, generating SQL queries, fixing query errors, and analyzing existing visualizations.
+
+## Set up Metabot
+
+Before using Metabot, you'll need to configure it in your Metabase instance.
+
+<Steps>
+  <Step title="Add Metabot from the Metabase Store">
+    1. Go to [store.metabase.com](https://store.metabase.com)
+    2. Log in with your Metabase Store account
+    3. In the **Instances** tab, find your instance and click **Add Metabot AI**
+    4. Select a plan based on your expected request volume
+    5. Read and accept the terms of service
+    
+    <Note>
+    A "request" is any message sent to Metabot. Multiple messages in the same chat session count as separate requests.
+    </Note>
+  </Step>
+  
+  <Step title="Configure Metabot settings">
+    Once added from the Store, log into your Metabase and navigate to **Admin > AI** to configure Metabot settings. See [Metabot settings](/ai/settings) for configuration options.
+  </Step>
+</Steps>
+
+## What Metabot can do
+
+Metabot can help you:
+
+- **AI exploration** - Start new conversations when you don't already have a chart or query
+- **Create charts** - Build visualizations using the query builder from natural language queries
+- **Generate SQL** - Write SQL queries in the native editor from natural language prompts
+- **Inline SQL editing** - Edit SQL directly without using the chat sidebar
+- **Analyze charts** - Get insights from existing visualizations
+- **Fix SQL errors** - Automatically correct errors in SQL code
+- **Answer questions** - Get help from Metabase documentation
+
+<Note>
+Like all generative AI, you should always double-check Metabot's results.
+</Note>
+
+## The Metabot chat sidebar
+
+There are multiple ways to start a chat with Metabot:
+
+- Type **Cmd+E** on Mac or **Ctrl+E** on Windows to open the chat sidebar
+- Click the Metabot icon in the top right
+
+Metabot maintains context of the current question with each new prompt. Only the current conversation history is saved (you can scroll up to see it). If you start a new chat, Metabase will discard the previous conversation.
+
+### Tips for using Metabot
+
+- **Provide context** - If you know the table or fields you want to query, tell Metabot
+- **Reset when needed** - When you want Metabot to do something completely different, reset the conversation to avoid confusion from irrelevant historical context
+- **Follow up and refine** - Once Metabot creates a question, you can ask follow-up questions or take over yourself by drilling through the chart or tweaking the query in the editor
+- **Use English** - Metabot works best with English prompts for the most reliable results
+- **Define terminology** - Add domain-specific terms to the [glossary](https://www.metabase.com/docs/latest/exploration-and-organization/data-model-reference#glossary) to help Metabot understand your organization's terminology
+
+### Metabot response menu
+
+Hover over Metabot's responses to:
+
+- **Copy** the response text
+- **Give feedback** with thumbs-up/thumbs-down
+- **Re-run** the prompt (useful if you've updated the chart or want a different response)
+
+## AI exploration
+
+Use **AI exploration** to start a new conversation with Metabot when you don't already have a chart, question, or query to work from.
+
+<Steps>
+  <Step title="Open AI exploration">
+    Navigate to **+ New → AI exploration**
+  </Step>
+  
+  <Step title="Ask a question">
+    Type your question or pick one of the suggested prompts
+  </Step>
+</Steps>
+
+When answering questions in AI exploration, Metabot searches a limited set of content instead of your entire Metabase. Admins can set a **Collection for natural language querying** to scope AI exploration to a specific collection and its subcollections.
+
+<Note>
+You can still refer to content outside the scoped collection by explicitly @-mentioning it in your prompt.
+</Note>
+
+## Analyze charts with Metabot
+
+When viewing a question, click the Metabot icon in the upper right to analyze a visualization. You can also open the command palette to tell Metabot to analyze the chart.
+
+When viewing a table of results, Metabase won't display the Metabot button, but you can open the chat to ask Metabot to analyze the table, and it will produce an X-ray of the results.
+
+You can also ask Metabot to tell you about specific tables in your database.
+
+## How Metabot uses the query builder
+
+When you ask Metabot to create a chart from natural language, it first looks for existing questions that might answer your request. If it finds a relevant question, it'll point you to that instead of creating something new. Otherwise, Metabot will use the query builder to create a new chart.
+
+<Note>
+Metabot can only handle basic query builder operations and lacks access to custom expressions. It's also limited to single-level aggregation and grouping. For more complex analysis, take over and refine the query yourself, or switch to the SQL editor.
+</Note>
+
+## Generate SQL in the native editor
+
+To have Metabot generate SQL for you:
+
+<Steps>
+  <Step title="Open the SQL editor">
+    Navigate to the native SQL editor
+  </Step>
+  
+  <Step title="Select your database">
+    Choose the database you want to query
+  </Step>
+  
+  <Step title="Open the chat sidebar">
+    Type **Cmd+E** on Mac or **Ctrl+E** on Windows
+  </Step>
+  
+  <Step title="Describe your query">
+    Ask Metabot to "Write a SQL query that..." and type your prompt
+  </Step>
+</Steps>
+
+Metabot will generate the SQL for you, but it won't run the query automatically. This gives you a chance to inspect the code before executing it.
+
+<Info>
+If you don't specify a table in your natural language question, Metabot will only check the first 100 tables in the currently selected database. For tables beyond the first 100, specify them explicitly or Metabot may hallucinate table names.
+</Info>
+
+## Inline SQL editing
+
+You can ask Metabot to generate or edit code in the SQL editor without using the chat sidebar:
+
+<Steps>
+  <Step title="Open the SQL editor">
+    Navigate to the native SQL editor
+  </Step>
+  
+  <Step title="Trigger inline editing">
+    Press **Cmd+Shift+I** on Mac or **Ctrl+Shift+I** on Windows
+  </Step>
+  
+  <Step title="Describe your SQL">
+    Type what you want to generate or modify
+  </Step>
+  
+  <Step title="Review and accept">
+    Review the generated code and accept or reject it
+  </Step>
+</Steps>
+
+Once you start typing or editing your SQL, you can continue using the keyboard shortcut to refine your code.
+
+## Fix SQL query errors
+
+When you get an error in a SQL query, you can click the **Have Metabot fix it** button, and Metabot will attempt to correct the query. You can also ask Metabot to fix your SQL in the chat.
+
+## Navigating after Metabot creates a chart
+
+If Metabot creates a query or takes you to a new item but you want to return to the previous screen, use your browser's back button.
+
+You can also save any chart that Metabot creates to a dashboard or collection.
+
+## Giving feedback on Metabot responses
+
+When you hover over Metabot's responses, you'll see options to give feedback.
+
+Both thumbs up and thumbs down are helpful. If you give a thumbs down, you can optionally provide more details with an issue type:
+
+- UI bug
+- Took incorrect actions
+- Overall refusal
+- Did not follow request
+- Not factually correct
+- Incomplete response
+- Other
+
+<Info>
+When you submit feedback, the form may contain sensitive data from your conversation.
+</Info>
+
+## Privacy and data usage
+
+Metabot has intentionally limited capabilities:
+
+- Cannot access API keys
+- Cannot create assets
+- Cannot write data
+- Cannot send your data outside of your Metabase
+
+### What Metabot can see
+
+Metabot has access to:
+
+- **Metadata** - Table, Question, Model, Dashboard, and Metric structure and configuration
+- **Sample field values** - To understand how data is stored (e.g., "WI" vs "Wisconsin")
+- **Timeseries data** - For chart analysis, depending on the chart type
+
+<Note>
+Your questions and conversations remain private to your Metabase unless you submit feedback. We collect some metadata to gauge and improve usage, but we don't collect or store prompts unless you submit feedback.
+</Note>
+
+## Permissions
+
+Metabot inherits the permissions of the current user. Whenever someone uses Metabot, it can only see what that person has permissions to see and do.
+
+To restrict what data Metabot can access for each person, apply data and collection permissions to their groups normally, and those permissions will apply to their use of Metabot as well.
+
+## Viewing Metabot usage
+
+To see how many Metabot requests have been made this month:
+
+1. Navigate to **Admin > Settings > License**
+2. Log in to the Metabase Store if prompted
+3. View the **Metabot AI requests used, this month (updated daily)** field
+
+Each message sent to Metabot counts as a request.

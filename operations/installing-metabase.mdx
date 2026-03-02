@@ -1,0 +1,143 @@
+---
+title: Installing Metabase
+description: Learn how to install Metabase using Docker, JAR file, or cloud deployment options.
+---
+
+Metabase is built and packaged as a Java JAR file and can be run anywhere that Java is available. Choose the installation method that best fits your needs.
+
+## Metabase Cloud
+
+The easiest way to run Metabase is with [Metabase Cloud](https://www.metabase.com/cloud/). All you need to do is sign up for a free trial, and you're ready to start analyzing your data.
+
+<Note>
+Metabase Cloud handles all infrastructure, upgrades, and maintenance automatically, so you can focus on your data.
+</Note>
+
+## Self-hosting Metabase
+
+If you need to self-host Metabase, you have several options depending on your infrastructure and requirements.
+
+### Choosing an installation method
+
+<Tabs>
+  <Tab title="Docker (Recommended)">
+    Docker is the recommended way to self-host Metabase. It provides:
+    - Easy deployment and updates
+    - Consistent environment across systems
+    - Simple configuration via environment variables
+    - Built-in process management
+
+    [Learn how to run Metabase on Docker](/operations/running-docker)
+  </Tab>
+  
+  <Tab title="JAR file">
+    Running the JAR file directly gives you more control but requires manual setup:
+    - Java Runtime Environment (JRE) required
+    - Manual process management
+    - Good for testing and development
+    - More challenging to manage in production
+
+    [Learn how to run the Metabase JAR](/operations/running-jar)
+  </Tab>
+  
+  <Tab title="Cloud platforms">
+    Metabase can be deployed to various cloud platforms:
+    - Azure Web Apps
+    - AWS Elastic Beanstalk
+    - Kubernetes (community-supported)
+    - Podman
+
+    Check our [platform-specific guides](https://www.metabase.com/docs/latest/installation-and-operation) for details.
+  </Tab>
+</Tabs>
+
+## Installation steps overview
+
+<Steps>
+  <Step title="Choose your deployment method">
+    Decide between Docker, JAR, or a cloud platform based on your infrastructure and requirements.
+  </Step>
+  
+  <Step title="Set up your application database">
+    For production deployments, configure a production-ready database (PostgreSQL or MySQL) to store Metabase's application data.
+    
+    [Configure your application database](/operations/configuring-database)
+  </Step>
+  
+  <Step title="Configure environment variables">
+    Set up required environment variables for database connections, server settings, and other configurations.
+    
+    [View all environment variables](/operations/environment-variables)
+  </Step>
+  
+  <Step title="Launch Metabase">
+    Start your Metabase instance using your chosen deployment method.
+  </Step>
+  
+  <Step title="Complete setup">
+    Visit your Metabase URL and complete the initial setup wizard to create your admin account and connect your data sources.
+  </Step>
+</Steps>
+
+## System requirements
+
+### Java requirements
+
+If running the JAR file directly:
+- **Java 21** is required (Java 21 JRE from Eclipse Temurin with HotSpot JVM recommended)
+- Earlier Java versions are not supported
+- Works on x86 and ARM architectures
+
+### Database requirements
+
+For production deployments, use one of these databases to store Metabase's application data:
+
+- **PostgreSQL** (recommended) - version 12.0 or higher
+- **MySQL** - version 8.0.17 or higher
+- **MariaDB** - version 10.2.2 or higher
+
+<Warning>
+Do not use the default H2 database in production. H2 is file-based and only suitable for local testing and demos.
+</Warning>
+
+## Air-gapped environments
+
+If you need to run Metabase in an air-gapped environment without internet access, check out the [air-gapped edition of Metabase](https://www.metabase.com/product/air-gapping).
+
+## Getting help
+
+<CardGroup cols={2}>
+  <Card title="Professional services" icon="briefcase" href="https://www.metabase.com/product/professional-services">
+    Get expert help with setup, training, data modeling, and embedding
+  </Card>
+  
+  <Card title="Metabase experts" icon="users" href="https://www.metabase.com/partners/">
+    Connect with certified Metabase partners for technical resources and consulting
+  </Card>
+</CardGroup>
+
+## What's not supported
+
+- AWS Marketplace or Azure Marketplace distributions
+- Officially supported Helm charts (community charts are available)
+- ApsaraDB MySQL (use ApsaraDB PostgreSQL instead)
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Run with Docker" icon="docker" href="/operations/running-docker">
+    Get started with the recommended Docker deployment
+  </Card>
+  
+  <Card title="Run JAR file" icon="file" href="/operations/running-jar">
+    Install and run Metabase as a standalone JAR
+  </Card>
+  
+  <Card title="Configure database" icon="database" href="/operations/configuring-database">
+    Set up a production-ready application database
+  </Card>
+  
+  <Card title="Upgrade Metabase" icon="arrow-up" href="/operations/upgrading">
+    Learn how to upgrade to newer versions
+  </Card>
+</CardGroup>

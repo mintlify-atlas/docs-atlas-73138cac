@@ -1,0 +1,598 @@
+---
+title: Card
+description: Create and manage questions (cards) programmatically through the Metabase API
+---
+
+The Card API manages questions in Metabase. Cards represent saved questions that can be displayed as visualizations, added to dashboards, or executed to retrieve data. This API includes 16 endpoints.
+
+## List cards
+
+Get a list of all cards (questions) you have access to.
+
+```bash
+GET /api/card
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/card \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+
+```javascript JavaScript
+const cards = await fetch('https://your-metabase.com/api/card', {
+  headers: { 'X-Metabase-Session': sessionToken }
+}).then(r => r.json());
+```
+
+```python Python
+response = requests.get(
+    'https://your-metabase.com/api/card',
+    headers={'X-Metabase-Session': session_token}
+)
+cards = response.json()
+```
+</CodeGroup>
+
+### Response
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Total Orders",
+    "description": "Count of all orders",
+    "display": "scalar",
+    "query_type": "query",
+    "database_id": 1,
+    "collection_id": 5,
+    "created_at": "2024-01-15T10:00:00Z"
+  }
+]
+```
+
+## Get card
+
+Get details about a specific card by ID.
+
+```bash
+GET /api/card/{id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/card/1 \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="id" type="integer" required>
+  Card ID or NanoID string
+</ParamField>
+
+<ParamField query="legacy-mbql" type="boolean">
+  Return query in MBQL 4 format instead of MBQL 5 (default: false)
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="integer">
+  Card ID
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Card name
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Card description
+</ResponseField>
+
+<ResponseField name="display" type="string">
+  Visualization type (table, bar, line, pie, scalar, etc.)
+</ResponseField>
+
+<ResponseField name="dataset_query" type="object">
+  The query definition (MBQL or native SQL)
+</ResponseField>
+
+<ResponseField name="visualization_settings" type="object">
+  Display settings for the visualization
+</ResponseField>
+
+<ResponseField name="result_metadata" type="array">
+  Metadata about result columns
+</ResponseField>
+
+<ResponseField name="collection_id" type="integer">
+  ID of the collection containing this card
+</ResponseField>
+
+## Create card
+
+Create a new card (question).
+
+```bash
+POST /api/card
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/card \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "name": "New Question",
+    "display": "table",
+    "visualization_settings": {},
+    "dataset_query": {
+      "type": "query",
+      "database": 1,
+      "query": {
+        "source-table": 5
+      }
+    }
+  }'
+```
+
+```javascript JavaScript
+const card = await fetch('https://your-metabase.com/api/card', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Metabase-Session': sessionToken
+  },
+  body: JSON.stringify({
+    name: 'New Question',
+    display: 'table',
+    visualization_settings: {},
+    dataset_query: {
+      type: 'query',
+      database: 1,
+      query: {
+        'source-table': 5
+      }
+    }
+  })
+}).then(r => r.json());
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="name" type="string" required>
+  Question name
+</ParamField>
+
+<ParamField body="dataset_query" type="object" required>
+  Query definition (MBQL or native)
+  
+  For MBQL queries:
+  ```json
+  {
+    "type": "query",
+    "database": 1,
+    "query": {
+      "source-table": 5
+    }
+  }
+  ```
+  
+  For native SQL:
+  ```json
+  {
+    "type": "native",
+    "database": 1,
+    "native": {
+      "query": "SELECT * FROM orders"
+    }
+  }
+  ```
+</ParamField>
+
+<ParamField body="display" type="string" required>
+  Visualization type (table, bar, line, pie, scalar, etc.)
+</ParamField>
+
+<ParamField body="visualization_settings" type="object" required>
+  Visualization configuration (can be empty object)
+</ParamField>
+
+<ParamField body="description" type="string">
+  Card description
+</ParamField>
+
+<ParamField body="collection_id" type="integer">
+  Collection to save the card in
+</ParamField>
+
+<ParamField body="type" type="string">
+  Card type: "question" or "model" (default: "question")
+</ParamField>
+
+<ParamField body="parameters" type="array">
+  Template tag parameters for the question
+</ParamField>
+
+## Update card
+
+Update an existing card.
+
+```bash
+PUT /api/card/{id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X PUT \
+  https://your-metabase.com/api/card/1 \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "name": "Updated Question Name",
+    "description": "Updated description"
+  }'
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="id" type="integer" required>
+  Card ID
+</ParamField>
+
+### Request body
+
+All fields are optional. Only include fields you want to update.
+
+<ParamField body="name" type="string">
+  Updated card name
+</ParamField>
+
+<ParamField body="description" type="string">
+  Updated description
+</ParamField>
+
+<ParamField body="dataset_query" type="object">
+  Updated query definition
+</ParamField>
+
+<ParamField body="display" type="string">
+  Updated visualization type
+</ParamField>
+
+<ParamField body="visualization_settings" type="object">
+  Updated visualization settings
+</ParamField>
+
+<ParamField body="collection_id" type="integer">
+  Move to a different collection
+</ParamField>
+
+<ParamField body="archived" type="boolean">
+  Archive or unarchive the card
+</ParamField>
+
+## Delete card
+
+Permanently delete a card.
+
+```bash
+DELETE /api/card/{id}
+```
+
+<CodeGroup>
+```bash curl
+curl -X DELETE \
+  https://your-metabase.com/api/card/1 \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+<Warning>
+This permanently deletes the card. To soft delete (archive), use `PUT /api/card/{id}` with `"archived": true`.
+</Warning>
+
+## Execute card query
+
+Run the query for a card and get results.
+
+```bash
+POST /api/card/{card-id}/query
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/card/1/query \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "ignore_cache": false
+  }'
+```
+
+```javascript JavaScript
+const results = await fetch('https://your-metabase.com/api/card/1/query', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Metabase-Session': sessionToken
+  },
+  body: JSON.stringify({
+    ignore_cache: false
+  })
+}).then(r => r.json());
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="card-id" type="integer" required>
+  Card ID or NanoID
+</ParamField>
+
+### Request body
+
+<ParamField body="ignore_cache" type="boolean">
+  Skip cached results and run fresh query (default: false)
+</ParamField>
+
+<ParamField body="dashboard_id" type="integer">
+  Dashboard context if running from a dashboard
+</ParamField>
+
+<ParamField body="collection_preview" type="boolean">
+  Whether this is a collection preview query
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="object">
+  Query results
+  - `rows` - Array of result rows
+  - `cols` - Array of column metadata
+  - `rows_truncated` - Number of truncated rows if result was limited
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Query status ("completed", "failed", etc.)
+</ResponseField>
+
+<ResponseField name="row_count" type="integer">
+  Number of rows returned
+</ResponseField>
+
+<ResponseField name="running_time" type="integer">
+  Query execution time in milliseconds
+</ResponseField>
+
+## Download query results
+
+Execute a card query and download results in a specific format.
+
+```bash
+POST /api/card/{card-id}/query/{export-format}
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/card/1/query/csv \
+  -H 'Content-Type: application/json' \
+  -H 'X-Metabase-Session: SESSION_TOKEN' \
+  -d '{
+    "format_rows": true,
+    "pivot_results": false
+  }' \
+  -o results.csv
+```
+</CodeGroup>
+
+### Parameters
+
+<ParamField path="card-id" type="integer" required>
+  Card ID
+</ParamField>
+
+<ParamField path="export-format" type="string" required>
+  Export format: csv, xlsx, or json
+</ParamField>
+
+### Request body
+
+<ParamField body="format_rows" type="boolean">
+  Apply formatting to cell values (default: false)
+</ParamField>
+
+<ParamField body="pivot_results" type="boolean">
+  Pivot the results (default: false)
+</ParamField>
+
+<ParamField body="parameters" type="array">
+  Parameter values for the query
+</ParamField>
+
+### Response
+
+Returns file data in the requested format with appropriate content-type header.
+
+## Copy card
+
+Create a copy of an existing card.
+
+```bash
+POST /api/card/{id}/copy
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/card/1/copy \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+<Note>
+The copied card will be named "Copy of [original name]" and will be saved to the same collection.
+</Note>
+
+## Get card dashboards
+
+Get a list of dashboards where this card appears.
+
+```bash
+GET /api/card/{id}/dashboards
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/card/1/dashboards \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Response
+
+```json
+[
+  {
+    "id": 5,
+    "name": "Sales Dashboard"
+  },
+  {
+    "id": 12,
+    "name": "Executive Overview"
+  }
+]
+```
+
+## Get query metadata
+
+Get metadata needed to build/edit a card's query.
+
+```bash
+GET /api/card/{id}/query_metadata
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/card/1/query_metadata \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Response
+
+Returns database metadata, table info, and field definitions needed for the query builder.
+
+## Public sharing
+
+### Create public link
+
+Generate a public sharing link for a card.
+
+```bash
+POST /api/card/{card-id}/public_link
+```
+
+<CodeGroup>
+```bash curl
+curl -X POST \
+  https://your-metabase.com/api/card/1/public_link \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+<Note>
+Public sharing must be enabled in instance settings. Requires admin permissions.
+</Note>
+
+### Response
+
+```json
+{
+  "uuid": "110c3d96-ff3a-4ec6-9a82-7c2d5e073fa2"
+}
+```
+
+The card can be accessed at `/public/question/{uuid}`.
+
+### Delete public link
+
+Remove the public sharing link for a card.
+
+```bash
+DELETE /api/card/{card-id}/public_link
+```
+
+<CodeGroup>
+```bash curl
+curl -X DELETE \
+  https://your-metabase.com/api/card/1/public_link \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+## List embeddable cards
+
+Get all cards that can be embedded.
+
+```bash
+GET /api/card/embeddable
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/card/embeddable \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+Returns cards where `enable_embedding` is true.
+
+## Parameter values
+
+### Get parameter values
+
+Fetch possible values for a card parameter.
+
+```bash
+GET /api/card/{card-id}/params/{param-key}/values
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/card/1/params/category/values \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+### Search parameter values
+
+Search for parameter values matching a query.
+
+```bash
+GET /api/card/{card-id}/params/{param-key}/search/{query}
+```
+
+<CodeGroup>
+```bash curl
+curl -X GET \
+  https://your-metabase.com/api/card/1/params/category/search/electronics \
+  -H 'X-Metabase-Session: SESSION_TOKEN'
+```
+</CodeGroup>
+
+<Note>
+Results are limited to the first 1000 matches.
+</Note>
