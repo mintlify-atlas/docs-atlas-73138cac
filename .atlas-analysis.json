@@ -1,0 +1,232 @@
+{
+  "projectType": "saas",
+  "projectName": "Metabase",
+  "projectDescription": "Open-source business intelligence platform for asking questions and analyzing data",
+  "theme": "sequoia",
+  "primaryColor": "#509EE3",
+  "lightColor": "#9CC4E8",
+  "darkColor": "#2E5C8A",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation",
+              "cloud-vs-self-hosting"
+            ]
+          },
+          {
+            "group": "Questions & Dashboards",
+            "pages": [
+              "questions/asking-questions",
+              "questions/query-builder",
+              "questions/sql-editor",
+              "questions/native-queries",
+              "dashboards/creating-dashboards",
+              "dashboards/dashboard-filters",
+              "dashboards/subscriptions",
+              "dashboards/alerts"
+            ]
+          },
+          {
+            "group": "Data Modeling",
+            "pages": [
+              "data-modeling/models",
+              "data-modeling/metrics",
+              "data-modeling/segments",
+              "data-modeling/metadata"
+            ]
+          },
+          {
+            "group": "Database Connections",
+            "pages": [
+              "databases/connecting",
+              "databases/supported-databases",
+              "databases/sync-scan",
+              "databases/users-roles-privileges"
+            ]
+          },
+          {
+            "group": "Embedding",
+            "pages": [
+              "embedding/introduction",
+              "embedding/sdk-introduction",
+              "embedding/sdk-components",
+              "embedding/modular-embedding",
+              "embedding/interactive-embedding",
+              "embedding/public-sharing"
+            ]
+          },
+          {
+            "group": "Administration",
+            "pages": [
+              "administration/settings",
+              "administration/users-and-groups",
+              "administration/permissions",
+              "administration/authentication",
+              "administration/email",
+              "administration/caching"
+            ]
+          },
+          {
+            "group": "Installation & Operations",
+            "pages": [
+              "operations/installing-metabase",
+              "operations/configuring-database",
+              "operations/upgrading",
+              "operations/backing-up",
+              "operations/environment-variables",
+              "operations/running-docker",
+              "operations/running-jar"
+            ]
+          },
+          {
+            "group": "AI Features",
+            "pages": [
+              "ai/metabot",
+              "ai/sql-generation",
+              "ai/agent-api"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api/overview",
+              "api/authentication",
+              "api/rate-limits"
+            ]
+          },
+          {
+            "group": "Core Resources",
+            "pages": [
+              "api/database",
+              "api/card",
+              "api/dashboard",
+              "api/collection",
+              "api/dataset"
+            ]
+          },
+          {
+            "group": "User Management",
+            "pages": [
+              "api/user",
+              "api/session",
+              "api/permissions"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "api/actions",
+              "api/embedding",
+              "api/public",
+              "api/settings"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "SDK Reference",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "sdk/installation",
+              "sdk/quickstart",
+              "sdk/configuration"
+            ]
+          },
+          {
+            "group": "Components",
+            "pages": [
+              "sdk/metabase-provider",
+              "sdk/interactive-question",
+              "sdk/static-question",
+              "sdk/interactive-dashboard",
+              "sdk/static-dashboard",
+              "sdk/collection-browser"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "sdk/theming",
+              "sdk/custom-styling",
+              "sdk/event-handlers",
+              "sdk/typescript-types"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Developers",
+        "groups": [
+          {
+            "group": "Contributing",
+            "pages": [
+              "developers/contributing",
+              "developers/development-environment",
+              "developers/code-structure",
+              "developers/testing"
+            ]
+          },
+          {
+            "group": "Drivers & Plugins",
+            "pages": [
+              "developers/building-drivers",
+              "developers/community-drivers",
+              "developers/driver-interface"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Visual query builder with no-SQL-required interface",
+    "Native SQL editor with autocomplete and syntax highlighting",
+    "Interactive dashboards with filters, drill-through, and subscriptions",
+    "Data modeling with models, metrics, and segments",
+    "18+ database connectors including PostgreSQL, MySQL, BigQuery, Snowflake",
+    "Embedding SDK for React with customizable components",
+    "Full-app and modular embedding with SSO",
+    "AI-powered SQL generation with Metabot",
+    "Row and column-level permissions",
+    "Automated dashboard subscriptions and alerts",
+    "REST API for programmatic access",
+    "Multi-tenant support with sandboxing"
+  ],
+  "publicApiSurface": [
+    "/api/database - Database connections and metadata",
+    "/api/card - Saved questions and queries",
+    "/api/dashboard - Dashboard management",
+    "/api/dataset - Execute queries and retrieve data",
+    "/api/collection - Organize content in collections",
+    "/api/user - User management",
+    "/api/session - Authentication and sessions",
+    "/api/permissions - Access control",
+    "/api/action - HTTP and database actions",
+    "/api/embedding - Embedding tokens and parameters",
+    "/api/public - Public sharing endpoints",
+    "/api/field - Field metadata and configuration",
+    "/api/table - Table metadata",
+    "/api/segment - Saved filters",
+    "/api/metric - Saved metrics",
+    "@metabase/embedding-sdk-react - React SDK for embedding",
+    "MetabaseProvider - SDK context provider",
+    "InteractiveQuestion - Embeddable question component",
+    "InteractiveDashboard - Embeddable dashboard component",
+    "StaticQuestion - Read-only question component",
+    "StaticDashboard - Read-only dashboard component"
+  ]
+}
